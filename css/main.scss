@@ -1,0 +1,347 @@
+---
+# Only the main Sass file needs front matter (the dashes are enough)
+---
+
+$body-bg: #16212C;
+$navbar-default-bg: #16212C;
+
+$navbar-default-link-color:                #ccc;
+$navbar-default-link-hover-color:          #888;
+$navbar-default-link-active-color:        #fff;
+
+$link-color:      #800000;
+$blockquote-border-color: #4060c0;
+$link-hover-color: #400000;
+
+@import "bootstrap";
+@import "_font-awesome.min";
+@import "syntax";
+
+
+/*
+ * Globals
+ */
+
+body {
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
+
+
+.navbar {
+  margin-bottom: 0px;
+}
+
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5,
+h6, .h6 {
+  margin-top: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  color: #333;
+}
+
+
+/*
+ * Override Bootstrap's default container.
+ */
+
+@media (min-width: 1200px) {
+  .container {
+    width: 970px;
+  }
+}
+
+
+/*
+ * Masthead for nav
+ */
+
+.blog-masthead {
+  background-color: #428bca;
+  -webkit-box-shadow: inset 0 -2px 5px rgba(0,0,0,.1);
+          box-shadow: inset 0 -2px 5px rgba(0,0,0,.1);
+}
+
+/* Nav links */
+.blog-nav-item {
+  position: relative;
+  display: inline-block;
+  padding: 10px;
+  font-weight: 500;
+  color: #cdddeb;
+}
+.blog-nav-item:hover,
+.blog-nav-item:focus {
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Active state gets a caret at the bottom */
+.blog-nav .active {
+  color: #fff;
+}
+.blog-nav .active:after {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 0;
+  margin-left: -5px;
+  vertical-align: middle;
+  content: " ";
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid;
+  border-left: 5px solid transparent;
+}
+
+/* read-more */
+a.more-link
+{
+	padding-bottom: 20px;
+}
+
+/*
+ * Blog name and description
+ */
+
+.blog-header {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+article  h1.title  {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.blog-description {
+  font-size: 20px;
+  color: #999;
+}
+
+
+/*
+ * Main column and sidebar layout
+ */
+
+.blog-main {
+  font-size: 18px;
+  line-height: 1.5;
+  background-color: #fff;
+  padding: 3% 8%;
+}
+
+/* Sidebar modules for boxing content */
+.sidebar-module {
+  padding: 15px;
+  margin: 0 -15px 15px;
+}
+.sidebar-module-inset {
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+.sidebar-module-inset p:last-child,
+.sidebar-module-inset ul:last-child,
+.sidebar-module-inset ol:last-child {
+  margin-bottom: 0;
+}
+
+
+/* Pagination */
+.pager {
+  margin-bottom: 60px;
+  text-align: left;
+}
+.pager > li > a {
+  width: 140px;
+  padding: 10px 20px;
+  text-align: center;
+  border-radius: 30px;
+}
+
+/* archives */
+article .archives h2.year
+{
+	border-bottom: 1px solid #999;
+}
+article .archives h3.title
+{
+	display: inline-block;
+}
+
+article  .archives .blog-post-meta
+{
+	display: inline-block;
+}
+
+/*
+ * Blog posts
+ */
+
+article .post {
+  margin-bottom: 60px;
+}
+.blog-post-title {
+  margin-bottom: 5px;
+  font-size: 60px;
+  font-weight: bold;
+}
+.blog-post-meta {
+  margin-bottom: 20px;
+  color: #bbb;
+}
+
+/*
+ * Footer
+ */
+
+.blog-footer {
+  padding: 27px 0;
+  color: #999;
+  text-align: center;
+}
+.blog-footer p:last-child {
+  margin-bottom: 0;
+}
+
+.xoofx-logo {
+    background: transparent url("../images/blog_logo.png") no-repeat scroll 0px 0px;
+    display: block;
+    width: 66px;
+    height: 48px;    
+	margin-right: 5px;
+}
+
+blockquote {
+	color: #777;
+	background-color: #f8f8f8;
+}
+
+.blog-post-meta  a {
+  color: #bbb
+}
+
+.entry-content .rss
+{
+	position: inline-block;
+	float: right;
+}
+
+.blog-post-meta .fa-calendar
+{
+	padding-right: 5px;
+}
+
+.blog-post-meta .fa-tags, .fa-comments, .fa-edit
+{
+	padding-left: 10px;
+	padding-right: 5px;
+}
+
+.blog-post-meta  a:hover , a:focus {
+  color: #888
+}
+
+article h1.title a
+{
+	color: #333;
+}
+
+article h1.title a:hover, a:focus
+{
+	color: $link-color;
+	text-decoration-line: none;
+}
+
+.entry-content
+{
+	padding-bottom: 10px;
+}
+
+.navbar
+{
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	border-width: 0px;
+}
+
+.navbar .navbar-nav .active
+{
+	border-bottom: 3px solid #b00;
+}
+
+.navbar .container
+{
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.navbar .navbar-right {
+    margin-right: -5px;
+}
+
+
+#page-navigation
+{
+	padding-top: 30px;
+	padding-bottom: 20px;
+}
+
+#page-navigation div {
+    display: inline-block;
+}
+
+#page-navigation div.next {
+    float: right;
+}
+
+article .home li
+{
+	padding-bottom: 20px;
+} 
+
+article .home .little-voice
+{
+	color: #BBB;
+	font-style: italic;
+	transition: color 0.5s ease-in-out;
+}
+
+article .home .little-voice a
+{
+	color: #888;
+	font-style: italic;
+	transition: color 0.5s ease-in-out;
+}
+
+article .home  li:hover .little-voice
+{
+	color: #333;
+	font-style: italic;
+}
+
+article .home  li:hover .little-voice a
+{
+	color: $link-color;
+	font-style: italic;
+}
+
+article img
+{
+	padding: 10px;
+}
+
+article .home .fa
+{
+	font-size: 30px;
+	color: #900;
+} 
+
+img {
+  @extend .img-responsive;
+}

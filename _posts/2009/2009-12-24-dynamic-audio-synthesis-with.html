@@ -1,0 +1,11 @@
+---
+layout: post
+title: Dynamic audio synthesis with Silverlight 3
+date: '2009-12-24T02:31:00.010+11:00'
+modified_time: '2009-12-24T07:17:37.041+11:00'
+comments: true
+blogger_id: tag:blogger.com,1999:blog-1076643699683521890.post-8081546822755313532
+blogger_orig_url: http://code4k.blogspot.com/2009/12/dynamic-audio-synthesis-with.html
+---
+
+While WebGL is going to be something really cool for some online demomaking (although i would be happy to have an equivalent under Silverlight), it seems that audio is going to be a bit more limited.<br />Few months ago, Iwas very excited about a new feature in Silverlight 3.0 : dynamic raw audio access. That was something I was <a href="http://forums.xna.com/forums/t/4076.aspx">asking (with others) </a>to the XNA team, but they sadly rejected totally such a feature request. Hopefully, Silverlight was more listening to its community and they brought this feature. Notice that this is the first time we have such an access under .NET. You don't have this under the normal .NET Framework, what a shame!<br />At that time, the dynamic raw audio access in the <a href="http://forums.silverlight.net/forums/p/82270/192781.aspx">Silverlight beta had a bad latency</a>... but they solved this issue and believe it or not, it's working GREAT.<br /><br />It's now possible to achieve a latency as low as 20 to 30ms, although that might not be sufficient for a professional audio system, that's already really cool to have it on a browser.<br /><br />I did a very small experiment with just a plain cosinus to output some dynamic sound and the result is quite cool, under 7ko in xap archive (push the button and move the slider)<br /><iframe src="http://rmasm.net/code4k/SilverSynth/index.html" frameborder="0" width="400" height="300" scrolling="no"></iframe><br /><br />You can download the <a href="http://rmasm.net/code4k/SilverSynth/SilverSynth.7z">Visual Studio C# Project here</a>.

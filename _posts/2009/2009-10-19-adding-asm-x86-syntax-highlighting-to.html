@@ -1,0 +1,16 @@
+---
+layout: post
+title: Adding asm x86 Syntax Highlighting to Visual Studio 2008
+date: '2009-10-19T10:18:00.004+11:00'
+tags:
+- assembler
+- Tools
+- x86
+- Visual Studio
+modified_time: '2009-10-20T09:30:50.033+11:00'
+comments: true
+blogger_id: tag:blogger.com,1999:blog-1076643699683521890.post-4515196012507500191
+blogger_orig_url: http://code4k.blogspot.com/2009/10/adding-asm-x86-syntax-highlighting-to.html
+---
+
+While i use to develop some part of 4k's intro code in x86 assembler, it is quite annoying to switch from Visual Studio to an external editor in order to have a correct syntax highlighting. I like the principle of an Integrated Development Environment, and VS is a great tool for that. Based on my previous experience on <a href="http://nshader.codeplex.com/">NShader</a>, i have decided to implement a syntax highlighter for x86 ASM... and thanks to NShader's work, it was really easy to code it! For anyone looking for a place to start when developing a LanguageService Package for Visual Studio, this project is easy to follow and gives a basic implementation for syntax highlighting.<br /><br />So, i have just released <a href="http://asmhighlighter.codeplex.com/">AsmHighlighter</a> under codeplex. This is an AddIn for Visual Studio 2008 (it won't work for Express Editions, as they don't allow communities addIns) that enables <b>syntax highlighting for x86 ASM language</b>. <b>MASM </b>syntax is mainly supported and <b>NASM </b>syntax is partially supported. I have no more reason to switch to an external editor! Cool!<br /><br />Apart from that, the nice thing with <b>MASM is that it is possible to debug directly under Visual Studio</b>, making a mixed C-ASM project much easier to develop (VS is adding building rules for ASM files automatically to your project). On the other hand, i was not able to debug with NASM as nasm cannot generate debug information under the win32 platform...<br /><br />I also found a cool project called <a href="http://japheth.de/index.html">JWasm </a>developed by Japheth : JWasm is a MASM v6 compatible assembler (with v8 bug fixes and improvements)&nbsp; that is able to output win32,win64 as well as linux elf object files. Quite interesting when you still want to develop with a MASM syntax and be able to export your work under linux without moving to another assembler! Japtheth even provides <a href="http://japheth.de/JWasm/Readme.html">JWasm.rules files</a> for an integration under Visual Studio. It's even possible to debug JWasm output objects files under VS,  that's great!<br /><br />Now, you may have noticed that all of this is not strictly related to 4k-64k intros coding, but well, you can consider <a href="http://asmhighlighter.codeplex.com/">AsmHighlighter</a> as a productivity tool for 4k-64k development! ;)

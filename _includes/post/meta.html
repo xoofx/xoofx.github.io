@@ -1,0 +1,8 @@
+<div class="blog-post-meta">
+	<span class="fa fa-calendar"></span> {% include post/date.html %}{{ time }}
+	{% include post/tags.html %}
+	{% if site.disqus_short_name and site.disqus_show_comment_count == true %}
+		<span class="fa fa-comments"></span> {% include post/comments_link.html %}
+	{% endif %}
+	<span class="fa fa-edit"></span> {% include post/edit.html %}
+</div>

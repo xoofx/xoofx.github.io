@@ -1,0 +1,37 @@
+# Site Settings
+author: Alexandre Mutel
+title: xoofx
+description: xoofx website
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: "http://xoofx.com" # the base hostname & protocol for your site
+
+# Github repository
+github_user: xoofx
+github_repo_url: https://github.com/xoofx/xoofx.github.io/
+
+# Twitter
+twitter_user: xoofx
+twitter_tweet_button: true
+
+# Disqus Comments
+disqus_short_name: xoofx
+disqus_show_comment_count: true
+
+# Jekyll settings
+permalink: /blog/:year/:month/:day/:title/
+# try to fix excerpt separator
+excerpt_separator: "" 
+# excerpt_link: Read More...
+paginate: 10
+paginate_path: "/blog/page:num/"
+markdown: redcarpet
+redcarpet:
+    extensions: ["tables"]
+highlighter: pygments
+
+sass:
+    style: :compressed
+
+gems:
+  - jekyll-sitemap
+

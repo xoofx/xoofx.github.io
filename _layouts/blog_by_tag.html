@@ -1,0 +1,21 @@
+---
+layout: default
+---
+{% assign current_tag = page.url | replace: '/index.html', '' | split: '/' | last %}
+{% if site.data.tags[current_tag] %}
+{% assign current_tag = site.data.tags[current_tag] %}
+{% endif %}
+<article class="page">
+<div class="archives" itemscope itemtype="http://schema.org/Blog">
+	<h1 class="title">Articles by tag: {{ current_tag }}</h1>
+	<div>
+		{% if site.tags[current_tag] %}
+			{% for post in site.tags[current_tag] %}
+				{% include archive_post.html %}
+			{% endfor %}
+		{% else %}
+			<p>There are no posts for this tag.</p>
+		{% endif %}
+	</div>
+</div>	
+</article>

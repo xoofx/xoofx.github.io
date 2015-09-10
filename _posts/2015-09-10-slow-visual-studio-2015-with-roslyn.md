@@ -7,9 +7,9 @@ tags:
 comments: true
 ---
 
-At work, we have switched to VS2015 and have been experiencing so far lots "Visual Studio Not Responding" while editing the code. I first thought that it was ReSharper that was crawling VS. Then I started to disable many extensions, but still while typing into a C# file, sometimes VS could get stuck for more than 10+ seconds!
+At work, we have switched to VS2015 and have been experiencing so far lots "Visual Studio Not Responding" while editing the code. I first thought that it was ReSharper that was crawling VS. Then I tried to disable almost all extensions, but still while typing into a C# file, sometimes VS could get stuck for more than 10+ seconds!
 
-So I started to dig into this problem with xperf (with the shiny new WPR and WPA tools from Windows 10 SDK!) and discovered that it was mainly due to the GC (and Roslyn) crawling VS (If you are a C++ programmer, you can laugh at it, for sure). Here is a screenshot of the xperf report:
+Digging a bit more into this problem with xperf (with the shiny new WPR and WPA tools from Windows 10 SDK!) I discovered that it was mainly due to the GC (and maybe Roslyn) crawling VS (If you are a C++ programmer, you can laugh at it, for sure). Here is a screenshot of the xperf report:
 
 ![Visual Studio 2015 WPA](/images/VS2015_Roslyn_GC.jpg)
 
@@ -33,7 +33,11 @@ Basically, Roslyn is putting the GC in the `SustainedLowLatency` mode whenever y
 
 I don't know if it is a placebo effect, but I'm getting a bit less "Not Responding" from VS2015 for the past few days. At least, I'm not completely stuck, as last friday, It was impossible for me to work. But one of my co-worker that is having the same problem tried the registry trick but it didn't seem to make a difference... Sadly also, I tried to reproduce this issue with a plain C# app without any luck so... most likely because the memory scenario that is causing this GC slowness is not easily reproducible.
 
-At least, for sure, there is a bug somewhere in Visual Studio 2015 with the GC... but today, someone on the MVP mailing list was complaining about a bug in the GC of .NET 4.6 that was slowing down its app by a factor of x10, and I completely forgot this issue that I saw a couple of weeks ago : "[Gen2 free list changes in CLR 4.6 GC](http://blogs.msdn.com/b/maoni/archive/2015/08/12/gen2-free-list-changes-in-clr-4-6-gc.aspx)". **Could it be that it is in fact the original bug that is making our VS2015 experience so painful and horrible?**
+At least, for sure, there is a bug somewhere in Visual Studio 2015 with the GC... but today, someone on the MVP mailing list was complaining about a bug in the GC of .NET 4.6 that was slowing down its app by a factor of x10, and I completely forgot this issue that I saw a couple of weeks ago : "[Gen2 free list changes in CLR 4.6 GC](http://blogs.msdn.com/b/maoni/archive/2015/08/12/gen2-free-list-changes-in-clr-4-6-gc.aspx)".
+
+**Could it be that it is in fact the original bug that is making our VS2015 experience so painful and horrible?**
+
+My wild guess: Roslyn Syntax Trees are more likely to end-up quickly in a Gen2 memory section, while editing a single file (or doing a refactoring on many different files), with the immutable architecture of Roslyn, would cause to sparsely un-reference some objects from Gen2... the GC could then hit the bug described above... Anyway, hope that the VS/CLR team can solve this quickly!
 
 Are you experiencing this kind of issues as well? Let me know!
 

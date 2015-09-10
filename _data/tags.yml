@@ -16,7 +16,7 @@ slimdx: SlimDX
 csharp: C#
 d3d11: D3D11
 directx: DirectX
-net: .Net
+net: ".Net"
 d3d10: D3D10
 direct2d: Direct2D
 crinkler: crinkler
@@ -31,3 +31,5 @@ design: design
 ui: UI
 game: game
 jekyll: jekyll
+visualstudio2015: Visual Studio 2015
+roslyn: Roslyn

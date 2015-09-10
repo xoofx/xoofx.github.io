@@ -33,7 +33,7 @@ Basically, Roslyn is putting the GC in the `SustainedLowLatency` mode whenever y
 
 I don't know if it is a placebo effect, but I'm getting a bit less "Not Responding" from VS2015 for the past few days. At least, I'm not completely stuck, as last Friday, It was impossible for me to work. But one of my co-worker that is having the same problem tried the registry trick but it didn't seem to make a difference... Sadly also, I tried to reproduce this issue with a plain C# app without any luck so... most likely because the memory scenario that is causing this GC slowness is not easily reproducible.
 
-At least, for sure, there is a bug somewhere in Visual Studio 2015 with the GC... but today, someone on the MVP mailing list was complaining about a bug in the GC of .NET 4.6 that was slowing down its app by a factor of x10, and I completely forgot this issue that I saw a couple of weeks ago : "[Gen2 free list changes in CLR 4.6 GC](http://blogs.msdn.com/b/maoni/archive/2015/08/12/gen2-free-list-changes-in-clr-4-6-gc.aspx)".
+But it looks like there is a bug somewhere in Visual Studio 2015 with the GC... Incidentally, someone on the MVP mailing list was complaining about a bug in the GC of .NET 4.6 that was slowing down its app by a factor of x10, and I completely forgot this issue that I saw a couple of weeks ago : "[Gen2 free list changes in CLR 4.6 GC](http://blogs.msdn.com/b/maoni/archive/2015/08/12/gen2-free-list-changes-in-clr-4-6-gc.aspx)".
 
 **Could it be that it is in fact the original bug that is making our VS2015 experience so painful and horrible?**
 

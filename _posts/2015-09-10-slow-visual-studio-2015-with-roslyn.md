@@ -37,7 +37,9 @@ At least, for sure, there is a bug somewhere in Visual Studio 2015 with the GC..
 
 Are you experiencing this kind of issues as well? Let me know!
 
-### Side node about ReSharper and Roslyn
+___
+
+### Side notes about ReSharper and Roslyn
   
 On a side note, I was not really happy to learn last year that ReSharper would not consider to rely on Roslyn to build their productivity tool, as I was afraid about the double of work.
 

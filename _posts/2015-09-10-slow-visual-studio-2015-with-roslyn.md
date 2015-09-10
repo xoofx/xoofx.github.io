@@ -18,6 +18,7 @@ You can see on the diagram that the GC is blocked in a `gc_heap/gc1` phase, whil
 I was wondering why the hell the GC is triggered even if I don't see to modify heavily the memory (even if Roslyn can be memory consuming, come on...), so I looked at the Roslyn repo to find if there was any explicit GC handling and found this code in [GCManager](https://github.com/dotnet/roslyn/blob/master/src/VisualStudio/Core/Def/Implementation/GCManager.cs#L61):
 
 Every 5 seconds you stop typing something, this code is triggered:
+
 ```C#
 	// hint to the GC that if it postponed a gen 2 collection, now might be a good time to do it.
 	GC.Collect(2, GCCollectionMode.Optimized);

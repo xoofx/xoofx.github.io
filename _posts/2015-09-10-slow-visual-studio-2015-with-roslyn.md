@@ -11,7 +11,9 @@ At work, we have switched to VS2015 and have been experiencing so far lots of "V
 
 Digging a bit more into this problem with xperf (with the shiny new WPR and WPA tools from Windows 10 SDK!) I discovered that it was mainly due to the GC (and maybe Roslyn) burning the CPU and the memory (If you are a C++ programmer, you can laugh at it, for sure). Here is a screenshot of the xperf report:
 
-![Visual Studio 2015 WPA](/images/VS2015_Roslyn_GC.jpg)
+<a href="/images/VS2015_Roslyn_GC.jpg" title="Result of a xperf on a Visual Studio 2015 not responding" class="image-popup">
+	<img src="/images/VS2015_Roslyn_GC.jpg">			
+</a>
 
 You can see on the diagram that the GC is blocked in a `gc_heap/gc1` phase, while there is no particular reason for that. Also when you look more closely at the diagram, it is occupying a full core for more than 20+ seconds.
 
@@ -20,8 +22,8 @@ I was wondering why the hell the GC is triggered even if I don't see to modify h
 Every 5 seconds you stop typing into a file, this code is triggered:
 
 ```C#
-	// hint to the GC that if it postponed a gen 2 collection, now might be a good time to do it.
-	GC.Collect(2, GCCollectionMode.Optimized);
+    // hint to the GC that if it postponed a gen 2 collection, now might be a good time to do it.
+    GC.Collect(2, GCCollectionMode.Optimized);
 ```
 
 Basically, Roslyn is putting the GC in the `SustainedLowLatency` mode whenever you type a character/cut/paste modify the current document, and restore the normal GC mode after 5 seconds and perform this optimized collect. I was quite intrigued by this (and not sure about how the `GCCollectionMode.Optimized` is actually working internally...), but it turns out that you can disable this behaviour via a single registry key:

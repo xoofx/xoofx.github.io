@@ -15,8 +15,8 @@ $link-hover-color: #400000;
 
 @import "bootstrap";
 @import "_font-awesome.min";
+@import "magnific";
 @import "syntax";
-
 
 /*
  * Globals
@@ -344,4 +344,12 @@ article .home .fa
 
 img {
   @extend .img-responsive;
+}
+
+.image-popup
+{
+	max-width: 100%; /* add this to enable resize of child img */
+	position: relative;
+	display: block;
+	padding: 5px 0 15px;	
 }

@@ -9,4 +9,8 @@
   ga('create', 'UA-19765162-5', 'auto');
   ga('send', 'pageview');
 
+  $(document).ready(function() {
+	$('.image-popup').magnificPopup({type: 'image',closeOnContentClick: true }); 
+	$('.inline-popup').magnificPopup({type: 'inline',closeOnContentClick: true }); 
+  });
 </script>

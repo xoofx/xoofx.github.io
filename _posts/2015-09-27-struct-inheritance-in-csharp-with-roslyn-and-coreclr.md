@@ -70,7 +70,7 @@ If you also think about generics, having a `struct StructBase`, and a `class Str
 
 Though this is valid objection that [object slicing](https://en.wikipedia.org/wiki/Object_slicing) can be harmful. On a similar subject, I recently made a mistake of moving a method from a struct to an extension method applied, but of course, the `this ` parameter was not making the parameter an `implicit ref` but was actually copying the struct, which was absolutely not what I wanted to do! Some inattention and struct implicit copy by value can introduce severe bugs... plain structs harmful?
 
-Still, something potentially harmful should not always be banned from a usage. In .NET, most developers barely develop structs, so it would not hurt this majority to introduce a feature that they would not use anyway... 
+Still, something potentially harmful should not always be banned from a usage. In .NET, most developers barely develop structs, so it would not hurt this majority to introduce a feature that they would not really use... 
 
 Anyway, let's dive into how to implement this with CoreCLR and Roslyn. **At least, this is an interesting and small journey, even if we don't necessarily intend to bring back our discovery to home!**
 

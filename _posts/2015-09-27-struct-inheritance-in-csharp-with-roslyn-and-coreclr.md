@@ -277,7 +277,7 @@ And here goes the [list of commits](https://github.com/xoofx/roslyn/commits/stru
 	<img src="/images/struct_inheritance_roslyn_commits.png">			
 </a>
 
-The only changes related to the IL codegen part was for the downcast from a derived type to a base struct type (commit [8e2a127](https://github.com/xoofx/roslyn/commit/8e2a1273411f915765d198d228d95ff0a0d385aa)), which basically loads the address of the operand onto the stack, and load then use this address to load the data using the base struct:
+The only changes related to the IL codegen part was for the downcast from a derived type to a base struct type (commit [8e2a127](https://github.com/xoofx/roslyn/commit/8e2a1273411f915765d198d228d95ff0a0d385aa)), which basically loads the address of the operand onto the stack (`Ldloca_S` and friends) and then use this address to load the data using the base struct (`ldobj class`):
 
 ```C#
     case ConversionKind.ExplicitReference:

@@ -60,7 +60,7 @@ The main answer with 79+ votes argues that "*The reason value types can't suppor
   
 - or [Why a C# struct cannot be inherited?](http://stackoverflow.com/questions/2310103/why-a-c-sharp-struct-cannot-be-inherited)
 
-The answer takes the example of "*Anything storing that struct type would take up a variable amount of memory based on which subtype it ended up containing*". Again, this is completely wrong. When you declare a struct (derived or not), **the size and layout will be statically known at compile time**. If a class would have to use a struct `StructDerived` derived from a `StructBase`, the class would use the size of `StructDerived`, nothing else, no magic or dynamic stuff involved.
+The answer takes the example of "*Anything storing that struct type would take up a variable amount of memory based on which subtype it ended up containing*". Again, this is completely wrong. When you declare a struct (derived or not), **the size and layout will be statically known at compile/JIT time**. If a class would have to use a struct `StructDerived` derived from a `StructBase`, the class would use the size of `StructDerived`, nothing else, no magic or dynamic stuff involved.
 
 - or [Why are .NET value types sealed?](http://stackoverflow.com/questions/1769306/why-are-net-value-types-sealed)
 

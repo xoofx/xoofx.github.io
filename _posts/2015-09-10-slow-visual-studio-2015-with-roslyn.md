@@ -9,6 +9,8 @@ comments: true
 
 > **Update 10 October 2015**: I just tried the Hotfix KBs mentioned in the [comment from Lee Coward
 7 Oct 2015 3:02 AM ](http://blogs.msdn.com/b/maoni/archive/2015/08/12/gen2-free-list-changes-in-clr-4-6-gc.aspx?wa=wsignin1.0#10646095) and it seems to fix the issue detailed in this post!
+>
+> It actually confirms that the issue was related to this bug in the GC.
 >  
 > **You can remove the registry key patch that was most likely unrelated!**
 

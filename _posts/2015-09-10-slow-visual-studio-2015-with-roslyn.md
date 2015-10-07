@@ -7,6 +7,10 @@ tags:
 comments: true
 ---
 
+> **Update 10 October 2015**: I just tried the Hotfix KBs mentioned in this [comment](http://blogs.msdn.com/b/maoni/archive/2015/08/12/gen2-free-list-changes-in-clr-4-6-gc.aspx?wa=wsignin1.0#10646095) and it seems to fix the issue detailed in this post!
+>  
+> **You can remove the registry key patch that was most likely unrelated!**
+
 At work, we have switched to VS2015 and have been experiencing so far lots of "Visual Studio Not Responding" while editing the code. I first thought that it was ReSharper crawling VS. Then I tried to disable almost all extensions, but still while typing into a C# file, sometimes VS could get stuck for more than 10+ seconds!
 
 Digging a bit more into this problem with xperf (with the shiny new WPR and WPA tools from Windows 10 SDK!) I discovered that it was mainly due to the GC (and maybe Roslyn) burning the CPU and the memory (If you are a C++ programmer, you can laugh at it, for sure). Here is a screenshot of the xperf report:

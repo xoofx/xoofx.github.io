@@ -315,7 +315,9 @@ As I expected from my previous post, and unlike struct inheritance that was requ
 
 As I'm not familiar with the CoreCLR codebase, It took me a bit of time to figure out where I should actually make these changes. Someone from the CoreCLR team would have most likely done this a bit more cleanly (and even differently)
 
-> In summary, I made the choice to initialize the class on the stack with the same layout than as It would have been on the heap: It means that the class is prefixed by the 8 bytes struct `ObjHeader` which is holding some information required by the GC (more about it later why it has been implemented like this). 
+In summary, I made the choice to initialize the class on the stack with the same layout than as It would have been on the heap: It means that the class is prefixed by the 8 bytes struct `ObjHeader` which is holding some information required by the GC (more about it later why it has been implemented like this).
+
+In practice, it means that whenever the GC finds a variable on the stack (transient or not), it will first check if it is actually an object allocated on the stack. If yes, the GC will not follow inside the class, because instead, we rely on the fact that the class is flatten on the stack (as a struct would be flatten), and ultimately, the GC will scan the fields of the class allocated on the stack.  
 
 I'm gonna try to give a bit more details about [the commits](https://github.com/xoofx/coreclr/commits/stackalloc_for_class) to support this `stackalloc` operator, what are the main changes to CoreCLR and what kind of problems I have encountered. In all the code changes, I have tried to prefix them by a `ClassAsValue`  message (here is just an highlight of the commits, there are a bit more in the branch):
 

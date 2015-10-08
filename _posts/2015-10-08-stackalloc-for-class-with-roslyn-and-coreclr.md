@@ -9,7 +9,7 @@ tags:
 comments: true
 ---
 
-In the sequel of my previous post adding [struct inheritance to C# with CoreCLR and Roslyn](/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/), I would like to share here a *proposal* and a *prototype* for a new `stackalloc` operator that **allow the allocation of a reference type on the stack instead of the heap**, all of this again integrated into CoreCLR and Roslyn! 
+In the sequel of my previous post adding [struct inheritance to C# with CoreCLR and Roslyn](/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/), I would like to share here a *proposal* and a *prototype* for a new `stackalloc` operator to **allow the allocation of a reference type on the stack instead of the heap**, all of this again integrated into CoreCLR and Roslyn! 
 
 Before going into the details about how it can be used and how it is actually implemented, I would like to explain a bit more why this is an important feature, as it may be obvious for some, It is often something that is not well enough considered by programmers using managed languages like .NET
 

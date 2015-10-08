@@ -83,7 +83,7 @@ In this post I will just focus on (1) but hopefully will give more details on ot
 
 # Allocation on the stack
 
-The stack is, by its nature, data locality friendly: whenever we call a method and push method arguments, or work on some local variables, all these datas will most likely be stored in a memory location (not only registers, starting from the Program Counter return address to the callee). Also the memory is growing/shrinking along the life of entering/exiting methods into a continous block of memory, so it is most of the time already in a cache line of the Lx caches. Nowadays, processors are also quite well equipped at prefetching main memory to cache lines when there is a predictible memory access pattern. 
+The stack is, by its nature, data locality friendly: whenever we call a method and push method arguments, or work on some local variables, all these datas will most likely be stored in a memory location (not only registers, starting from the Program Counter return address to the callee). Also the memory is growing/shrinking along the life of entering/exiting methods into a continuous block of memory, so it is most of the time already in a cache line of the Lx caches. Nowadays, processors are also quite well equipped at prefetching main memory to cache lines when there is a predictable memory access pattern. 
 
 In .NET, there are many cases where this would help a lot. Typically for example, with Linq, which is an API that I usually forbid for any critical runtime, mainly because whenever you need to perform this simple match on a list:
 
@@ -307,7 +307,7 @@ Note that my requirements of not introducing a new IL opcode was mainly motivate
 
 While it is a basic support of the `stackalloc` operator (I haven't implemented anything for array allocation for example), that's all we need to do to generate IL bytecode for at least a simple usecase.
 
-Again, this whole serie of prototypes should not be considered as fully tested or safe. They are just proof of concept!   
+Again, this whole series of prototypes should not be considered as fully tested or safe. They are just proof of concept!   
 
 # Implementation in CoreCLR
 
@@ -363,7 +363,7 @@ Notice that in the generated code here, I still don't output the small `ObjHeade
 
 The commit [265453c4fd](https://github.com/xoofx/coreclr/commit/265453c4fd26e83ee957952fd442f58524bf76a2) is making the following changes:
 
-- Add objheader_common.h that contains SIZEOF_OBJHEADER and can be used from eveywhere (as it was previously not accessible from JIT for example).  
+- Add objheader_common.h that contains SIZEOF_OBJHEADER and can be used from everywhere (as it was previously not accessible from JIT for example).  
 - Always use a 8 bytes ObjHeader and add extra bits for Class Allocated on stack. 
 - Update codegen to identity allocation on the stack.
 
@@ -507,7 +507,7 @@ If you run this sample without any args, it will allocate on the stack, otherwis
 
 So? What are the results of these changes? If you run the program above:
 
-- **The stack version will run in 400ms with 0 GC collect** 
+- The **stack version will run in 400ms with 0 GC collect** 
 - The **heap version will run in 5000ms with 100+ GC collect**
 
 I don't claim that using stackalloc is always going to give you 10x times performance, but it is just to demonstrate that allocation on the heap hurts more than you would think!

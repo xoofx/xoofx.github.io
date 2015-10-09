@@ -72,9 +72,9 @@ Incidentally, when I went to the MVP summit last year, I remember during a Q&A s
 
 If you are curious about how the GC in .NET is working, take a look at [the fundamentals of Garbage Collection in .NET](https://msdn.microsoft.com/en-us/library/ee787088%28v=vs.110%29.aspx)
 
-So how can improve our control over memory and locality? For example, .NET has structs that are already a language feature backed that a runtime that allow us to control a bit this locality... but this is far from enough and there are several other trails to explore like:
+So how can we improve our control over memory and locality? For example, .NET has structs that are already a language feature backed by a runtime that allows us to control a bit this locality... but this is far from enough and there are several others trails to explore like:
 
-1. Allocation on the stack of reference types
+1. Allocation on the stack of reference types (the subject of this post)
 2. Embedded allocation of a reference type within another reference type (fat type)
 3. Single Owner/Borrowed reference
 4. Explicit management of GC regions instead of relying on a generic generational GC
@@ -95,9 +95,9 @@ var matchElement = list.FirstOrDefault(t => t.Name == name);
 This harmless code above actually generates 2 allocations on the heap (!): 
 
 - A first one because of the non-duck-typing-ability of Linq: Because all Linq extension methods are declared with `this IEnumerable<T> collection`, they are forcing the boxing of the struct returned by the duck-typing method [GetEnumerator](http://referencesource.microsoft.com/#mscorlib/system/collections/generic/list.cs,563) on the `List<T>`, which is used for example when you perform a `foreach` directly on the list.
-- A second because of the closure that is translated by the compiler to a class object capturing the parameter/variable/field name and instantiated on the heap
+- A second because of the closure/lambda that is translated by the compiler to a class object capturing the parameter/variable/field name and instantiated on the heap
 
-while this more verbose code would not generate any allocation:
+while the following code is more verbose, but would not generate any allocations:
 
 ```C#
 foreach (var matchElement in list)
@@ -113,9 +113,9 @@ return null;
 
 I have seen for example a brilliant recursive descent parser that was using monads/generics in C#, unfortunately, performance wise, It was actually really bad, due to the allocations occurring at each methods just to feed the parser state. 
 
-Even if allocation on the gen 0 is quite fast (at least, way faster than a memalloc), and the allocated object is temporary (not store in a field/property), it is still slower than a local allocation on the stack (which is almost free, apart for a zeroing of the memory, that is part of the method prolog in .NET). It will also force a GC.Collect() at some point, a "stop the world" that will have to scan references on the stack (to check if any objects allocated on the heap is referenced by a variable on the stack).
+Even if allocation on the gen 0 is quite fast (at least, way faster than a `malloc`), and the allocated object is temporary (not store in a field/property), it is still slower than a local allocation on the stack (which is almost free, apart for a zeroing of the memory, that is part of the method prolog in .NET). Allocation on the heap will also force a `GC.Collect()` at some point, a "stop the world" that will have to scan references on the stack (also called stack-roots: if any objects allocated on the heap is referenced by a variable on the stack).
 
-When we know for sure that the object that we are going to instantiate and use will only live for the life of the current method, we should be able to instruct the compiler and runtime to generate an optimized path in this case.
+When we know for sure that an object is instantiated in a method for the sole purpose and use for the life of the current method, we should be able to instruct the compiler and runtime to generate an optimized path in this case.
 
 ## Language specs
 
@@ -174,7 +174,7 @@ But we notice that:
 - it requires an `unsafe` context
 - it doesn't allocate a .NET array but actually return only a pointer to the first element of the allocated array. You don't have access to a `Length` property nor you could use this return value with code expecting regular managed arrays.
 
-In I ideal world, I would replace completely this old operator by a new behaviour that would allow both allocation on class/reference type on the stack, as well as array of class/structs (and not only blittable structs, as it is today). This is what I have choosen for my prototype as I found it much cleaner and I don't have to introduce a new keyword.  
+In I ideal world, I would replace completely this old operator by a new behaviour that would allow both allocation on class/reference type on the stack, as well as array of class/structs (and not only blittable structs, as it is today). This is what I have chosen for in this prototype as I found it much cleaner and I don't have to introduce a new keyword.  
 
 In order to use the `stackalloc` operator, you can only assign it to a `transient` variable, like this:
 
@@ -185,7 +185,7 @@ In order to use the `stackalloc` operator, you can only assign it to a `transien
 	processor.Run(...);
 ```
 
-In the case of the lambda above, I haven't work out how the syntax would be used. The compiler could allow an implicit `stackalloc` operator when the parameter of the method receiving the argument is transient. But we still need a way to define how a lambda is declared transient, like prefixing my transient may be fine (but haven't checked in terms of parsing coherency):
+In the case of the lambda above, I haven't work out how the syntax would be used. The compiler could allow an implicit `stackalloc` operator when the parameter of the method receiving the argument is transient. But we still need a way to define how a lambda is declared transient, like prefixing by transient may be fine (but haven't checked in terms of parsing coherency):
 
 ```C#
     // Assume that the lambda is allocated on the stack excplitely when 
@@ -195,11 +195,11 @@ In the case of the lambda above, I haven't work out how the syntax would be used
 
 # Implementation in Roslyn
 
-You will notice from the [list of commits](https://github.com/xoofx/roslyn/commits/stackalloc_for_class) for this feature as implemented in the prototype that they are relatively small. 
+You will notice from the [list of commits](https://github.com/xoofx/roslyn/commits/stackalloc_for_class) for this feature as implemented in the prototype that they are relatively small.
 
 The reason is that I haven't taken the time to implement the full syntax verification of the rules above (e.g a transient variable can only be assigned to another transient variable), but just wanted to support at least the `transient` keyword and generate proper IL bytecode for the `stackalloc` operator. It means that you need to be careful to respect the rules of a transient variable when trying this with this custom Roslyn version!
 
-Also, in terms of IL code gen, I wanted the changes to be very limited and avoid completely any new IL opcodes. While I'm starting to explain the changes done in Roslyn, in practice, I had to make changes first to the CLR, and then implement the convenient bits into Roslyn once I was sure that I could make it run into the runtime!
+Also, in terms of IL code gen, I wanted the changes to be very limited and avoid completely any new IL opcodes. While I'm beginning this post with the changes done in Roslyn, in practice, I had to make changes first to the CLR, and once I was sure It could make it into the runtime, I implemented the convenient bits into Roslyn.
 
 I will try to explain the changes with a simple program. Let's compile this little code using the regular `new` operator:
 
@@ -278,7 +278,7 @@ First, the changes to the declaration of local variables:
            [1] valuetype Program V_1)
 ```
 
-We are introducing a shadow variable [1] declared as a `valuetype` but using a token that is actually a class (!). If you try to run this assembly with a regular CLR, It will generate an invalid error with "unexpected valuetype", but in CoreCLR, we will ensure that the IL code reader/importer will allow this syntax.
+We are introducing a shadow variable [1] declared as a `valuetype` but using a token that is actually a class (!). If you try to run this assembly with a regular CLR, It will generate an invalid error with "unexpected valuetype", but in CoreCLR, we will ensure that the IL code reader/importer will allow this syntax. The rule here is that there is one shadow variable allocated per `stackalloc` call site.
 
 Then we are going to initialize the class on the stack, exactly the same way a struct would be initialized. Note that unlike the `newobj` IL opcode instruction, we are not passing constructor parameters. This bytecode ensure that the class allocated on the stack is actually zeroed:
 
@@ -287,7 +287,7 @@ Then we are going to initialize the class on the stack, exactly the same way a s
   IL_0003:  initobj    Program
 ```
 
-Then we are calling the actual constructor for the class, and storing the pointer/reference to the class on the stack to the variable program (our now `transient` variable):
+After this, we can actually call the constructor for the class, and storing the pointer/reference to the class on the stack to the variable program (our now `transient` variable):
 
 ```
   IL_0009:  ldloca.s   V_1
@@ -296,7 +296,7 @@ Then we are calling the actual constructor for the class, and storing the pointe
   IL_0011:  stloc.0     // store into program variable
 ```
 
-Then we can just call a regular method exactly like for an object allocated on the heap:
+Finally, we can just call a regular method exactly like for an object allocated on the heap:
 
 ```
   IL_0012:  ldloc.0
@@ -307,17 +307,17 @@ Note that my requirements of not introducing a new IL opcode was mainly motivate
 
 While it is a basic support of the `stackalloc` operator (I haven't implemented anything for array allocation for example), that's all we need to do to generate IL bytecode for at least a simple usecase.
 
-Again, this whole series of prototypes should not be considered as fully tested or safe. They are just proof of concept!   
+Again, this whole series of prototypes should not be considered as fully tested or safe. They are just a proof of concept!   
 
 # Implementation in CoreCLR
 
-As I expected from my previous post, and unlike struct inheritance that was requiring just a 2 line changes, bringing `stackalloc` for class to the CoreCLR required significantly more **trial and crash ** steps in order to progressively reach a stable runtime.
+As I expected from my previous post, and unlike struct inheritance that was requiring just a 2 line changes, bringing `stackalloc` for class to the CoreCLR required significantly more **trial and crash** steps in order to progressively reach a stable runtime.
 
-As I'm not familiar with the CoreCLR codebase, It took me a bit of time to figure out where I should actually make these changes. Someone from the CoreCLR team would have most likely done this a bit more cleanly (and even differently)
+As I'm not familiar with the CoreCLR codebase, It took me a bit of time to figure out where I should actually make these changes. Someone from the CoreCLR team would have most likely done this a bit more cleanly and less hacky (and even differently)
 
-In summary, I made the choice to initialize the class on the stack with the same layout than as It would have been on the heap: It means that the class is prefixed by the 8 bytes struct `ObjHeader` which is holding some information required by the GC (more about it later why it has been implemented like this).
+In summary, I made the choice to initialize the class on the stack with the same layout than as it would have had on the heap: It means that the class is prefixed by the 8 bytes struct `ObjHeader` which is holding some information required by the GC (more about it later why it has been implemented like this).
 
-In practice, it means that whenever the GC finds a variable on the stack (transient or not), it will first check if it is actually an object allocated on the stack. If yes, the GC will not follow inside the class, because instead, we rely on the fact that the class is flatten on the stack (as a struct would be flatten), and ultimately, the GC will scan the fields of the class allocated on the stack.  
+In practice, it means that whenever the GC finds a variable on the stack (transient or not), it will first check if it is actually an object allocated on the stack. If yes, the GC will not scan fields for the class from this reference, because instead, we rely on the fact that the class is flatten on the stack (as a struct would be flatten), and ultimately, the GC will scan the fields of the class allocated on the stack (so we rely on the already existing infrastructure that allows the GC to scan fields of a struct on allocated on a stack)  
 
 I'm gonna try to give a bit more details about [the commits](https://github.com/xoofx/coreclr/commits/stackalloc_for_class) to support this `stackalloc` operator, what are the main changes to CoreCLR and what kind of problems I have encountered. In all the code changes, I have tried to prefix them by a `ClassAsValue`  message (here is just an highlight of the commits, there are a bit more in the branch):
 
@@ -342,7 +342,7 @@ This commit is modifying the `ICorStaticInfo` to introduce two methods that will
 
 Basically, we need to be able to:
 
-1. retrieve the full size of a class via the method `getBaseSize`. There is another method `getClassSize` in this interface, but this method returns in fact the size of a pointer for a reference type.
+1. Retrieve the full size of a class via the method `getBaseSize`. There is another method `getClassSize` in this interface, but this method returns in fact the size of a pointer for a reference type.
 2. Allow to retrieve the current method table for a particular class. This will be required to instantiate and initialize the class on the stack.
 
 
@@ -357,9 +357,9 @@ This is where we are starting to store the information about local variables dec
 
 This is a first commit that is generating some x64 code in order to initialize the method table of the object.
 
-It is a first step to generate a compliant class layout on the stack. A class is only differentiated by the presence of this methodtable pointer (or commonly called `vtable`) at the `offset 0`. This is through this pointer that we can find type information, perform cast, find and call virtual methods...etc.
+It is a first step to generate a compliant class layout on the stack. A class is only differentiated by the presence of this methodtable pointer (or commonly called `vtable`) at the `offset 0`. This is through this pointer that we can find type information, perform cast, find and call virtual methods...etc. This initialization of the methodtable of a class on the stack is only done once per stackalloc call site (or shadow variable) at the prolog of the method (just after the JIT has generated zeroing code)
 
-Notice that in the generated code here, I still don't output the small `ObjHeader` that is required for a GC object. It required a bit more changes.
+Notice that in the generated code here, I still don't output the small `ObjHeader` that is required for a GC object. It required a bit more changes...
 
 ### 5) Changes made to the `ObjHeader`
 
@@ -373,9 +373,9 @@ The idea here is that I wanted to store the information of whether this instance
 
 This information is later used in [GCHeap::Promote and GCHeap::Relocate, in order to skip reference that are allocated on the stack when performing a Garbabe Collect cycle](https://github.com/xoofx/coreclr/commit/1a73dcb9b1ca5b6a6857ba7c99cca9287a2ffb64)
 
-I'm also making sure that when the class is allocated on the stack, we are allocating the space for the `ObjHeader`, and setting the flag allocate on stack in this `ObjHeader`.
+I'm also making sure that when the class is allocated on the stack, we are allocating the space for the `ObjHeader`, and setting the flag allocate on stack in this `ObjHeader`, again all of this is done just once per stackalloc call site in the prolog of the method.
 
-Then there are a couple of commits to make [object.Validate()](https://github.com/xoofx/coreclr/commit/9b06c90e7895b088a33e4f195a990bb364041b7b) working. Lots of these checks are done in debug mode, but we still don't want to crash here. I have made the choice to almost bypass everything, but their could be additional checks for an object allocated on the stack...
+Then there are a couple of commits to make [object.Validate()](https://github.com/xoofx/coreclr/commit/9b06c90e7895b088a33e4f195a990bb364041b7b) working. Lots of these checks are done in debug mode, but we still don't want to crash here. I have made the choice to almost bypass everything, but their could be relevant checks to keep, or even additional checks for an object allocated on the stack...
 
 > Note about the `ObjHeader`:
 > If I had to rebuild an `ObjHeader` and had an opportunity to create a new language, I would completely remove support for `lock(object)` in the language, as these things can be done with dedicated mutex objects. The fact is that the `ObjHeader` can generates a shadow object called the `syncblk` that will contains the `hashcode` (if it was requested by a method), the monitor on the object, some stuff related to COM...etc. While I don't mind to have metadatas associated to object instance, having a cluttered `ObjHeader` that is basically encoding a pointer to this `syncblk` is restricting some interesting optims for the GC (for example, when I implemented a basic Immix GC, I used the `ObjHeader` to store the size of the object in order to quickly scan them without having to go through the `MethodTable` for example)  
@@ -383,13 +383,13 @@ Then there are a couple of commits to make [object.Validate()](https://github.co
 
 ### 6) [Generate proper x64 code for `initobj` opcode for class](https://github.com/xoofx/coreclr/commit/48a3840b0f006f50f8d03b31e258004b3a25bb90)
 
-This commit is mostly dealing with generating proper code for the `initobj` keyword. The change mostly consist in shifting the current address loaded for `initobj` (recall above the `ldloca.s`), as it is pointing to the start of the object (including the methodtable pointer), but we don't want the `initobj` to clear this methodtable that is setup just once at the prolog of the method. So in the case of a `initobj` performed on a class on stack, we are shifting by a pointer size the start of the zeroing. 
+This commit is mostly dealing with generating proper code for the `initobj` keyword. The changes mostly consist in shifting the current address loaded from the shadow variable to feed `initobj` (recall above the `ldloca.s`), as it is pointing to the start of the object (including the methodtable pointer), but we don't want the `initobj` generated code to clear this methodtable that is setup just once at the prolog of the method. So in the case of a `initobj` performed on a class on stack, we are shifting by a pointer size the start where things are zeroed (and we decrease of course the size of the data to zeroed) 
 
 ### 7) [Use `JIT_CheckedWriteBarrier` instead of `JIT_WriteBarrier`](https://github.com/xoofx/coreclr/commit/e16f85f350ad43ee490d92cbbd658a148ab3e68a)
 
-This was my last commit in order to get something working correctly with the GC. The JIT_CheckedWriteBarrier is basically a small shell around the regular [WriteBarrier](http://www.iecc.com/gclist/GC-algorithms.html) (a write barrier is used in the context of generational GC: whenever an object is stored in the field of another object, the write barrier allow to store somewhere in a cardtable the reference to the object that is receiving the reference source object in order to quickly identify which object should be scan - the object receiver - and which source object is most likely to be promoted - in case of the gen0 allocation)
+This was my last commit in order to get something working correctly with the GC. The `JIT_CheckedWriteBarrier` is basically a small shell around the regular [WriteBarrier](http://www.iecc.com/gclist/GC-algorithms.html) (a write barrier is used in the context of generational GC: whenever an object is stored in the field of another object, the write barrier allow to store somewhere in a cardtable the reference to the object that is receiving the reference source object in order to quickly identify which object should be scan - the object receiver - and which source object is most likely to be promoted - in case of the gen0 allocation)
 
-The code of the CheckedWriteBarrier is:
+The code of the `JIT_CheckedWriteBarrier` is:
 
 ```
 LEAF_ENTRY JIT_CheckedWriteBarrier, _TEXT
@@ -412,7 +412,7 @@ LEAF_ENTRY JIT_CheckedWriteBarrier, _TEXT
  
 It is basically ensuring that we are not going to use a write barrier if our pointer is not on the HEAP, and this is exactly what we want for our class instantiated on the stack. If we start to store a heap object to a field of an object allocated on the stack, we want to early exit (without it, it would try to flag a cardtable bit into an invalid memory location).
 
-I haven't measure the performance impact of getting through this small shell (`JIT_CheckedWriteBarrier` is actually used for ref pointers, as we don't know if a ref is on the stack - ref to a field struct - or the heap, so it is less used than `JIT_WriteBarrier`) so it may be an issue, but considering all the code involved afterwards for the barrier itself, it is still small, so that might not be a big issue. 
+I haven't measured the performance impact of getting through this small shell on all field assignments (`JIT_CheckedWriteBarrier` is actually used for ref pointers, as we don't know if a ref is on the stack - ref to a field struct - or the heap, so it is less used than `JIT_WriteBarrier`) so it may be an issue, but considering all the code involved afterwards for the barrier itself, it is still small, so that might not be a big issue after all. 
 
 **Woot, And that's all!** If you compile the CoreCLR on this branch, you will get a basic support for stackalloc for class!
 
@@ -512,18 +512,18 @@ So? What are the results of these changes? If you run the program above:
 - The **stack version will run in 400ms with 0 GC collect** 
 - The **heap version will run in 5000ms with 100+ GC collect**
 
-I don't claim that using stackalloc is always going to give you 10x times performance, but it is just to demonstrate that allocation on the heap hurts more than you would think!
+I don't claim that using stackalloc is always going to give you 10x times performance, but it is just to demonstrate that allocation on the heap hurts more than you would think and your program may benefit allocating class on the stacks in such scenarios.
 
 # Next?
 
 > Note: Its getting late and I haven't taken the time to upload a proper repo with the instructions to build all of this. I will try to do this later this week! Sorry!
 
-This prototype demonstrate that stackalloc for class is something that could become real for .NET CoreCLR and could bring lots of opportunities for optimizations!
+This prototype demonstrates that stackalloc for class is something that could become real for .NET CoreCLR and could bring lots of opportunities for optimizations!
 
-As it is only a prototype, I don't expect it to be back ported to CoreCLR anytime soon as-is, though I will push this to a PR just to get some feedback about the things that might be problematic in this proposal.
+As it is only a prototype, I don't expect it to be back ported to CoreCLR anytime soon as-is, though I will push this to a PR, just to get some feedback about the things that might be problematic in this proposal.
 
-I'm also very happy to be able to play with the CLR, such a pleasure to be able to experiement things like this! Even if you don't agree with the changes, take this serie of CoreCLR/Roslyn posts as educational, at least, it is the case for me.
+I'm also very happy to be able to play with the .NET CLR, such a pleasure to be able to experiement things like this! Even if you don't agree with the changes, take this series of CoreCLR/Roslyn posts as educational - don't be shy getting your hands dirty with CoreCLR!, at least, it is the case for me.
 
 Not sure I will prototype all the other features soon (like the embed in class), but at least that you can find interesting bits here and there! 
 
-Anyway, there is again a new toy in town, stackalloc for class, happy coding!
+Anyway, there is a new toy in town, **stackalloc for class**, happy coding!

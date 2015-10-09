@@ -229,7 +229,7 @@ var processorBis = processor.Bis;
 
 So It seems (all this post needs lots of peer review!) that it is possible to solve this problem at the cost of making the CLR runtime and the Roslyn compilation to cooperate:
 
-- At **compile time**, when Roslyn compile a type, it should store the information whether a particular type is `transient` **safe**. It has basically to check if the this pointer is stored/pass anywhere to a non transient method/property/field. In the end, we could just store this information as a metadata Attributes on the class (but might be safer to store it in the PE metadatas directly)
+- At **compile time**, when Roslyn compile a type, it should store the information whether a particular type is `transient` **safe**. It has basically to check if the this pointer is stored/pass anywhere to a non transient method/property/field. In the end, we could just store this information as a metadata Attributes on the class (but might be safer to store it in the PE metadatas directly). Tracking this at the compiler will not be easy, moreover if we want to track all assignments (and possibly raw casts) that are on the stack. 
 - At **runtime time**, when a type is loaded, we verify at classloader/import time that a type (and all its ancestors types) are actually `transient` safe. Then, at JIT time of a property/method, at every `stackalloc` callsite (basically, whenever there is a local variable valuetype referencing a class), we verify that the class that we want to allocated on the stack is `transient` **safe**
 
 **Note** that this code has not been tested/implemented in the current prototype!

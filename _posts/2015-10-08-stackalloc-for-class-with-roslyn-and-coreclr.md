@@ -121,8 +121,8 @@ When we know for sure that an object is instantiated in a method for the sole pu
 
 So in order to support this scenario, we need to define how this is going to work in the CLR and how this will be declared and used from the language (C#).
 
-- This is done first by introducing a new keyword `transient` to identify variable that cannot be stored outside of the stack.
-- Then we can revisit the `stackalloc` operator to support the actual allocation on the stack.
+- This is done first by introducing a new keyword `transient` to identify a variable that cannot be stored outside of the stack.
+- Then we can revisit the `stackalloc` operator to support the physical allocation on the stack.
 
 ### The `transient` variable modifier
 
@@ -175,6 +175,8 @@ But we notice that:
 - it doesn't allocate a .NET array but actually return only a pointer to the first element of the allocated array. You don't have access to a `Length` property nor you could use this return value with code expecting regular managed arrays.
 
 In I ideal world, I would replace completely this old operator by a new behaviour that would allow both allocation on class/reference type on the stack, as well as array of class/structs (and not only blittable structs, as it is today). This is what I have chosen for in this prototype as I found it much cleaner and I don't have to introduce a new keyword.  
+
+Basically, the new `stackalloc` operation should allow exactly the same calling constructors conventions then the `new` operation. 
 
 In order to use the `stackalloc` operator, you can only assign it to a `transient` variable, like this:
 
@@ -280,7 +282,7 @@ First, the changes to the declaration of local variables:
 
 We are introducing a shadow variable [1] declared as a `valuetype` but using a token that is actually a class (!). If you try to run this assembly with a regular CLR, It will generate an invalid error with "unexpected valuetype", but in CoreCLR, we will ensure that the IL code reader/importer will allow this syntax. The rule here is that there is one shadow variable allocated per `stackalloc` call site.
 
-Then we are going to initialize the class on the stack, exactly the same way a struct would be initialized. Note that unlike the `newobj` IL opcode instruction, we are not passing constructor parameters. This bytecode ensure that the class allocated on the stack is actually zeroed:
+Then we are going to initialize the class on the stack, exactly the same way a struct would be initialized. Note that unlike the `newobj` IL opcode instruction, we are not passing constructor parameters. This bytecode ensure that the class allocated on the stack is actually zeroed at the callsite (suppose the stackalloc is used within a loop, we want a fresh zeroed object on each loop items)
 
 ```
   IL_0001:  ldloca.s   V_1
@@ -305,13 +307,13 @@ Finally, we can just call a regular method exactly like for an object allocated 
 
 Note that my requirements of not introducing a new IL opcode was mainly motivated by the fact that I was not confident about the implications in the CLR, so I wanted to rely on stuff already working. I had only to patch existing code paths in CoreCLR in order to allow class to pass on the stack. It may be relevant that a new opcode could be used with a more compact syntax.
 
-While it is a basic support of the `stackalloc` operator (I haven't implemented anything for array allocation for example), that's all we need to do to generate IL bytecode for at least a simple usecase.
+While it is a basic support of the `stackalloc` operator (notice that I haven't implemented anything for array allocations for example), that's all we need to do to generate IL bytecode for at least our simple use case.
 
 Again, this whole series of prototypes should not be considered as fully tested or safe. They are just a proof of concept!   
 
 # Implementation in CoreCLR
 
-As I expected from my previous post, and unlike struct inheritance that was requiring just a 2 line changes, bringing `stackalloc` for class to the CoreCLR required significantly more **trial and crash** steps in order to progressively reach a stable runtime.
+As I expected from my previous post, and unlike struct inheritance that was requiring just 2 lines of code changes, bringing `stackalloc` for class to the CoreCLR required significantly more **trial and crash** steps in order to progressively reach a stable runtime.
 
 As I'm not familiar with the CoreCLR codebase, It took me a bit of time to figure out where I should actually make these changes. Someone from the CoreCLR team would have most likely done this a bit more cleanly and less hacky (and even differently)
 

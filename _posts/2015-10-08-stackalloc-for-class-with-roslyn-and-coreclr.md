@@ -195,6 +195,47 @@ In the case of the lambda above, I haven't work out how the syntax would be used
     var matchElement = list.FirstOrDefault(transient t => t.Name == name);
 ```
 
+### Safe `transient` class for `this` access
+
+> This part is an addition to the issue mentioned by [@jaredpar](https://twitter.com/jaredpar) in the comments at the bottom of this post. 
+
+There is a case where a class is allocated on the stack and used through a transient variable. But if we call a method on this variable, within the method, we can't ensure statically that we are in the context of a transient call and we may be able to store the `this` pseudo variable to a location that is not declared as `transient`, which would violate one of the rule defined above. 
+
+Here is a example of the problem:
+
+```C#
+public class MyProcessor
+{
+    public MyProcessor Bis;
+
+    public void Run()
+    {
+       // this can be used in the context of a transient callsite but here, we cannot
+       // verify this. It would mean that the `store` variable could live more than 
+       // the callsite (and will just result in a program crash)
+       Bis = this; 
+       (...)
+    } 
+}
+
+
+var processor = stackalloc MyProcessor();
+processor.Run();
+
+// Bam! The processorBis variable is no longer a transient variable 
+var processorBis = processor.Bis;
+
+```
+
+So It seems (all this post needs lots of peer review!) that it is possible to solve this problem at the cost of making the CLR runtime and the Roslyn compilation to cooperate:
+
+- At **compile time**, when Roslyn compile a type, it should store the information whether a particular type is `transient` **safe**. It has basically to check if the this pointer is stored/pass anywhere to a non transient method/property/field. In the end, we could just store this information as a metadata Attributes on the class (but might be safer to store it in the PE metadatas directly)
+- At **runtime time**, when a type is loaded, we verify at classloader/import time that a type (and all its ancestors types) are actually `transient` safe. Then, at JIT time of a property/method, at every `stackalloc` callsite (basically, whenever there is a local variable valuetype referencing a class), we verify that the class that we want to allocated on the stack is `transient` **safe**
+
+**Note** that this code has not been tested/implemented in the current prototype!
+
+Hope that there is not too much other devils in the details! (Hey @jaredpar! ;)
+
 # Implementation in Roslyn
 
 You will notice from the [list of commits](https://github.com/xoofx/roslyn/commits/stackalloc_for_class) for this feature as implemented in the prototype that they are relatively small.

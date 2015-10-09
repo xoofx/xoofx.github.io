@@ -552,8 +552,8 @@ If you run this sample without any args, it will allocate on the stack, otherwis
 
 So? What are the results of these changes? If you run the program above:
 
-- The **stack version will run in 400ms with 0 GC collect** 
-- The **heap version will run in 5000ms with 100+ GC collect**
+- The **stack version will run in `400 ms` with 0 GC collect** 
+- The **heap version will run in `5000 ms` with 100+ GC collect**
 
 I don't claim that using stackalloc is always going to give you 10x times performance, but it is just to demonstrate that allocation on the heap hurts more than you would think and your program may benefit allocating class on the stacks in such scenarios.
 

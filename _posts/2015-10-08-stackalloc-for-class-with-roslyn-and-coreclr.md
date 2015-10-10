@@ -245,7 +245,7 @@ Hope that there is not too much other devils in the details! (Hey @jaredpar! ;)
 I have seen many comments suggesting that escape analysis would be ideal for this, to make it more transparent and less cumbersome. While escape analysis can be of course handy (should I say "candy"?), there are many reasons why I prefer to have an explicit declaration (a must) rather than an implicit one (a nice to have):
 
 - that would again make the developer not responsible of taking care of its data and the way they are processed. And one day, someone start to store a reference what should be a transient parameter in a field object, and your whole application is slowing down on a critical process. 
-- escape analysis in many case is impossible to perform. Allocate a class and pass it to a virtual method (for which you know only the type at the callsite), and you won't have any way to determine whether stackalloc is safe or not.
+- escape analysis in many case is impossible to perform. Allocate a class and pass it to a virtual method (for which you know only the type at the callsite, unless allocated in the same method), and you won't have any way to determine whether stackalloc is safe or not.
 - you may want to enforce in the contract of your API certifying that it doesn't store any references passed. This post is not only about `stackalloc` but also about the concept of `transient` (for example, you don't want that a process method keeps the context passed by argument)
 
 # Implementation in Roslyn

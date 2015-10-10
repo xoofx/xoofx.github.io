@@ -9,6 +9,9 @@ tags:
 comments: true
 ---
 
+> *Udpdated  9 Oct 2015: Added a section about the `this` and `transient` safe problem*
+> *Udpdated 10 Oct 2015: Added a section about escape analysis*
+
 In the sequel of my previous post adding [struct inheritance to C# with CoreCLR and Roslyn](/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/), I would like to share here a *proposal* and a *prototype* for a new `stackalloc` operator to **allow the allocation of a reference type on the stack instead of the heap**, all of this again integrated into CoreCLR and Roslyn! 
 
 Before going into the details about how it can be used and how it is actually implemented, I would like to explain a bit more why this is an important feature, as it may be obvious for some, It is often something that is not well enough considered by programmers using managed languages like .NET
@@ -235,6 +238,14 @@ So It seems (all this post needs lots of peer review!) that it is possible to so
 **Note** that this code has not been tested/implemented in the current prototype!
 
 Hope that there is not too much other devils in the details! (Hey @jaredpar! ;)
+
+### About Escape Analysis
+
+I have seen many comments suggesting that escape analysis would be ideal for this, to make it more transparent and less cumbersome. While escape analysis can be of course handy (should I say "candy"?), there are many reasons why I prefer to have an explicit declaration (a must) rather than an implicit one (a nice to have):
+
+- that would again make the developer not responsible of taking care of its data and the way they are processed. And one day, someone start to store a reference what should be a transient parameter in a field object, and your whole application is slowing down on a critical process. 
+- escape analysis in many case is impossible to perform. Allocate a class and pass it to a virtual method (for which you know only the type at the callsite), and you won't have any way to determine whether stackalloc is safe or not.
+- you may want to enforce in the contract of your API certifying that it doesn't store any references passed. This post is not only about `stackalloc` but also about the concept of `transient` (for example, you don't want that a process method keeps the context passed by argument)
 
 # Implementation in Roslyn
 

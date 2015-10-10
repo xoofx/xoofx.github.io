@@ -9,11 +9,11 @@ tags:
 comments: true
 ---
 
-> *Udpdated  9 Oct 2015: Added a section about the `this` and `transient` safe problem*
+> **Source code is now available on [github](https://github.com/xoofx/StackAllocForClass)**
+> 
+>  *Udpdated  9 Oct 2015: Added a section about the `this` and `transient` safe problem*
 > 
 > *Udpdated 10 Oct 2015: Added a section about escape analysis*
->
-> Source code is now available on https://github.com/xoofx/StackAllocForClass
 
 In the sequel of my previous post adding [struct inheritance to C# with CoreCLR and Roslyn](/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/), I would like to share here a *proposal* and a *prototype* for a new `stackalloc` operator to **allow the allocation of a reference type on the stack instead of the heap**, all of this again integrated into CoreCLR and Roslyn! 
 

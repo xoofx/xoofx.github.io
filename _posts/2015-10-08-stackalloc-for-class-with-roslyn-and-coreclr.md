@@ -12,6 +12,8 @@ comments: true
 > *Udpdated  9 Oct 2015: Added a section about the `this` and `transient` safe problem*
 > 
 > *Udpdated 10 Oct 2015: Added a section about escape analysis*
+>
+> Source code is now available on https://github.com/xoofx/StackAllocForClass
 
 In the sequel of my previous post adding [struct inheritance to C# with CoreCLR and Roslyn](/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/), I would like to share here a *proposal* and a *prototype* for a new `stackalloc` operator to **allow the allocation of a reference type on the stack instead of the heap**, all of this again integrated into CoreCLR and Roslyn! 
 
@@ -570,8 +572,6 @@ So? What are the results of these changes? If you run the program above:
 I don't claim that using stackalloc is always going to give you 10x times performance, but it is just to demonstrate that allocation on the heap hurts more than you would think and your program may benefit allocating class on the stacks in such scenarios.
 
 # Next?
-
-> Note: Its getting late and I haven't taken the time to upload a proper repo with the instructions to build all of this. I will try to do this later this week! Sorry!
 
 This prototype demonstrates that stackalloc for class is something that could become real for .NET CoreCLR and could bring lots of opportunities for optimizations!
 

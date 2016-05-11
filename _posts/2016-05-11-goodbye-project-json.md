@@ -20,7 +20,7 @@ This is a follow-up about [`project.json` being abandoned in favour of msbuild](
 
 # What went wrong with `project.json`?
 
-The problem is that `project.json` quickly had to replicate many `msbuild` project behaviours  https://github.com/aspnet/Home/wiki/Project.json-file (things like configurations, build targets, compilation flags, build commands...etc.) and well, you don't want to rebuild a build system, so at some point, everything had to go back to a well established build system (hint: `msbuild`) in order to build things efficiently (track file dependencies, don't compile things that are not necessary, add build conditions... etc.)
+The problem is that `project.json` quickly had to replicate many `msbuild` project behaviours <https://github.com/aspnet/Home/wiki/Project.json-file> (things like configurations, build targets, compilation flags, build commands...etc.) and well, you don't want to rebuild a build system, so at some point, everything had to go back to a well established build system (hint: `msbuild`) in order to build things efficiently (track file dependencies, don't compile things that are not necessary, add build conditions... etc.)
 
 Things became worse and a bit more weird with `xproj` that acted as a bridge between the `msbuild` system and pseudo-build-system `project.json`, still `project.json` (and the underlying dnx ASP.NET vnext build system) was nowhere a build-system
 

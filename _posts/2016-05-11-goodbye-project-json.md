@@ -5,7 +5,7 @@ tags:
  - msbuild
 comments: true
 ---
-This is a follow-up about `project.json` being abandoned in favour of msbuild https://twitter.com/xoofx/status/730223811895779328
+This is a follow-up about [`project.json` being abandoned in favour of msbuild](https://twitter.com/xoofx/status/730223811895779328)
 
 # Why `project.json` (speculations)?
 

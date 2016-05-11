@@ -7,6 +7,8 @@ comments: true
 ---
 This is a follow-up about [`project.json` being abandoned in favour of msbuild](https://twitter.com/xoofx/status/730223811895779328)
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/P9HqMZviaMg?start=1713" frameborder="0" allowfullscreen></iframe>
+
 # Why `project.json` (speculations)?
 
 - Because at the time the ASP.NET team worked on this, MSBuild was not open-source nor cross platform

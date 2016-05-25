@@ -6,6 +6,7 @@ permalink: /projects/
 
 In my spare time, I have developed a couple of open-source projects on github and try to maintain them:
 
+- [Markdig](https://github.com/lunet-io/markdig) A fast and powerful Markdown processor for .NET 
 - [SharpDX](http://sharpdx.org) The definitive DirectX wrapper for .NET
 - [SharpDoc](https://github.com/xoofx/SharpDoc) A documentation generator for .NET
 - [SharpCLABot](https://github.com/SharpCLABot/SharpCLABot) An ASP.NET application providing CLA bot for github projects, hostable on Azure

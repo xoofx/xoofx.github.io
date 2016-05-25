@@ -23,7 +23,7 @@ While I'm enthusiastic about the general idea of this proposal, I was expecting 
 
 Fair enough, but I still wanted to challenge the idea and prove that it is a lot less complicated than it sounds and that overall using in C# could be pretty cool or at least, a lot more appealing than the original proposal, for the IL casual end-user I am... 
 
-In this blog post I will explain a bit the implementation details of a [prototype]((https://github.com/xoofx/roslyn/tree/inline_il_asm) that allows to use a seamlessly integrated inline IL ASM syntax into C#, almost as it was a DSL!
+In this blog post I will explain a bit the implementation details of a [prototype](https://github.com/xoofx/roslyn/tree/inline_il_asm) that allows to use a seamlessly integrated inline IL ASM syntax into C#, almost as it was a DSL!
 
 # In which case?
 

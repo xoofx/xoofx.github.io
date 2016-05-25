@@ -104,7 +104,7 @@ The system supports almost all IL bytecode instructions, though I haven't taken 
 
 # The implementation
 
-I won't go into all the dirty details about the implementation (here is a [full list of the changes](https://github.com/xoofx/roslyn/commits/inline_il_asm)), but the main additions are in the following files:
+I won't go into all the dirty details about the implementation (here is a [full list of the changes](https://github.com/xoofx/roslyn/commit/d70bdaca3b23c79e4a45bf44afbab968c3d5398c)), but the main additions are in the following files:
 
 - The [`ILInstruction`](https://github.com/xoofx/roslyn/blob/inline_il_asm/src/Compilers/CSharp/Portable/Binder/ILInstruction.cs) class describes the supported instructions and what kind of arguments they expect
 - The [`Binder.TryCompilerIntrinsic`](https://github.com/xoofx/roslyn/blob/inline_il_asm/src/Compilers/CSharp/Portable/Binder/BinderILEmit.cs) method that performs the syntax verification of the IL instruction

@@ -81,7 +81,7 @@ static void il(params object[] args) {}
 
 Et voilà, you have the inline IL ASM function available right into your code when using my fork of Roslyn. 
 
-The syntax is able to track usage of variables so that usage of 'stdloc` is marking used variable correctly so that we don't have any compilation errors about a variable being used without an assignment:
+The syntax is able to track usage of variables so that usage of `stloc` is marking used variable correctly so that we don't have any compilation errors about a variable being used without an assignment:
 
 ```csharp
 // -----------------------

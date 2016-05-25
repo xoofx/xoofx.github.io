@@ -93,7 +93,7 @@ The stack is, by its nature, data locality friendly: whenever we call a method a
 
 In .NET, there are many cases where this would help a lot. Typically for example, with Linq, which is an API that I usually forbid for any critical runtime, mainly because whenever you need to perform this simple match on a list:
 
-```C#
+```csharp
 var matchElement = list.FirstOrDefault(t => t.Name == name);
 
 ``` 
@@ -105,7 +105,7 @@ This harmless code above actually generates 2 allocations on the heap (!):
 
 while the following code is more verbose, but would not generate any allocations:
 
-```C#
+```csharp
 foreach (var matchElement in list)
 {
     if (matchElement.Name == name)
@@ -138,7 +138,7 @@ Lets start by defining the concept of a `transient` variable:
 > 2. A `transient` variable can only be assigned to another `transient` variable.
 > 3. A `transient` variable can receive a non transient variable as long as types matches
 
-```C#
+```csharp
 public void Runner(transient MyProcessor processor)
 {
     (...)
@@ -166,7 +166,7 @@ This is introducing a new keyword, something that the language team is not going
  
 If you have never used the `stackalloc` operator, it allows to instantiate an array of blittable valuetypes on the stack:
 
-```C#   
+```csharp   
 	unsafe {
         // Allocate an array of int
         int* pInts = stackalloc int[5];
@@ -186,7 +186,7 @@ Basically, the new `stackalloc` operation should allow exactly the same calling 
 
 In order to use the `stackalloc` operator, you can only assign it to a `transient` variable, like this:
 
-```C#
+```csharp
 	// Create a new instance of MyProcessor on the stack
 	transient MyProcessor processor = stackalloc MyProcessor(...);
 
@@ -195,7 +195,7 @@ In order to use the `stackalloc` operator, you can only assign it to a `transien
 
 In the case of the lambda above, I haven't work out how the syntax would be used. The compiler could allow an implicit `stackalloc` operator when the parameter of the method receiving the argument is transient. But we still need a way to define how a lambda is declared transient, like prefixing by transient may be fine (but haven't checked in terms of parsing coherency):
 
-```C#
+```csharp
     // Assume that the lambda is allocated on the stack excplitely when 
     // it is marked as `transient` or prefixed by `stackalloc`? 
     var matchElement = list.FirstOrDefault(transient t => t.Name == name);
@@ -209,7 +209,7 @@ There is a case where a class is allocated on the stack and used through a trans
 
 Here is a example of the problem:
 
-```C#
+```csharp
 public class MyProcessor
 {
     public MyProcessor Bis;
@@ -260,7 +260,7 @@ Also, in terms of IL code gen, I wanted the changes to be very limited and avoid
 
 I will try to explain the changes with a simple program. Let's compile this little code using the regular `new` operator:
 
-```C#
+```csharp
 public class Program
 {
     public void Run() {}
@@ -299,7 +299,7 @@ IL code manipulation is something that I have [abused a lot at the very beginnin
 
 So, let's go back to our little program. Now, if we replace the `new` operator by our new (doh!) `stackalloc` operator:
 
-```C#
+```csharp
         var program = stackalloc Program();  // NOTICE: stackalloc instead of new!
         program.Run();
 ```
@@ -477,7 +477,7 @@ I haven't measured the performance impact of getting through this small shell on
 
 This is the sample program I used to test the implementation of the stackalloc for class:
 
-```C#
+```csharp
 using System;
 
 public abstract class HelloClassOnStackBase

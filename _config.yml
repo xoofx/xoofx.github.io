@@ -24,10 +24,10 @@ excerpt_separator: ""
 # excerpt_link: Read More...
 paginate: 10
 paginate_path: "/blog/page:num/"
-markdown: redcarpet
-redcarpet:
-    extensions: ["tables"]
-highlighter: pygments
+markdown: kramdown
+kramdown:
+    input: GFM
+highlighter: rouge
 
 sass:
     style: :compressed

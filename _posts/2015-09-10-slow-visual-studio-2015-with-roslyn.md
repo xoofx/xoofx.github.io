@@ -28,7 +28,7 @@ I was wondering why the hell the GC is triggered even if I don't see to modify h
 
 Every 5 seconds you stop typing into a file, this code is triggered:
 
-```C#
+```csharp
     // hint to the GC that if it postponed a gen 2 collection, now might be a good time to do it.
     GC.Collect(2, GCCollectionMode.Optimized);
 ```

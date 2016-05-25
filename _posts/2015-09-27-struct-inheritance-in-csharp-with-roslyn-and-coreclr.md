@@ -28,7 +28,7 @@ Specially because it is ending by a little parenthesis that almost completely in
 
 The following code explains better why the definition above is confusing:
 
-```C#
+```csharp
 void MyFunction(ref MyValue a, ref MyValue b)
 {
    // If MyValue was a struct, a and b could in fact point to the same "instance"!
@@ -80,7 +80,7 @@ Before going the deep route of modifying Roslyn, I wanted to quickly check how m
 
 In order to experiment this, I first implemented a `HelloWorld.cs` that would assume inheritance from `ValueDerived` from `ValueBase`:
 
-```C#
+```csharp
 using System;
 
 // Base struct
@@ -117,7 +117,7 @@ public class Program
 
 Just compile the code above with a regular csc command and then after, apply the following program using [Cecil](https://github.com/jbevain/cecil) to generate an assembly with a struct inheritance:
 
-```C#
+```csharp
 using System.IO;
 using Mono.Cecil;
 
@@ -217,7 +217,7 @@ I didn't want to go too much into the details of a full/clean implem, but I stil
 
 - **Allow to access base field from derived struct:**
 
-```C#
+```csharp
 var valueDerived = new ValueDerived();
 // Object initializer is not supported in this example, so we initialize fields directly
 valueDerived.A = 1;
@@ -227,13 +227,13 @@ valueDerived.C = 5;
 
 - **Allow to explicitly cast from a derived struct to a base struct** (like the compiler requires a cast from `int` to `short`), and correctly generate the object slicing code (copying only the base value from the derived struct):
 
-```C#
+```csharp
 var valueBaseFromDerived = (ValueBase)valueDerived
 ```
 
 - **Allow to invoke a method with a by ref on base** with passing a derived value struct by ref without casting (as this is valid):
 
-```C#
+```csharp
 public static int StaticCalculateByRefBase(ref ValueBase value)
 {
     return value.A + value.B;
@@ -247,7 +247,7 @@ var result1 = StaticCalculateByRefBase(ref valueDerived);
 
 - **Allow to invoke a base method from a derived method in a struct**. This is not about supporting `virtual`/`override` which should be in fact forbidden for structs, but to allow to simply call to base method (note the usage of `new` on the method instead of `virtual`/`override`):
 
-```C#
+```csharp
 public struct ValueBase
 {
     public int A;
@@ -279,7 +279,7 @@ And here goes the [list of commits](https://github.com/xoofx/roslyn/commits/stru
 
 The only changes related to the IL codegen part was for the downcast from a derived type to a base struct type (commit [8e2a127](https://github.com/xoofx/roslyn/commit/8e2a1273411f915765d198d228d95ff0a0d385aa)), which basically loads the address of the operand onto the stack (`Ldloca_S` and friends) and then use this address to load the data using the base struct (`ldobj class`):
 
-```C#
+```csharp
     case ConversionKind.ExplicitReference:
         // Handle valuetype cast here
         if (conversion.Type.IsValueType && conversion.Operand.Type.IsValueType)
@@ -294,7 +294,7 @@ The only changes related to the IL codegen part was for the downcast from a deri
 
 and handling of the base method call (commit [0671169](https://github.com/xoofx/roslyn/commit/0671169a92a0c4519af81dc89995d5134440777b)):
 
-```C#
+```csharp
     case BoundKind.BaseReference:
         Debug.Assert(expression.Type.IsValueType, "only value types may need a ref to base");
         _builder.EmitOpCode(ILOpCode.Ldarg_0);
@@ -307,7 +307,7 @@ As you can see, the changes are relatively small. Again, I didn't test a lot all
 
 Here is the sourcecode for the testcase I used to test this struct inheritance CoreCLR/Roslyn patches (or grab it on [gist](https://gist.github.com/xoofx/b7bc54a6c71628bbbe93))
 
-```C#
+```csharp
 using System;
 
 public struct ValueBase

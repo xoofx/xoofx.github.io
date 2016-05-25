@@ -100,7 +100,7 @@ In terms of error, the compiler extension is able to:
 
 More checks would need to be included (like checking that instructions are well balanced and the stack is not corrupted and provide a meaningful error...etc.), but it's just a prototype.
 
-The system supports almost all IL bytecode instructions, though I haven't taken the time for tested them (but it should even work with goto like instructions with labels!)
+The system supports almost all IL bytecode instructions, though I haven't taken the time to test all of them (but it should even work with goto like instructions with labels!)
 
 # The implementation
 
@@ -123,7 +123,7 @@ In order to plug into the syntax verification, we have first to identify if a me
 
 This checks are performed when creating the [SourceMemberMethodSymbol at line 316](https://github.com/xoofx/roslyn/blob/inline_il_asm/src/Compilers/CSharp/Portable/Symbols/Source/SourceMemberMethodSymbol.cs#L316)
 
-I had to store the information about this `CompilerIntrinsic` as a MethodKind as there was no more space left in the method modifiers. This change was a bit annoying as It had to update in some places that were checking for a regular method call (`MethodKind.Ordinary`) and add also the case for (`MethodKind.CompilerIntrinsic`). That's just a detail, I could have added a boolean property in the end, that would have been easier!
+I had to store the information about this `CompilerIntrinsic` in the `MethodKind` enum as there was no more space left in the method modifiers. This change was a bit annoying as I had to update some places that were checking for a regular method call (`MethodKind.Ordinary`) by adding also the case for (`MethodKind.CompilerIntrinsic`). That's just a detail, I could have added a boolean property in the end, that would have been easier!
  
 There is also the support for two kinds of IL compiler intrinsic:
 

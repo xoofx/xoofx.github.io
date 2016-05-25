@@ -126,6 +126,7 @@ This checks are performed when creating the [SourceMemberMethodSymbol at line 31
 I had to store the information about this `CompilerIntrinsic` as a MethodKind as there was no more space left in the method modifiers. This change was a bit annoying as It had to update in some places that were checking for a regular method call (`MethodKind.Ordinary`) and add also the case for (`MethodKind.CompilerIntrinsic`). That's just a detail, I could have added a boolean property in the end, that would have been easier!
  
 There is also the support for two kinds of IL compiler intrinsic:
+
 - one that doesn't return a value
 - one that returns a value
 

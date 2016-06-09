@@ -4,9 +4,14 @@ title: Projects
 permalink: /projects/
 ---
 
-In my spare time, I have developed a couple of open-source projects on github and try to maintain them:
+In my spare time, I have developed a couple of open-source projects on [github](https://github.com/xoofx) and try to maintain them:
 
-- [Markdig](https://github.com/lunet-io/markdig) A fast and powerful Markdown processor for .NET 
+- [babelmark 3](http://babelmark.github.io/) A website that compares various Markdown implementations
+- [Markdig](https://github.com/lunet-io/markdig) A Markdown processor for .NET, a fully extensible implementation of the [CommonMark](http://commonmark.org/) standard with excellent performance, both in terms of speed, and GC pressure.
+- [NUglify](https://github.com/xoofx/NUglify) A HTML, JavaScript and CSS minification Library for .NET (fork of AjaxMin + new features)
+- [Scriban](https://github.com/lunet-io/scriban) A fast, powerful and lightweight text templating language and engine for .NET 
+- [SharpScss](https://github.com/xoofx/SharpScss) A pinvoke .NET wrapper around libsass to convert SCSS to CSS
+- [GitRocketFilter](https://github.com/xoofx/GitRocketFilter) A super fast alternative to `git-filter-branch`, powerful command line tool to rewrite git branches powered by .NET, equivalent of
 - [SharpDX](http://sharpdx.org) The definitive DirectX wrapper for .NET
 - [SharpDoc](https://github.com/xoofx/SharpDoc) A documentation generator for .NET
 - [SharpCLABot](https://github.com/SharpCLABot/SharpCLABot) An ASP.NET application providing CLA bot for github projects, hostable on Azure

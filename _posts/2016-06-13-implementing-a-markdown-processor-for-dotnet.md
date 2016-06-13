@@ -6,7 +6,7 @@ tags:
  - Markdown
  - Markdig
  - .Net
-comments: false
+comments: true
 ---
 
 <img align="right" width="160px" height="160px" src="https://raw.githubusercontent.com/lunet-io/markdig/master/images/markdig.png">

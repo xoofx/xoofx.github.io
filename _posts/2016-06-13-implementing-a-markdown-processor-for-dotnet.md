@@ -41,7 +41,7 @@ I evaluated the following existing libraries:
 - [MarkdownDeep](https://github.com/toptensoftware/markdowndeep): Full parser, code repo is a bit rough though, some extensions.
 - [CommonMark.NET](https://github.com/Knagis/CommonMark.NET): Full parser, port of [cmark](https://github.com/jgm/cmark), no extensions (on master)
 
-Among the existing implems, two of them were out of the crowd: MarkdownDeep and CommonMark.NET, but they were still lacking what I was looking for:
+Among the existing .NET library, two of them were out of the crowd: MarkdownDeep and CommonMark.NET, but they were still lacking what I was looking for:
 
 <div class="table-responsive">
   <table class="table" style="font-size: 1.4rem">
@@ -55,11 +55,11 @@ Among the existing implems, two of them were out of the crowd: MarkdownDeep and 
       </tr>
       <tr>
          <td>Based       </td>
-         <td> <strong>new implem</strong></td>
+         <td> <strong>new</strong></td>
          <td> Port of cmark (master<sup>1</sup>)</td>
-         <td> Perl implem   </td>
-         <td> new implem   </td>
-         <td> JS implem    </td>
+         <td> Perl </td>
+         <td> new </td>
+         <td> JS </td>
       </tr>
       <tr>
          <td>Tech based  </td>
@@ -118,9 +118,9 @@ So I started to challenge if I could write a full CommonMark compliant parser wi
 
 # The CommonMark specs
 
-Luckily, the [CommonMark specs](http://spec.commonmark.org/) done by [John Mac Farlane](http://johnmacfarlane.net/) are **amazing** and frankly, without them, I wouldn't have even started this colossal work, because if the implem was laborious and sometimes tricky, the specs are much more involving...
+Luckily, the [CommonMark specs](http://spec.commonmark.org/) done by [John Mac Farlane](http://johnmacfarlane.net/) are **amazing** and frankly, without them, I wouldn't have even started this colossal work, because if the code was laborious and sometimes tricky, the specs are much more involving...
 
-So what is exactly difficult with parsing Markdown? The first thing you will notice is that Markdown doesn't give you any syntax errors. Everything you type is somewhat valid (not what you may want to do, but it is still valid). If you are used to write parsers (or you remember your compiler class!), you won't find a [formal grammar for Markdown](http://roopc.net/posts/2014/markdown-cfg/) and the reason is that some constructs can be ambiguous. Emphasis handling in Markdown is one example. But even with the CommonMark specs, while implementing it, I came across some cases where it was still not clear: 
+So what is exactly difficult with parsing Markdown? The first thing you will notice is that Markdown doesn't give you any syntax errors. Everything you type is somewhat valid (not what you may want to do, but it is still valid). If you are used to write parsers (or you remember your compiler class!), you won't find a [formal grammar for Markdown](http://roopc.net/posts/2014/markdown-cfg/) and the reason is that some constructs can be ambiguous. Emphasis handling in Markdown is one example. But even with the CommonMark specs, while developing it, I came across some cases where it was still not clear: 
 
 Typically a link followed by a setText heading:
 
@@ -134,9 +134,9 @@ Test
 [foo]
 ```
 
-You can have a look at the differences of this [example on babelmark3](http://babelmark.github.io/?text=%5Bfoo%5D%3A+%0A++%2Furl%0A++%22title%22%0ATest%0A%3D%3D%3D%3D%0A%0A%5Bfoo%5D) (A service I released recently, check-it out!). Obviously, it is not well handled. It is not surprising then that there is even a CommonMark compliant implem that is giving a different result...
+You can have a look at the differences of this [example on babelmark3](http://babelmark.github.io/?text=%5Bfoo%5D%3A+%0A++%2Furl%0A++%22title%22%0ATest%0A%3D%3D%3D%3D%0A%0A%5Bfoo%5D) (A service I released recently, check-it out!). Obviously, it is not well handled. It is not surprising then that there is even a CommonMark compliant processor that is giving a different result...
 
-While implementing this specific case, I had for example to plug the handling of link definitions and setText heading into the ParagraphBlock parser:
+While coding this specific case, I had for example to plug the handling of link definitions and setText heading into the ParagraphBlock parser:
 
 - Link definitions when closing the parsing of a paragraph block (See [here](https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/ParagraphBlockParser.cs#L46))
 - setText heading when continuing parsing a paragraph block (See [here](https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/ParagraphBlockParser.cs#L36))
@@ -163,7 +163,7 @@ This kind of rules make it nearly impossible in a formal grammar, even with an i
 
 So, needless to say, this was laborious to go through all the CommonMark specs examples (more than 600+) and get all them working properly. On my way to the 100% complete, I was of course striken all around by regressions, when finishing one feature and realizing that I have broken something I did the previous day! But wow, this is where I realized more than in any previous projects that **tests are pure gold for a project, more important than the code itself**.
 
-In the end, it took me around two weeks (working early in the morning and in the evening) to implement the core parts of CommonMark. But the fact is that implementing the core specs is not enough, you obviously want to have all the useful extensions (like pipe tables), automatic identifiers...etc. And this part brought in its own other challenges... and I spent the rest of the 1.5 months implementing all the extensions, polishing the code and the performance, and that was not an easy part as well...
+In the end, it took me around two weeks (working early in the morning and in the evening) to build the core parsing part of CommonMark. But the fact is that implementing the core specs is not enough, you obviously want to have all the useful extensions (like pipe tables), automatic identifiers...etc. And this part brought in its own other challenges... and I spent the rest of the 1.5 months coding all the extensions, polishing the code and the performance, and that was not an easy part as well...
 
 # Implementing an efficient extension system
 
@@ -186,13 +186,13 @@ But this should not ([example on babelmark3](http://babelmark.github.io/?text=%6
 0       `|` 1
 ```
 
-While performance has been on the radar quite early while developing Markdig, implementing the 18+ extensions has put lots of pressure on the design of Markdig. And they were both sometimes fighting against each other. Because I wanted Markdig to be fully customizable (at some degree of course), I had to insert many pluggable entry points in the API and implem to make it possible. Doing so, I had to face many optimization and/or design challenges.
+While performance has been on the radar quite early while developing Markdig, implementing the 18+ extensions has put lots of pressure on the design of Markdig. And they were both sometimes fighting against each other. Because I wanted Markdig to be fully customizable (at some degree of course), I had to insert many pluggable entry points in the API to make it possible. Doing so, I had to face many optimization and/or design challenges.
 
-Typically on the design part, when I implemented [grid tables](http://pandoc.org/README.html#extension-grid_tables) ([example on babelmark3](http://babelmark.github.io/?text=%3A+Sample+grid+table.%0A%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Fruit+++++++++%7C+Price+++++++++%7C+Advantages+++++++++%7C%0A%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%0A%7C+Bananas+++++++%7C+%241.34+++++++++%7C+-+built-in+wrapper+%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+bright+color+++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Oranges+++++++%7C+%242.10+++++++++%7C+-+cures+scurvy+++++%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+tasty++++++++++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B)) it required the parser to support nested block parsing: A cell in a table is considered as a sub "Document" part (with its own lines), so the parser had to be able to spawn itself in a mode where it could handle such cases.
+Typically on the design part, when I added support for [grid tables](http://pandoc.org/README.html#extension-grid_tables) ([example on babelmark3](http://babelmark.github.io/?text=%3A+Sample+grid+table.%0A%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Fruit+++++++++%7C+Price+++++++++%7C+Advantages+++++++++%7C%0A%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%0A%7C+Bananas+++++++%7C+%241.34+++++++++%7C+-+built-in+wrapper+%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+bright+color+++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Oranges+++++++%7C+%242.10+++++++++%7C+-+cures+scurvy+++++%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+tasty++++++++++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B)) it required the parser to support nested block parsing: A cell in a table is considered as a sub "Document" part (with its own lines), so the parser had to be able to spawn itself in a mode where it could handle such cases.
 
 For the performance part, Markdown is challenging because you need to handle efficiently character sequences, and unlike a conventional Markdown parser that use a standard switch case for handling cases, you cannot do that with a pluggable architecture. Every "token" characters can be pluggable, and they may affect multiple parts in the pipeline.
 
-So instead of having something like this (as seen in the [cmark implem](https://github.com/jgm/cmark/blob/25429c96f6554ffac415f9d865934b1183f3398e/src/inlines.c#L976)):
+So instead of having something like this (as seen in [cmark](https://github.com/jgm/cmark/blob/25429c96f6554ffac415f9d865934b1183f3398e/src/inlines.c#L976)):
 
 ```cpp
 switch (c)
@@ -261,7 +261,7 @@ An example of such constraint is when I have added support for additional ordere
 
 Also I wanted to be able to change the behaviour of the core parsing of CommonMark (or disable some parts, like HTML parsing). You may need (?) for instance to test a different type of heading starting by a `@` instead of `#`... This requirement forced to consider the core CommonMark parsers as plugins as well.
 
-At the beginning, without the extensions, with still a relatively pluggable architecture, Markdig was as fast as CommonMark.NET(master), which is only 15% slower than the C implementation. But once I finished implementing the **18+ extensions** (while often checking the performance regressions carefully), I had to admit that I couldn't achieve the same amount of performance with a more pluggable architecture. 
+At the beginning, without the extensions, with still a relatively pluggable architecture, Markdig was as fast as CommonMark.NET(master), which is only 15% slower than the C implementation. But once I finished building the **18+ extensions** (while often checking the performance regressions carefully), I had to admit that I couldn't achieve the same amount of performance with a more pluggable architecture. 
 
 That was the price to pay. Though, three remarks I would like to emphasis (even if they are obvious, it is not bad to recall them, starting for myself!):
 

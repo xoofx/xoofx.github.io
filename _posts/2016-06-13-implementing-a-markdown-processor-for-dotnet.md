@@ -17,7 +17,7 @@ The post is organized like this:
 
 - A [Why?](#why) introduction where I explain why the need for a new .NET Markdown parser
 - The challenges of Markdown and the [CommonMark specs](#the-commonmark-specs)
-- The challenges of implementing [efficient extensions](#implementing-an-efficient-extension-system)
+- The challenges of developing [an efficient extension system](#implementing-an-efficient-extension-system)
 - [Performance is in the details](#performance-is-in-the-details), where I visit the noticeable C# tricks and code I had to use to achieve good performance
 
 # Why?
@@ -26,7 +26,7 @@ First, you may wonder why another Markdown processor for .NET? The simplicity of
 
 So for such an important format, we need a rock solid library for .NET! 
  
-And there is actually not so many implems for .NET (compare to in Ruby, or Php, or JavaScript). But I was also specifically looking for an implementation that was:
+And there is actually not so many packages for .NET (compare to in Ruby, or Php, or JavaScript). But I was also specifically looking for an implementation that was:
 
 - Super fast (no regex) and GC friendly 
 - [CommonMark](http://commonmark.org/) compliant
@@ -169,7 +169,7 @@ In the end, it took me around two weeks (working early in the morning and in the
 
 There are currently no real specifications for extensions in CommonMark, as they are waiting for the core part to be stabilized before proceeding further. So I had to leverage on many useful discussions on the [CommonMark forum](https://talk.commonmark.org/)
 
-The first one I tried was pipe tables: for this, I relied on the behaviour of some of the best implems out there ([PHP Markdown Extra](https://michelf.ca/projects/php-markdown/extra/) by Michel Fortin or [Pandoc](http://pandoc.org/) my John Mac Farlane) to implement the behaviour in Markdig. But it turned out that I had to [relax the parsing strategy](https://talk.commonmark.org/t/parsing-strategy-for-tables/2027/1) above (two steps, blocks first, then inlines) in order to handle them correctly. 
+The first one I tried was pipe tables: for this, I relied on the behaviour of some of the best implems out there ([PHP Markdown Extra](https://michelf.ca/projects/php-markdown/extra/) by Michel Fortin or [Pandoc](http://pandoc.org/) my John Mac Farlane) to integrate the behaviour in Markdig. But it turned out that I had to [relax the parsing strategy](https://talk.commonmark.org/t/parsing-strategy-for-tables/2027/1) above (two steps, blocks first, then inlines) in order to handle them correctly. 
 
 Typically the following should be a table ([example on babelmark3](http://babelmark.github.io/?text=%60Column1+%7C%60+%7C+Column2%0A-----------+%7C+-------%0A0+++++++++++%7C+1)):
 
@@ -392,7 +392,7 @@ public unsafe int IndexOfOpeningCharacter(string text, int start, int end)
 
 I have been using `TextReader.ReadLine()` when reading the input Markdown document. The great thing about the implementations of this method is that they are usually enough fast.
 
-The [`StreamReader.ReadLine`](https://github.com/dotnet/coreclr/blob/6cd92b2da7b3aac86598e7b8d7b6fad063239b6b/src/mscorlib/src/System/IO/StreamReader.cs#L728) implementation for example is well optimized, using internally a pool of `StringBuilder`
+The [`StreamReader.ReadLine`](https://github.com/dotnet/coreclr/blob/6cd92b2da7b3aac86598e7b8d7b6fad063239b6b/src/mscorlib/src/System/IO/StreamReader.cs#L728)  for example is well optimized, using internally a pool of `StringBuilder`
 
 The [`StringReader.ReadLine`](https://github.com/dotnet/coreclr/blob/6cd92b2da7b3aac86598e7b8d7b6fad063239b6b/src/mscorlib/src/System/IO/StringReader.cs#L116) is also performing only a fast scan of newline character and `substring` on the original string.
 

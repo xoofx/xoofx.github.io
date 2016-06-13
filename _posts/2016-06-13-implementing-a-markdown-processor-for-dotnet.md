@@ -257,6 +257,8 @@ Here, we try to find in the coming characters any characters that *could be* an 
 
 Because any new extension may come with a new character that may be interpreted differently, you need to have a **pluggability at the character level**. One reason why you cannot really express such an efficient pluggable Markdown parser with just a set of regexp or a *fixed* switch matching pipeline.
 
+An example of such constraint is when I have added support for additional ordered list with starting letters (supporting `a)` `b)` `c)` and `i)` `ii)` `iii)`), you need to quickly identify if we are in front of a list starting `a)` or `a paragraph starting by the letter b, or c or a-z!`. Without an efficient lookup method, this single extension would have killed the performance of Markdig (though this has still a non negligible impact even with proper optims)  
+
 Also I wanted to be able to change the behaviour of the core parsing of CommonMark (or disable some parts, like HTML parsing). You may need (?) for instance to test a different type of heading starting by a `@` instead of `#`... This requirement forced to consider the core CommonMark parsers as plugins as well.
 
 At the beginning, without the extensions, with still a relatively pluggable architecture, Markdig was as fast as CommonMark.NET(master), which is only 15% slower than the C implementation. But once I finished implementing the **18+ extensions** (while often checking the performance regressions carefully), I had to admit that I couldn't achieve the same amount of performance with a more pluggable architecture. 

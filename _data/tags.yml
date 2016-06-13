@@ -34,3 +34,5 @@ jekyll: jekyll
 visualstudio2015: Visual Studio 2015
 roslyn: Roslyn
 coreclr: CoreCLR
+markdown: Markdown
+markdig: Markdig

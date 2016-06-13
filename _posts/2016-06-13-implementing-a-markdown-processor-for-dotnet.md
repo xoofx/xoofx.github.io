@@ -16,8 +16,8 @@ Earlier this year, for two intensive months, I have spent all my spare time impl
 The post is organized like this:
 
 - A [Why?](#why) introduction where I explain why the need for a new .NET Markdown parser
-- The challenge of Markdown and the [CommonMark specs](#the-commonmark-specs)
-- The challenge of implementing [efficient extensions](#implementing-an-efficient-extension-system)
+- The challenges of Markdown and the [CommonMark specs](#the-commonmark-specs)
+- The challenges of implementing [efficient extensions](#implementing-an-efficient-extension-system)
 - [Performance is in the details](#performance-is-in-the-details), where I visit the noticeable C# tricks and code I had to use to achieve good performance
 
 # Why?

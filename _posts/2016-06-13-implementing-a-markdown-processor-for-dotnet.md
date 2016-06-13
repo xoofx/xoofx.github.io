@@ -9,7 +9,7 @@ tags:
 comments: true
 ---
 
-<img align="right" width="160px" height="160px" src="https://raw.githubusercontent.com/lunet-io/markdig/master/images/markdig.png">
+<img align="right" width="160px" height="160px" src="https://raw.githubusercontent.com/lunet-io/markdig/master/img/markdig.png">
 
 Earlier this year, for two intensive months, I have spent all my spare time implementing [Markdig](https://github.com/lunet-io/markdig), a new Markdown processor for .NET. In this post, I will report back about the quirks and pitfalls I have found while coding this as well as the performance and design considerations I had to balance with.
 

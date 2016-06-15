@@ -112,7 +112,7 @@ Among the existing .NET library, two of them were out of the crowd: MarkdownDeep
   </table>
 </div>
 
-<sup>1</sup>: For CommonMark.NET, there is a full rewrite of the parser in a [pipe_tables](https://github.com/AMDL/CommonMark.NET/tree/pipe-tables) branch, not yet official, not finished? I also took the time to evaluate a bit more this one, but I was not really convinced by some design decisions (e.g: [using only composition over a simple inheritance scheme for the syntax tree](https://github.com/Knagis/CommonMark.NET/issues/78)) and a plugin architecture that was not enough versatile for what I was looking for... Still, overall, CommonMark.NET is a pretty solid library! (perf and code quality wise)
+<sup>1</sup>: For CommonMark.NET, there is a full rewrite of the parser in a [pipe_tables](https://github.com/AMDL/CommonMark.NET/tree/pipe-tables) branch, not yet official, not finished? I also took the time to evaluate a bit more this one, but I was not really convinced by some design decisions (e.g: [using only composition over a simple inheritance scheme for the syntax tree](https://github.com/Knagis/CommonMark.NET/issues/78)) and a plugin architecture that was not enough versatile for what I was looking for... Still, overall, CommonMark.NET is a pretty solid library, perf and code quality wise. To boostrap the development, I have re-used some of their decoding primitive for Markdig (e.g [HTML Entity decoding](https://github.com/lunet-io/markdig/blob/master/src/Markdig/Helpers/EntityHelper.cs))
 
 So I started to challenge if I could write a full CommonMark compliant parser with all the features and dreams I had in mind...
 

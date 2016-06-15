@@ -298,6 +298,8 @@ It has basically 3 fields:
 
 Note that I declared also this type as a **struct**, as It is critical to avoid allocating slices on the heap, otherwise it would have been basically be the same as performing `substrings`.
 
+So for instance, if you load the full Markdown document to process into a single string, and work with `StringSlice` on this string, it will generate around 30% less allocations rather then reading the source document with a TextReader line by line (allocating a string for each line).
+
 For this case, I wanted to use a dedicated optimized slice for strings (with useful attached method that cannot be put as extension methods, as we don't have yet implicit ref for them!). Otherwise, I can suggest also [Slice.net](https://github.com/joeduffy/slice.net) by Joe Duffy for a generic version of it.
 
 ## 2) Use custom struct `List<T>`
@@ -390,7 +392,7 @@ public unsafe int IndexOfOpeningCharacter(string text, int start, int end)
 
 ## 5) `TextReader.ReadLine()` fast but...
 
-I have been using `TextReader.ReadLine()` when reading the input Markdown document. The great thing about the implementations of this method is that they are usually enough fast.
+I started the implementation by using `TextReader.ReadLine()` when reading the input Markdown document. The great thing about the implementations of this method is that they are usually enough fast.
 
 The [`StreamReader.ReadLine`](https://github.com/dotnet/coreclr/blob/6cd92b2da7b3aac86598e7b8d7b6fad063239b6b/src/mscorlib/src/System/IO/StreamReader.cs#L728)  for example is well optimized, using internally a pool of `StringBuilder`
 
@@ -398,7 +400,7 @@ The [`StringReader.ReadLine`](https://github.com/dotnet/coreclr/blob/6cd92b2da7b
 
 My only grip with these methods is that you are loosing the critical information of the new line character (was it a `\r` or `\r\n` or `\n`?), hence loosing the offset in the stream if you want to provide an accurate position within the original stream.
 
-For now Markdig is using these methods but in case of precise source code position (e.g for syntax highlighting), I may have to switched to custom version instead, which may not be efficient (For instance, we don't have access to the original `string` for a `StringReader` and I would have to go through a `ReadBytes(...)` which would be less efficient...)
+Markdig is no longer using these methods but instead is loading the full Markdown document into a string and is working with `StringSlice`, as I realized that it was more efficient to load the document once into a string instead of loading each line in a new string. This method provides also a much better handling of precise source code position (e.g for syntax highlighting).
 
 Also one thing that was a bit frustrating when trying to squeeze out some performance from string handling was the internal accessibility of the [`FastAllocateString`](https://github.com/dotnet/coreclr/blob/6cd92b2da7b3aac86598e7b8d7b6fad063239b6b/src/mscorlib/src/System/String.cs#L1554) which allows to allocate a string on the heap without zeroing it, very useful, used in [many places in the .NET framework](https://github.com/dotnet/coreclr/search?utf8=%E2%9C%93&q=FastAllocateString) but inaccessible for us, unfortunately... :(
 

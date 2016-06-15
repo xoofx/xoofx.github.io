@@ -87,7 +87,7 @@ Among the existing .NET library, two of them were out of the crowd: MarkdownDeep
       </tr>
       <tr>
          <td>Extensions </td>
-         <td> <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><br><strong>18+</td> extensions</strong></td>
+         <td> <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><br><strong>20+</td> extensions</strong></td>
          <td> no (master<sup>1</sup>)</td>
          <td> no </td>
          <td> <i class="fa fa-star"></i><i class="fa fa-star"></i> </td>
@@ -186,7 +186,7 @@ But this should not ([example on babelmark3](http://babelmark.github.io/?text=%6
 0       `|` 1
 ```
 
-While performance has been on the radar quite early while developing Markdig, implementing the 18+ extensions has put lots of pressure on the design of Markdig. And they were both sometimes fighting against each other. Because I wanted Markdig to be fully customizable (at some degree of course), I had to insert many pluggable entry points in the API to make it possible. Doing so, I had to face many optimization and/or design challenges.
+While performance has been on the radar quite early while developing Markdig, implementing the 20+ extensions has put lots of pressure on the design of Markdig. And they were both sometimes fighting against each other. Because I wanted Markdig to be fully customizable (at some degree of course), I had to insert many pluggable entry points in the API to make it possible. Doing so, I had to face many optimization and/or design challenges.
 
 Typically on the design part, when I added support for [grid tables](http://pandoc.org/README.html#extension-grid_tables) ([example on babelmark3](http://babelmark.github.io/?text=%3A+Sample+grid+table.%0A%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Fruit+++++++++%7C+Price+++++++++%7C+Advantages+++++++++%7C%0A%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%0A%7C+Bananas+++++++%7C+%241.34+++++++++%7C+-+built-in+wrapper+%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+bright+color+++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Oranges+++++++%7C+%242.10+++++++++%7C+-+cures+scurvy+++++%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+tasty++++++++++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B)) it required the parser to support nested block parsing: A cell in a table is considered as a sub "Document" part (with its own lines), so the parser had to be able to spawn itself in a mode where it could handle such cases.
 
@@ -261,7 +261,7 @@ An example of such constraint is when I have added support for additional ordere
 
 Also I wanted to be able to change the behaviour of the core parsing of CommonMark (or disable some parts, like HTML parsing). You may need (?) for instance to test a different type of heading starting by a `@` instead of `#`... This requirement forced to consider the core CommonMark parsers as plugins as well.
 
-At the beginning, without the extensions, with still a relatively pluggable architecture, Markdig was as fast as CommonMark.NET(master), which is only 15% slower than the C implementation. But once I finished building the **18+ extensions** (while often checking the performance regressions carefully), I had to admit that I couldn't achieve the same amount of performance with a more pluggable architecture. 
+At the beginning, without the extensions, with still a relatively pluggable architecture, Markdig was as fast as CommonMark.NET(master), which is only 15% slower than the C implementation. But once I finished building the **20+ extensions** (while often checking the performance regressions carefully), I had to admit that I couldn't achieve the same amount of performance with a more pluggable architecture. 
 
 That was the price to pay. Though, three remarks I would like to emphasis (even if they are obvious, it is not bad to recall them, starting for myself!):
 

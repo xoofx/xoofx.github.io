@@ -134,7 +134,7 @@ Test
 [foo]
 ```
 
-You can have a look at the differences of this [example on babelmark3](http://babelmark.github.io/?text=%5Bfoo%5D%3A+%0A++%2Furl%0A++%22title%22%0ATest%0A%3D%3D%3D%3D%0A%0A%5Bfoo%5D) (A service I released recently, check-it out!). Obviously, it is not well handled. It is not surprising then that there is even a CommonMark compliant processor that is giving a different result...
+You can have a look at the differences of this [example on babelmark3](https://babelmark.github.io/?text=%5Bfoo%5D%3A+%0A++%2Furl%0A++%22title%22%0ATest%0A%3D%3D%3D%3D%0A%0A%5Bfoo%5D) (A service I released recently, check-it out!). Obviously, it is not well handled. It is not surprising then that there is even a CommonMark compliant processor that is giving a different result...
 
 While coding this specific case, I had for example to plug the handling of link definitions and setText heading into the ParagraphBlock parser:
 
@@ -152,7 +152,7 @@ Things like spaces, tabs, blank lines have their importance in Markdown. You can
 
 There are also some lazy continuation rules. For example, a paragraph can continue on a following line and will be considered as part of the previous line (so in our case, as part of the block quote that is still pending)
 
-[Example on babelmark3:](http://babelmark.github.io/?text=%3E+This+is+a+paragraph%0Athat+continues+on+a+second+line%0A)
+[Example on babelmark3:](https://babelmark.github.io/?text=%3E+This+is+a+paragraph%0Athat+continues+on+a+second+line%0A)
 
 ```md
 > This is a paragraph
@@ -171,7 +171,7 @@ There are currently no real specifications for extensions in CommonMark, as they
 
 The first one I tried was pipe tables: for this, I relied on the behaviour of some of the best implems out there ([PHP Markdown Extra](https://michelf.ca/projects/php-markdown/extra/) by Michel Fortin or [Pandoc](http://pandoc.org/) my John Mac Farlane) to integrate the behaviour in Markdig. But it turned out that I had to [relax the parsing strategy](https://talk.commonmark.org/t/parsing-strategy-for-tables/2027/1) above (two steps, blocks first, then inlines) in order to handle them correctly. 
 
-Typically the following should be a table ([example on babelmark3](http://babelmark.github.io/?text=%60Column1+%7C%60+%7C+Column2%0A-----------+%7C+-------%0A0+++++++++++%7C+1)):
+Typically the following should be a table ([example on babelmark3](https://babelmark.github.io/?text=%60Column1+%7C%60+%7C+Column2%0A-----------+%7C+-------%0A0+++++++++++%7C+1)):
 
 ```
 `Column1 |` | Column2
@@ -179,7 +179,7 @@ Typically the following should be a table ([example on babelmark3](http://babelm
 0           | 1
 ```
 
-But this should not ([example on babelmark3](http://babelmark.github.io/?text=%60Column1+%7C%60+Column2%0A0+++++++%60%7C%60+1%0A)):
+But this should not ([example on babelmark3](https://babelmark.github.io/?text=%60Column1+%7C%60+Column2%0A0+++++++%60%7C%60+1%0A)):
 
 ```
 `Column1 |` Column2
@@ -188,7 +188,7 @@ But this should not ([example on babelmark3](http://babelmark.github.io/?text=%6
 
 While performance has been on the radar quite early while developing Markdig, implementing the 20+ extensions has put lots of pressure on the design of Markdig. And they were both sometimes fighting against each other. Because I wanted Markdig to be fully customizable (at some degree of course), I had to insert many pluggable entry points in the API to make it possible. Doing so, I had to face many optimization and/or design challenges.
 
-Typically on the design part, when I added support for [grid tables](http://pandoc.org/README.html#extension-grid_tables) ([example on babelmark3](http://babelmark.github.io/?text=%3A+Sample+grid+table.%0A%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Fruit+++++++++%7C+Price+++++++++%7C+Advantages+++++++++%7C%0A%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%0A%7C+Bananas+++++++%7C+%241.34+++++++++%7C+-+built-in+wrapper+%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+bright+color+++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Oranges+++++++%7C+%242.10+++++++++%7C+-+cures+scurvy+++++%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+tasty++++++++++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B)) it required the parser to support nested block parsing: A cell in a table is considered as a sub "Document" part (with its own lines), so the parser had to be able to spawn itself in a mode where it could handle such cases.
+Typically on the design part, when I added support for [grid tables](http://pandoc.org/README.html#extension-grid_tables) ([example on babelmark3](https://babelmark.github.io/?text=%3A+Sample+grid+table.%0A%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Fruit+++++++++%7C+Price+++++++++%7C+Advantages+++++++++%7C%0A%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%2B%0A%7C+Bananas+++++++%7C+%241.34+++++++++%7C+-+built-in+wrapper+%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+bright+color+++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B%0A%7C+Oranges+++++++%7C+%242.10+++++++++%7C+-+cures+scurvy+++++%7C%0A%7C+++++++++++++++%7C+++++++++++++++%7C+-+tasty++++++++++++%7C%0A%2B---------------%2B---------------%2B--------------------%2B)) it required the parser to support nested block parsing: A cell in a table is considered as a sub "Document" part (with its own lines), so the parser had to be able to spawn itself in a mode where it could handle such cases.
 
 For the performance part, Markdown is challenging because you need to handle efficiently character sequences, and unlike a conventional Markdown parser that use a standard switch case for handling cases, you cannot do that with a pluggable architecture. Every "token" characters can be pluggable, and they may affect multiple parts in the pipeline.
 

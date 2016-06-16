@@ -445,7 +445,7 @@ Because Marked.NET and MarkdownSharp are way too slow, we couldn't include them 
 ![BenchMark Memory](https://raw.githubusercontent.com/lunet-io/markdig/master/img/BenchmarkMemory.png)
 
 
-### Performance in x86:
+### Performance for x86:
 
 ```
 BenchmarkDotNet-Dev=v0.9.7.0+

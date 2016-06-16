@@ -410,6 +410,90 @@ This is also not something new, but for small Dictionary (last time I checked, I
 
 On average, even if you replace internally a `Dictionary<XXX,TTT>` by a `List<T>` (assuming that T contains an access to the key), you will see **4x to 5x times better performance** (just for the allocating/feeding part, access perf also better when number of elements are < 10). See this [gist](https://gist.github.com/xoofx/c517e0c1770d9bdf1d3fa0dea832935b) for more details.
 
+# Benchmarks
+
+This is an early preview of the benchmarking against various implementations:
+
+**C implementations**:
+
+- [cmark](https://github.com/jgm/cmark): Reference C implementation of CommonMark, no support for extensions
+- [Moonshine](https://github.com/brandonc/moonshine): popular C Markdown processor
+
+**.NET implementations**:
+
+- [Markdig](https://github.com/lunet-io/markdig): itself
+- [CommonMark.NET(master)](https://github.com/Knagis/CommonMark.NET): CommonMark implementation for .NET, no support for extensions, port of cmark
+  - [CommonMark.NET(pipe_tables)](https://github.com/AMDL/CommonMark.NET/tree/pipe-tables): An evolution of CommonMark.NET, supports extensions, not released yet
+- [MarkdownDeep](https://github.com/toptensoftware/markdowndeep) another .NET implementation
+- [MarkdownSharp](https://github.com/Kiri-rin/markdownsharp): Open source C# implementation of Markdown processor, as featured on Stack Overflow, regexp based.
+- [Marked.NET](https://github.com/T-Alex/MarkedNet) port of original [marked.js](https://github.com/chjj/marked) project
+
+**JavaScript/V8 implementations**:
+
+- [Strike.V8](https://github.com/SimonCropp/Strike) [marked.js](https://github.com/chjj/marked) running in Google V8 (not .NET based)
+
+### Analysis of the results:
+
+- Markdig is roughly **x100 times faster than MarkdownSharp**
+- **Among the best in CPU**, Extremelly competitive and often faster than other implementations (not feature wise equivalent) 
+- **15% to 30% less allocations** and GC pressure
+
+Because Marked.NET and MarkdownSharp are way too slow, we couldn't include them in the following charts:
+
+![BenchMark CPU Time](https://raw.githubusercontent.com/lunet-io/markdig/master/img/BenchmarkCPU.png)
+
+![BenchMark Memory](https://raw.githubusercontent.com/lunet-io/markdig/master/img/BenchmarkMemory.png)
+
+
+### Performance in x86:
+
+```
+BenchmarkDotNet-Dev=v0.9.7.0+
+OS=Microsoft Windows NT 6.2.9200.0
+Processor=Intel(R) Core(TM) i7-4770 CPU 3.40GHz, ProcessorCount=8
+Frequency=3319351 ticks, Resolution=301.2637 ns, Timer=TSC
+HostCLR=MS.NET 4.0.30319.42000, Arch=32-bit RELEASE
+JitModules=clrjit-v4.6.1080.0
+
+Type=Program  Mode=SingleRun  LaunchCount=2
+WarmupCount=2  TargetCount=10
+
+                     Method |      Median |    StdDev |Scaled | Gen 0  | Gen 1 | Gen 2  |Bytes Allocated/Op |
+--------------------------- |------------ |---------- |------ |------  |------ |------  |------------------ |
+                    Markdig |   5.5316 ms | 0.0372 ms |  0.71 |  56.00 | 21.00 |  49.00 |      1,285,917.31 |
+     CommonMark.NET(master) |   4.7035 ms | 0.0422 ms |  0.60 | 113.00 |  7.00 |  49.00 |      1,502,404.60 |
+CommonMark.NET(pipe_tables) |   5.6164 ms | 0.0298 ms |  0.72 | 111.00 | 56.00 |  49.00 |      1,863,128.13 |
+               MarkdownDeep |   7.8193 ms | 0.0334 ms |  1.00 | 120.00 | 56.00 |  49.00 |      1,884,854.85 |
+                      cmark |   4.2698 ms | 0.1526 ms |  0.55 |      - |     - |      - |                NA |
+                  Moonshine |   6.0929 ms | 0.1053 ms |  1.28 |      - |     - |      - |                NA |
+                  Strike.V8 |  10.5895 ms | 0.0492 ms |  1.35 |      - |     - |      - |                NA |
+                 Marked.NET | 207.3169 ms | 5.2628 ms | 26.51 |  0.00  |  0.00 |  0.00  |    303,125,228.65 |
+              MarkdownSharp | 675.0185 ms | 2.8447 ms | 86.32 | 40.00  | 27.00 | 41.00  |      2,413,394.17 |
+```
+
+### Performance for x64:
+
+```
+BenchmarkDotNet-Dev=v0.9.6.0+
+OS=Microsoft Windows NT 6.2.9200.0
+Processor=Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz, ProcessorCount=8
+Frequency=3319351 ticks, Resolution=301.2637 ns, Timer=TSC
+HostCLR=MS.NET 4.0.30319.42000, Arch=64-bit RELEASE [RyuJIT]
+JitModules=clrjit-v4.6.1080.0
+
+Type=Program  Mode=SingleRun  LaunchCount=2
+WarmupCount=2  TargetCount=10
+
+               Method |    Median |    StdDev |  Gen 0 |  Gen 1 | Gen 2 | Bytes Allocated/Op |
+--------------------- |---------- |---------- |------- |------- |------ |------------------- |
+          TestMarkdig | 5.5276 ms | 0.0402 ms | 109.00 |  96.00 | 84.00 |       1,537,027.66 |
+    TestCommonMarkNet | 4.4661 ms | 0.1190 ms | 157.00 |  96.00 | 84.00 |       1,747,432.06 |
+ TestCommonMarkNetNew | 5.3151 ms | 0.0815 ms | 229.00 | 168.00 | 84.00 |       2,323,922.97 |
+     TestMarkdownDeep | 7.4076 ms | 0.0617 ms | 318.00 | 186.00 | 84.00 |       2,576,728.69 |
+```
+
+
+
 # Final words
 
 Though this has been quite laborious to develop, I have enjoyed quite a lot developing Markdig. It was so exciting to see the number of tests passing increasing days after days of hard labour.

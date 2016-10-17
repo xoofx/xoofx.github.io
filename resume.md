@@ -136,7 +136,7 @@ Started as a prototype in a project where the code was mostly a large C/C++ appl
 - Company: Societe Generale - IT Equity Derivatives Trading Markets
 - Location: New-York, US
 
-As part of my duty for the French military service, I had an opportunity to work in New-York as a 1st level support of a critical application for traders, working directly with them on the trading floor. The application consisted of multiple client side applications and a centralized database with various pricing server running located in Paris. I was also responsible to provide local IT support (e.g debugging network printers on a Sun servers) and development for the traders (advanced excel macros, specially for basket trading)
+As part of my duty for the French military service, I had an opportunity to work in New-York as a 1st level support of a critical application for traders, working directly with them on the trading floor. The application consisted of multiple client side applications and a centralized database with various pricing servers running located in Paris. I was also responsible to provide local IT support (e.g debugging network printers on a Sun servers) and development for the traders (advanced excel macros, specially for basket trading)
 
 ### 1st Level Support and Developer
 - June 1997 - December 1997 (6 months)

@@ -90,7 +90,7 @@ My work spanned from various aspects of the development of this product, includi
 - June 1997 - June 2006 (9 years)
 - Company: Societe Generale - IT Equity Derivatives Trading Markets
 - Location: Paris, France
-- Technologies: `Java`, `J2EE`, `C/C++`, `Corba`, `SQL`, `Sybase Database`, `Sybase EventBroker`, `Tibco`, `Oracle OLAP Database`, `HTTP`, `HTML`
+- Technologies: `Java`, `J2EE`, `C/C++`, `Corba`, `SQL`, `Sybase Database`, `Sybase EventBroker`, `Tibco`, `Oracle OLAP Database`, `HTTP`, `HTML`, `Perl`, `Unix shells`
 - Infrastructure: `MsBuild`, `git`, `rcs`, `clearcase`, `perforce`
 - Platforms: `Windows`, `Sun Solaris`, `Linux`
 

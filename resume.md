@@ -35,7 +35,7 @@ ___
 Technologies: *`C#`, `C/C++`, `Direct3D11`, `MsBuild`, `ASP.NET`, `HTML+JavaScript`*  
 Platforms: *`Windows`*  
 
-During my spare time, I have been the author and developer of several open-source projects:
+For the past years and during my spare time, I have been the author and developer of several open-source projects:
 
 - [SharpDX](http://sharpdx.org) is **the .NET Wrapper for the full DirectX API**, first released in November 2010, .NET API generated directly from C++ DirectX headers, using a "sophisticated" IL rewriting at that time, and one of the largest code generator from C++ to C# developed so far. This project has been used in hundreds of commercial projects and games.
 - [Markdig](https://github.com/lunet-io/markdig) **A Markdown processor for .NET**, a fully extensible implementation of the [CommonMark](http://commonmark.org/) standard with excellent performance, both in terms of speed, and GC pressure. This is one of the best Markdown processor, all languages combined, that is implemented with a genuine extensible architecture and provides excellent performance. I'm also a contributor of the [Markdown Editor for Visual Studio](https://github.com/madskristensen/MarkdownEditor).

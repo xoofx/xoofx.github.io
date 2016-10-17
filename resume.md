@@ -40,7 +40,7 @@ For the past years and during my spare time, I have been the author and develope
 
 - [SharpDX](http://sharpdx.org) is **the .NET Wrapper for the full DirectX API**, first released in November 2010, .NET API generated directly from C++ DirectX headers, using a "sophisticated" IL rewriting at that time, and one of the largest code generator from C++ to C# developed so far. This project has been used in hundreds of commercial projects and games.
 - [Markdig](https://github.com/lunet-io/markdig) **A Markdown processor for .NET**, a fully extensible implementation of the [CommonMark](http://commonmark.org/) standard with excellent performance, both in terms of speed, and GC pressure. This is one of the best Markdown processor, all languages combined, that is implemented with a genuine extensible architecture and provides excellent performance. I'm also a contributor of the [Markdown Editor for Visual Studio](https://github.com/madskristensen/MarkdownEditor).
-- [babelmark 3](https://babelmark.github.io/) A website I developed to compare various Markdown implementations (including Markdig)
+- [babelmark 3](https://babelmark.github.io/) A website I developed to compare different Markdown implementations (including Markdig)
 - [NUglify](https://github.com/xoofx/NUglify) I forked the project Microsoft Ajax Minifier, ported it to the .NET Core/Standard platform, and developed a full **HTML5 parser and minifier** for it.
 - [Scriban](https://github.com/lunet-io/scriban) I developed a fast, powerful and lightweight **text templating language and engine for .NET** with the goal to use it for a static website generator. 
 - [SharpScss](https://github.com/xoofx/SharpScss) I developed a **small pinvoke .NET wrapper around libsass** to convert SCSS to CSS
@@ -61,7 +61,7 @@ Platforms: *`Windows`, `Android`, `iOS`, `PS4`*
 Team Size: *5-10 people*  
 
 I have been prototyping, designing and developing a C# game engine called [xenko](http://xenko.com)
-My work spanned from various aspects of the development of this product, including:
+My work spanned from diversified aspects of the development of this product, including:
 
 - **Co-design and development of a powerful object oriented shading language based on HLSL** providing class inheritance, composition, and automatic varying attributes detection across GPU pipeline stages.
 - **Development of an extensible HLSL parser** and **semantic analysis**
@@ -72,7 +72,7 @@ My work spanned from various aspects of the development of this product, includi
 - Design and implementation of the **initial Graphics api** ported from SharpDX toolkit
 - **Overall optimizations** on many parts of the engine (e.g entity components system, .NET assembly IL rewriting...etc), including build optimizations (e.g execution server for accelerating assets compilation)
 - Development of the **msbuild infrastructure** for the whole project
-- Development of multiple **shading effects used in several demos showed at the GDC** (volumetric light shafts, heat shimmering, GPU particle sorting...)
+- Development of multiple **shading effects used in different demos showed at the GDC** (volumetric light shafts, heat shimmering, GPU particle sorting...)
 - Design and implementation of a **core post effect system** including dev of some specifics fx (tone mapping, bloom...)
 - Design and development of a **full Direct3D11 emulation layer written in C++ around the PS4 GCN API** to facilitate the porting of Yebis post effect to the PS4
 - Development of a **gamma correct full asset pipeline**, from texture assets handling to rendering on the screen.
@@ -96,19 +96,19 @@ Technologies: *`Java`, `J2EE`, `C/C++`, `Corba`, `SQL`, `Sybase Database`, `Syba
 Infrastructure: *`MsBuild`, `git`, `rcs`, `clearcase`, `perforce`*  
 Platforms: *`Windows`, `Sun Solaris`, `Linux`*  
 
-I have been a lead developer on various challenging projects.
+I have been a lead developer on numerous challenging projects.
 
 ### Software Architect: Prototyping new technologies
 ***December 2005 - June 2007 (1.5 years)***  
 Team Size: *15*  
 
-During this period, I have contributed to study the integration of various technologies for frontend applications, including the challenge to aggregate efficiently trading positions using an Oracle OLAP Database.
+During this period, I have contributed to study the integration of several technologies for frontend applications, including the challenge to aggregate efficiently trading positions using an Oracle OLAP Database.
 
 ### Software Architect: redesigning of the Profit&Loss application for the J2EE Platform  
 ***April 2003 - December 2004 (1.5 years)***  
 Team Size: *15*  
 
-Part of a large project (120+ people) aiming at redesigning several key components around the Profit&Loss application, I was directly involved in:
+Part of a large project (120+ people) aiming at redesigning key components around the Profit&Loss application, I was directly involved in:
 
 - Designing the migration from a legacy C++ application to a new Java J2EE infrastructure, working with an external J2EE Business solution called JRisk.
 - Technical follow up and mentoring with the team to ensure that implementation details and problems are retro-feedback to the global design of the migration
@@ -157,7 +157,7 @@ Company: *IBM*
 Location: *La Gaude, France*  
 Technologies: *`C++`, `ISDN Protocols`, `HTTP servers`, `HTML`*  
 
-I joined a team that was actively developing the ISDN network stack for the IBM 2220 Nways Broadband Switch. I have developed an application to perform checks of the protocol. The application was producing a HTML report with a web server to easily verify visually the correctness of the protocol implementation. With this tool, I have been able to identify some problems and helped the team to debug and fix various bugs.
+I joined a team that was actively developing the ISDN network stack for the IBM 2220 Nways Broadband Switch. I have developed an application to perform checks of the protocol. The application was producing a HTML report with a web server to easily verify visually the correctness of the protocol implementation. With this tool, I have been able to identify some problems and helped the team to debug and fix some bugs.
 
 ___
 
@@ -228,4 +228,4 @@ ___
   several [unfinished musics](https://soundcloud.com/xoofx) around 2003 with Renoise.
 - **Philosophy**, read many authors after my world tour. One of my favorite philosopher is [Henry Bergson](https://en.wikipedia.org/wiki/Henri_Bergson)
 - **Hiking**, many during my world tour, at least one hike every month since then.
-- **Swimming**, with several competitions when I was younger and now more a casual swimmer
+- **Swimming**, with many competitions when I was younger and now more a casual swimmer

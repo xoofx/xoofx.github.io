@@ -19,7 +19,7 @@ server side applications, language compilers or game engines.
 
 I love to work on complex systems, improve their designs, empower the users and bring a strong technical leadership to a team.
 
-When working on a project, I particularly care about direction, performance, extensibility, maintainability, simplicity and usability.
+When working on a project, I particularly care about direction, performance, quality, extensibility, maintainability, simplicity and usability.
 
 I'm currently working on developing a product to empower developers and apps development.
 
@@ -202,7 +202,7 @@ ___
 
 In the recent years, I have published many technical posts on my [blog](http://xoofx.com/blog), most recently:
 
-- 2016: [Implementation of Markdig](http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/), a Markdown Engine.
+- 2016: [Implementation of Markdig](http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/), a Markdown Engine for .NET
 - 2016: [Inline .NET IL ASM](http://xoofx.com/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn/) in C# by modifying Roslyn.
 - 2015: [Stack allocation of .NET classes](http://xoofx.com/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr/) to improve locality and performance of .NET apps, including the modification of Roslyn and the CoreCLR Runtime and GC to allow such a prototype.
 - 2015: [Struct Inheritance for .NET](http://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/) by tweaking Roslyn and the CoreCLR Runtime.

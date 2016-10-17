@@ -107,6 +107,7 @@ During this period, I have contributed to study the integration of various techn
 - Team Size: 15
 
 Part of a large project (120+ people) aiming at redesigning several key components around the Profit&Loss application, I was directly involved in:
+
 - Designing the migration from a legacy C++ application to a new Java J2EE infrastructure, working with an external J2EE Business solution called JRisk.
 - Technical follow up and mentoring with the team to ensure that implementation details and problems are retro-feedback to the global design of the migration
 - Coordination with other architects and teams, participating to technical committees

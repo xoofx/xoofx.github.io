@@ -4,6 +4,7 @@ title: Resume
 permalink: /resume/
 ---
 # Resume
+<img src="/images/xoofx-2016.png" style="float: right;"/>
 Name: Alexandre MUTEL  
 Age: 43  
 Situation: Married, 2 children  

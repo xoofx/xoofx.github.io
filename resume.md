@@ -74,7 +74,7 @@ My work spanned from various aspects of the development of this product, includi
 - Development of the **msbuild infrastructure** for the whole project
 - Development of multiple **shading effects used in several demos showed at the GDC** (volumetric light shafts, heat shimmering, GPU particle sorting...)
 - Design and implementation of a **core post effect system** including dev of some specifics fx (tone mapping, bloom...)
-- Design and development of a **C++ Direct3D11 wrapper around the PS4 gcn API** to facilitate the porting of Yebis post effect to the PS4
+- Design and development of a **full Direct3D11 emulation layer written in C++ around the PS4 GDN API** to facilitate the porting of Yebis post effect to the PS4
 - Development of a **gamma correct full asset pipeline**, from texture assets handling to rendering on the screen.
 - Design and development of a **Physically based material system**, supporting layered materials with multi-BRDF (pluggable)
 - Design and implementation of the **scene graphics compositor** to render a scene graph into multiple render targets

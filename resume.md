@@ -178,7 +178,7 @@ I developed a 4k intro called [Ergon](https://www.youtube.com/watch?v=i_feg-bpqT
 While working at Societe Generale, I took a sabbatical year to do a backpacking trip around the world, all on my own. I spent 11 months in Africa (Burkina Faso, Mali, Benin, Togo, Ghana), South-America (Peru, Bolivia, Argentine, Chili), Isla de Pasqua, Tahiti, Australia, Indonesia, Singapore, Thailand, Nepal and India. While traveling I was actively writing and updating my website [diteoo.com](http://diteoo.com) (In French, it means *"Where are you?"*)  
 This travel has considerably transformed my vision of life.
 
-## Realtime 3D visualization with GPS for the EDHEC sailing cup 
+## Realtime 3D visualization - EDHEC sailing cup 
 ***November 1995 - April 1996***  
 Technologies: *`Watcom C++`, `dos4/gw` `Assembly x86`*  
 

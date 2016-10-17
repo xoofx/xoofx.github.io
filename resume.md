@@ -1,9 +1,8 @@
-ï»¿---
+---
 layout: page
 title: Resume
 permalink: /resume/
 ---
-
 # Resume
 Name: Alexandre MUTEL  
 Age: 43  
@@ -199,12 +198,12 @@ In the recent years, I have published many technical posts on my [blog](http://x
 
 # Diplomas
 
-- Social/Specialized Educator, IRTS Marne La Vallée (2006 - 2009, 3 years)  
+- Social/Specialized Educator, IRTS Marne La Vallee (2006 - 2009, 3 years)  
   After my world tour, I took a break of my computer activities and enrolled into a school
   to learn social education and got a diploma of specialized educator.
   After this diploma, I worked part-time for one year in a small structure helping kids in a neighborhood in Paris, but my passion in software development got back and I had to stop working there as I was not enough focus on this difficult job.
 - Software Engineer, INSA Lyon (1992 - 1997, 5 years)
-- Baccalaureat Mathematics and Physics, with honors, Lycée François-Arago, Perpignan (1992)
+- Baccalaureat Mathematics and Physics, with honors, Lycee Francois-Arago, Perpignan (1992)
 
 # Interests
 - Guitar classic/folk (learned for few years during my 5 years in Software Engineering)

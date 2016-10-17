@@ -126,7 +126,7 @@ Started as a prototype in a project where the code was mostly a large C/C++ appl
 
 - Early prototype of a Java server using Corba as a middleware
 - Design and development of a system to synchronize the output of the replication of a Sybase database, plugged into an EventBroker to notify asynchronously the Java data server to update their cache (A Sybase representative told me that It was the first time a team was pushing such an advanced technique with their product)
-- In order to notify the servers with updates, we have evaluated different low level network methods (UDP multicasting) and have opted for Tibco RendezVous as your network messaging system.
+- In order to notify the servers with updates, we have evaluated different low level network methods (UDP multicasting) and have opted for Tibco RendezVous as our lightweight network messaging system.
 - Development of an ActiveX plugin automatically generated from Java code in order to provide a end-user control accessible from Excel. The generator was also able to generate a full HTML/CHM documentation from Java source files. This technology was much more efficient than the existing solutions provided by Sun at this time.
 - Provide assistance to other applications to use this service.
 - Management of the project and technical follow-up with the team.

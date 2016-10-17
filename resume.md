@@ -118,7 +118,7 @@ Part of a large project (120+ people) aiming at redesigning key components aroun
 ***October 2002 - March 2003 (6 months)***  
 Team Size: *8*  
 
-Lead developer to incorporate an external solution called Calypso (Java application) and develop a new product CFD. Integration with existing legacy systems (front-office, middle office, back office).
+Lead developer to incorporate an external solution called Calypso (Java application) and develop the integration of a financial product called CFD (Contract For Difference). Integration with existing legacy systems (front-office, middle office, back office).
 
 ### Project Leader / Software Architect for a distributed data system
 ***April 1999 - September 2002 (3.5 years)***  

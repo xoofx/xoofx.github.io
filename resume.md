@@ -3,7 +3,8 @@ layout: page
 title: Resume
 permalink: /resume/
 ---
-<img src="/images/xoofx-2016.png" style="float: right;"/>
+<img src="/images/xoofx-2016.png" style="float: right;width: 200px;">  
+
 Name: Alexandre MUTEL  
 Age: 43  
 Situation: Married, 2 children  

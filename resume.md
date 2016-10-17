@@ -5,12 +5,12 @@ permalink: /resume/
 ---
 <img src="/images/xoofx-2016.png" style="float: right;width: 200px;">  
 
-Name: Alexandre MUTEL  
-Age: 43  
-Situation: Married, 2 children  
-Location: Grenoble, France  
-Email: alexandre_mutel at live.com  
-Latest update: 15 October 2016
+Name: *Alexandre MUTEL*  
+Age: *43*  
+Situation: *Married, 2 children*  
+Location: *Grenoble, France*  
+Email: *alexandre_mutel at live.com*  
+Latest update: *15 October 2016*
 
 ___
 
@@ -31,9 +31,9 @@ ___
 # Experience
 
 ## Lead Developer of several OSS projects
-- September 2010 - Today (6 years)
-- Technologies: `C#`, `C/C++`, `Direct3D11`, `MsBuild`, `ASP.NET`, `HTML+JavaScript`
-- Platforms: `Windows`
+- *September 2010 - Today (6 years)*
+- Technologies: *`C#`, `C/C++`, `Direct3D11`, `MsBuild`, `ASP.NET`, `HTML+JavaScript`*
+- Platforms: *`Windows`*
 
 During my spare time, I have been the author and developer of several open-source projects:
 

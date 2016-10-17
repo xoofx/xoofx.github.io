@@ -227,5 +227,5 @@ ___
 - **Music composition on computers** with musictracker: composed many musics on Amiga back in the 1990's and more recently 
   several [unfinished musics](https://soundcloud.com/xoofx) around 2003 with Renoise.
 - **Philosophy**, read many authors after my world tour. One of my favorite philosopher is [Henry Bergson](https://en.wikipedia.org/wiki/Henri_Bergson)
-- **Hicking**, many during my world tour, at least one hike every month since then.
+- **Hiking**, many during my world tour, at least one hike every month since then.
 - **Swimming**, with several competitions when I was younger and now more a casual swimmer

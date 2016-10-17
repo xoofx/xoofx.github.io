@@ -11,6 +11,8 @@ Location: Grenoble, France
 Email: alexandre_mutel at live.com  
 Latest update: 15 October 2016
 
+___
+
 I have been developing software with passion for more than 30+years, being involved 
 in challenging projects using various technologies, ranging from low level coding, 
 server side applications, language compilers or game engines.
@@ -22,6 +24,8 @@ When working on a project, I particularly care about direction, performance, ext
 I'm currently working on developing a product to empower developers and apps development.
 
 If you are looking for a CTO or a Software Architect, and we could have a strong common synergy, I'm open for discussions! Remote work preferred.
+
+___
 
 # Experience
 
@@ -152,6 +156,8 @@ Before going to New-York, I had to train and learn all the different application
 
 I joined a team that was actively developing the ISDN network stack for the IBM 2220 Nways Broadband Switch. I have developed an application to perform checks of the protocol. The application was procuding a HTML report with a web server to easily verify visually the correctness of the protocol implementation. With this tool, I have been able to identify some problems and helped the team to debug and fix various bugs.
 
+___
+
 # Personal Projects
 
 ## Demomaking - PC
@@ -183,9 +189,13 @@ With a group of enthousiast computer and electronic students at INSA de Lyon, we
 I spent my sparetime learning democoding and developed several dozens of effects (3D, sprites, bspline rendering, plasma/copper bar, character animation...) I joined the french demoscene group IRIS and released 1 intro and 2 demos ([SpaceDepths](http://www.pouet.net/prod.php?which=2893) and the [Olympia Demo](http://www.pouet.net/prod.php?which=52813))  
 I composed also many musics on this platform.
 
+___
+
 # Awards
 
 - I have been awarded as a **Microsoft Most Valuable Professionnal** for C#/.NET/Visual Studio (2014 - 2016, 3 years)
+
+___
 
 # Articles
 
@@ -196,6 +206,8 @@ In the recent years, I have published many technical posts on my [blog](http://x
 - 2015: [Stack allocation of .NET classes](http://xoofx.com/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr/) to improve locality and performance of .NET apps, including the modification of Roslyn and the CoreCLR Runtime and GC to allow such a prototype.
 - 2015: [Struct Inheritance for .NET](http://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/) by tweaking Roslyn and the CoreCLR Runtime.
 
+___
+
 # Diplomas
 
 - Social/Specialized Educator, IRTS Marne La Vallee (2006 - 2009, 3 years)  
@@ -204,6 +216,8 @@ In the recent years, I have published many technical posts on my [blog](http://x
   After this diploma, I worked part-time for one year in a small structure helping kids in a neighborhood in Paris, but my passion in software development got back and I had to stop working there as I was not enough focus on this difficult job.
 - Software Engineer, INSA Lyon (1992 - 1997, 5 years)
 - Baccalaureat Mathematics and Physics, with honors, Lycee Francois-Arago, Perpignan (1992)
+
+___
 
 # Interests
 - Guitar classic/folk (learned for few years during my 5 years in Software Engineering)

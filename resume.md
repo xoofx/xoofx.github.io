@@ -125,7 +125,7 @@ Lead developer to incorporate an external solution called Calypso (Java applicat
 Started as a prototype in a project where the code was mostly a large C/C++ application handling the Profit&Loss, Risk Analysis for the Equity derivatives. The goal of the project was to provide a distributed data system on top of an existing central database, to allow local and faster data access to different applications. The service had to run 24h/365 and was deployed around the world (Paris, NY, London, Tokyo). I have received feedback that this system was still in production in 2015.
 
 - Early prototype of a Java server using Corba as a middleware
-- Design and development of a system to synchronize the output of the replication of a Sybase database, plugged into an EventBroker to notify asynchronously the Java data server to update their cache.
+- Design and development of a system to synchronize the output of the replication of a Sybase database, plugged into an EventBroker to notify asynchronously the Java data server to update their cache (A Sybase representative told me that It was the first time a team was pushing such an advanced technology)
 - In order to notify the servers with updates, we have evaluated different low level network methods (UDP multicasting) and have opted for Tibco RendezVous as your network messaging system.
 - Development of an ActiveX plugin automatically generated from Java code in order to provide a end-user control accessible from Excel. The generator was also able to generate a full HTML/CHM documentation from Java source files. This technology was much more efficient than the existing solutions provided by Sun at this time.
 - Provide assistance to other applications to use this service.

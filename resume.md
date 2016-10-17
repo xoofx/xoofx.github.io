@@ -15,7 +15,7 @@ Social medias: [@xoofx](https://twitter.com/xoofx) on Twitter, [Github](https://
 
 ___
 
-I have been developing software with passion for more than 30+years, being involved 
+I have been developing software with passion for more than 30 years, being involved 
 in challenging projects using various technologies, ranging from low level coding, 
 server side applications, language compilers or game engines.
 

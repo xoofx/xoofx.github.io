@@ -17,7 +17,7 @@ ___
 
 I have been developing software with passion for more than 30 years, being involved 
 in challenging projects using various technologies, ranging from low level coding, 
-server side applications, language compilers or game engines.
+server side applications, language parsers or game engines.
 
 I love to work on complex systems, improve their designs, empower the users and bring a strong technical leadership to a team.
 

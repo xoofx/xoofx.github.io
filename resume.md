@@ -6,11 +6,11 @@ permalink: /resume/
 <img src="/images/xoofx-2016.png" style="float: right;width: 200px;">  
 
 Name: *Alexandre MUTEL*  
-Age: *43*  
+Age: *Born in 1973*  
 Situation: *Married, 2 children*  
 Location: *Grenoble, France*  
 Email: *alexandre_mutel at live.com*  
-Latest update: *15 October 2016*
+***Latest update: 15 October 2016***
 
 ___
 

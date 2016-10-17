@@ -3,8 +3,8 @@ layout: page
 title: Resume
 permalink: /resume/
 ---
-# Resume
 <img src="/images/xoofx-2016.png" style="float: right;"/>
+# Resume
 Name: Alexandre MUTEL  
 Age: 43  
 Situation: Married, 2 children  
@@ -71,7 +71,7 @@ My work spanned from various aspects of the development of this product, includi
 - Design and implementation of the **initial Graphics api** ported from SharpDX toolkit
 - **Overall optimizations** on many parts of the engine (e.g entity components system, .NET assembly IL rewriting...etc), including build optimizations (e.g execution server for accelerating assets compilation)
 - Development of the **msbuild infrastructure** for the whole project
-- Development of multiple **shading effetcs used in several demos showed at the GDC** (volumetric light shafts, heat shimmering, GPU particle sorting...)
+- Development of multiple **shading effects used in several demos showed at the GDC** (volumetric light shafts, heat shimmering, GPU particle sorting...)
 - Design and implementation of a **core post effect system** including dev of some specifics fx (tone mapping, bloom...)
 - Design and development of a **C++ Direct3D11 wrapper around the PS4 gcn API** to facilitate the porting of Yebis post effect to the PS4
 - Development of a **gamma correct full asset pipeline**, from texture assets handling to rendering on the screen.
@@ -110,7 +110,7 @@ During this period, I have contributed to study the integration of various techn
 Part of a large project (120+ people) aiming at redesigning several key components around the Profit&Loss application, I was directly involved in:
 - Designing the migration from a legacy C++ application to a new Java J2EE infrastructure, working with an external J2EE Business solution called JRisk.
 - Technical follow up and mentoring with the team to ensure that implementation details and problems are retro-feedback to the global design of the migration
-- Coordination with other architects and teams, participating to technical commitees
+- Coordination with other architects and teams, participating to technical committees
 
 ### Senior Software Developer for the integration of CFD products
 - October 2002 - March 2003 (6 months)
@@ -122,12 +122,12 @@ Lead developer to incorporate an external solution called Calypso (Java applicat
 - April 1999 - September 2002 (3.5 years)
 - Team Size: 5-8
 
-Started as a prototype in a project where the code was mostly a large C/C++ application handling the Profit&Loss, Risk Analysis for the Equity derivatives. The goal of the project was to provide a distributed data system on top of an existing central database, to allow local and faster data access to different applications. The service had to run 24h/365 and was deployed around the world (Paris, NY, London, Tokyo). I have recieved feedback that this system was still in production in 2015.
+Started as a prototype in a project where the code was mostly a large C/C++ application handling the Profit&Loss, Risk Analysis for the Equity derivatives. The goal of the project was to provide a distributed data system on top of an existing central database, to allow local and faster data access to different applications. The service had to run 24h/365 and was deployed around the world (Paris, NY, London, Tokyo). I have received feedback that this system was still in production in 2015.
 
 - Early prototype of a Java server using Corba as a middleware
 - Design and development of a system to synchronize the output of the replication of a Sybase database, plugged into an EventBroker to notify asynchronously the Java data server to update their cache.
 - In order to notify the servers with updates, we have evaluated different low level network methods (UDP multicasting) and have opted for Tibco RendezVous as your network messaging system.
-- Development of an ActiveX plugin automatically generated from Java code in order to provide a end-user control accessible from Excel. The generator was also able to generate a full HTML/CHM documentation from Java source files. This tehnology was much more efficient than the existing solutions provided by Sun at this time.
+- Development of an ActiveX plugin automatically generated from Java code in order to provide a end-user control accessible from Excel. The generator was also able to generate a full HTML/CHM documentation from Java source files. This technology was much more efficient than the existing solutions provided by Sun at this time.
 - Provide assistance to other applications to use this service.
 - Management of the project and technical follow-up with the team.
 
@@ -136,7 +136,7 @@ Started as a prototype in a project where the code was mostly a large C/C++ appl
 - Company: Societe Generale - IT Equity Derivatives Trading Markets
 - Location: New-York, US
 
-As part of my duty for the French miliary service, I had an opportunity to work in New-York as a 1st level support of a critical application for traders, working directly with them on the trading floor. The application consisted of multiple client side applications and a centralized database with various pricing server running located in Paris. I was also responsible to provide local IT support (e.g debugging network printers on a Sun servers) and development for the traders (advanced excel macros, specially for basket trading)
+As part of my duty for the French military service, I had an opportunity to work in New-York as a 1st level support of a critical application for traders, working directly with them on the trading floor. The application consisted of multiple client side applications and a centralized database with various pricing server running located in Paris. I was also responsible to provide local IT support (e.g debugging network printers on a Sun servers) and development for the traders (advanced excel macros, specially for basket trading)
 
 ### 1st Level Support and Developer
 - June 1997 - December 1997 (6 months)
@@ -155,7 +155,7 @@ Before going to New-York, I had to train and learn all the different application
 - Location: La Gaude, France
 - Technologies: `C++`, `ISDN Protocols`, `HTTP servers`, `HTML`
 
-I joined a team that was actively developing the ISDN network stack for the IBM 2220 Nways Broadband Switch. I have developed an application to perform checks of the protocol. The application was procuding a HTML report with a web server to easily verify visually the correctness of the protocol implementation. With this tool, I have been able to identify some problems and helped the team to debug and fix various bugs.
+I joined a team that was actively developing the ISDN network stack for the IBM 2220 Nways Broadband Switch. I have developed an application to perform checks of the protocol. The application was producing a HTML report with a web server to easily verify visually the correctness of the protocol implementation. With this tool, I have been able to identify some problems and helped the team to debug and fix various bugs.
 
 ___
 
@@ -173,28 +173,28 @@ I developed a 4k intro called [Ergon](https://www.youtube.com/watch?v=i_feg-bpqT
 ## Backpacking World Tour
 - January 2004 - November 2004 (11 months)
 
-While working at Societe Generale, I took a sabatical year to do a backpacking trip around the world, all on my own. I spent 11 months in Africa (Burkina Faso, Mali, Benin, Togo, Ghana), South-America (Peru, Bolivia, Argentine, Chili), Isla de Pasqua, Taihiti, Australia, Indonesia, Singapur, Thailand, Nepal and India. While travelling I was actively writing and updating my website [diteoo.com](http://diteoo.com) (In French, it means *"Where are you?"*)  
+While working at Societe Generale, I took a sabbatical year to do a backpacking trip around the world, all on my own. I spent 11 months in Africa (Burkina Faso, Mali, Benin, Togo, Ghana), South-America (Peru, Bolivia, Argentine, Chili), Isla de Pasqua, Tahiti, Australia, Indonesia, Singapore, Thailand, Nepal and India. While traveling I was actively writing and updating my website [diteoo.com](http://diteoo.com) (In French, it means *"Where are you?"*)  
 This travel has considerably transformed my vision of life.
 
 ## Realtime 3D visualization with GPS for the EDHEC sailing cup 
 - November 1995 - April 1996
 - Technologies: `Watcom C++`, `dos4/gw` `Assembly x86`
 
-With a group of enthousiast computer and electronic students at INSA de Lyon, we built a project to track GPS position of boats in a sailing cup and display them in 3D real-time. I was the lead developer of the 3D renderer that was using the popular BSP rendering and texture mapping technique at this time. The 3D renderer 
+With a group of enthusiast computer and electronic students at INSA de Lyon, we built a project to track GPS position of boats in a sailing cup and display them in 3D real-time. I was the lead developer of the 3D renderer that was using the popular BSP rendering and texture mapping technique at this time. The 3D renderer 
 
 ## Demomaking - Amiga
 - 1989 - 1992 (3 years)
 - Technologies: `GFA Basic`, `Assembler 68000`
 - Platform: `Amiga`
 
-I spent my sparetime learning democoding and developed several dozens of effects (3D, sprites, bspline rendering, plasma/copper bar, character animation...) I joined the french demoscene group IRIS and released 1 intro and 2 demos ([SpaceDepths](http://www.pouet.net/prod.php?which=2893) and the [Olympia Demo](http://www.pouet.net/prod.php?which=52813))  
+I spent my spare time learning democoding and developed several dozens of effects (3D, sprites, bspline rendering, plasma/copper bar, character animation...) I joined the french demoscene group IRIS and released 1 intro and 2 demos ([SpaceDepths](http://www.pouet.net/prod.php?which=2893) and the [Olympia Demo](http://www.pouet.net/prod.php?which=52813))  
 I composed also many musics on this platform.
 
 ___
 
 # Awards
 
-- I have been awarded as a **Microsoft Most Valuable Professionnal** for C#/.NET/Visual Studio (2014 - 2016, 3 years)
+- I have been awarded as a **Microsoft Most Valuable Professional** for C#/.NET/Visual Studio (2014 - 2016, 3 years)
 
 ___
 
@@ -224,6 +224,6 @@ ___
 - Guitar classic/folk (learned for few years during my 5 years in Software Engineering)
 - Music composition on computers with musictracker: composed many musics on Amiga back in the 1990's and more recently 
   several [unfinished musics](https://soundcloud.com/xoofx) around 2003 with Renoise.
-- Philosophia: Read many authors after my world tour. One of my favorite philosopher is [Henry Bergson](https://en.wikipedia.org/wiki/Henri_Bergson)
+- Philosophy: Read many authors after my world tour. One of my favorite philosopher is [Henry Bergson](https://en.wikipedia.org/wiki/Henri_Bergson)
 - Hicking, many during my world tour, at least one hike every month since then.
 - Swimming: several competitions when I was younger and now more a casual swimmer

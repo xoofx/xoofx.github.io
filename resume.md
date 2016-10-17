@@ -31,7 +31,7 @@ ___
 # Experience
 
 ## Lead Developer of several OSS projects
-- *September 2010 - Today (6 years)*
+- ***September 2010 - Today (6 years)***
 - Technologies: *`C#`, `C/C++`, `Direct3D11`, `MsBuild`, `ASP.NET`, `HTML+JavaScript`*
 - Platforms: *`Windows`*
 
@@ -51,13 +51,13 @@ During my spare time, I have been the author and developer of several open-sourc
 - [SharpDoc](https://github.com/xoofx/SharpDoc) A documentation generator for .NET, that was used to generate early version of SharpDX and Xenko .NET API documentation.
 
 ## Lead Software Architect on a Game Engine
-- June 2011 - April 2016 (5 years)
-- Company: Silicon Studio, R&D
-- Location: Tokyo, Japan
-- Technologies: `C#`, `C/C++`, `HLSL/GLSL`, `Direct3D11`, `GCN/PS4`, `ASP.NET`, `HTML+JavaScript`, `PHP`
-- Infrastructure: `MsBuild`, `git`, `svn`, `Jira`, `Confluence`, `TeamCity`
-- Platforms: `Windows`, `Android`, `iOS`, `PS4`
-- Team Size: 5-10 people
+- ***June 2011 - April 2016 (5 years)***
+- Company: *Silicon Studio, R&D*
+- Location: *Tokyo, Japan*
+- Technologies: *`C#`, `C/C++`, `HLSL/GLSL`, `Direct3D11`, `GCN/PS4`, `ASP.NET`, `HTML+JavaScript`, `PHP`*
+- Infrastructure: *`MsBuild`, `git`, `svn`, `Jira`, `Confluence`, `TeamCity`*
+- Platforms: *`Windows`, `Android`, `iOS`, `PS4`*
+- Team Size: *5-10 people*
 
 I have been prototyping, designing and developing a C# game engine called [xenko](http://xenko.com)
 My work spanned from various aspects of the development of this product, including:
@@ -88,24 +88,24 @@ My work spanned from various aspects of the development of this product, includi
 - Participation to the **planning** of the project
 
 ## Software Architect, Project Leader, Developer and Support
-- June 1997 - June 2006 (9 years)
-- Company: Societe Generale - IT Equity Derivatives Trading Markets
-- Location: Paris, France
-- Technologies: `Java`, `J2EE`, `C/C++`, `Corba`, `SQL`, `Sybase Database`, `Sybase EventBroker`, `Tibco`, `Oracle OLAP Database`, `HTTP`, `HTML`, `Perl`, `Unix shells`
-- Infrastructure: `MsBuild`, `git`, `rcs`, `clearcase`, `perforce`
-- Platforms: `Windows`, `Sun Solaris`, `Linux`
+- ***June 1997 - June 2006 (9 years)***
+- Company: *Societe Generale - IT Equity Derivatives Trading Markets*
+- Location: *Paris, France*
+- Technologies: *`Java`, `J2EE`, `C/C++`, `Corba`, `SQL`, `Sybase Database`, `Sybase EventBroker`, `Tibco`, `Oracle OLAP Database`, `HTTP`, `HTML`, `Perl`, `Unix shells`*
+- Infrastructure: *`MsBuild`, `git`, `rcs`, `clearcase`, `perforce`*
+- Platforms: *`Windows`, `Sun Solaris`, `Linux`*
 
 I have been a lead developer on various challenging projects.
 
 ### Software Architect: Prototyping new technologies
-- December 2005 - June 2007 (1.5 years)
-- Team Size: 15
+- ***December 2005 - June 2007 (1.5 years)***
+- Team Size: *15*
 
 During this period, I have contributed to study the integration of various technologies for frontend applications, including the challenge to aggregate efficiently trading positions using an Oracle OLAP Database.
 
 ### Software Architect: redesigning of the Profit&Loss application for the J2EE Platform  
-- April 2003 - December 2004 (1.5 years)
-- Team Size: 15
+- ***April 2003 - December 2004 (1.5 years)***
+- Team Size: *15*
 
 Part of a large project (120+ people) aiming at redesigning several key components around the Profit&Loss application, I was directly involved in:
 
@@ -114,14 +114,14 @@ Part of a large project (120+ people) aiming at redesigning several key componen
 - Coordination with other architects and teams, participating to technical committees
 
 ### Senior Software Developer for the integration of CFD products
-- October 2002 - March 2003 (6 months)
-- Team Size: 8
+- ***October 2002 - March 2003 (6 months)***
+- Team Size: *8*
 
 Lead developer to incorporate an external solution called Calypso (Java application) and develop a new product CFD. Integration with existing legacy systems (front-office, middle office, back office).
 
 ### Project Leader / Software Architect for a distributed data system
-- April 1999 - September 2002 (3.5 years)
-- Team Size: 5-8
+- ***April 1999 - September 2002 (3.5 years)***
+- Team Size: *5-8*
 
 Started as a prototype in a project where the code was mostly a large C/C++ application handling the Profit&Loss, Risk Analysis for the Equity derivatives. The goal of the project was to provide a distributed data system on top of an existing central database, to allow local and faster data access to different applications. The service had to run 24h/365 and was deployed around the world (Paris, NY, London, Tokyo). I have received feedback that this system was still in production in 2015.
 
@@ -133,16 +133,16 @@ Started as a prototype in a project where the code was mostly a large C/C++ appl
 - Management of the project and technical follow-up with the team.
 
 ### 1st Level Support - Trading Floor
-- January 1998 - April 1999 (1.5 years)
-- Company: Societe Generale - IT Equity Derivatives Trading Markets
-- Location: New-York, US
+- ***January 1998 - April 1999 (1.5 years)***
+- Company: *Societe Generale - IT Equity Derivatives Trading Markets*
+- Location: *New-York, US*
 
 As part of my duty for the French military service, I had an opportunity to work in New-York as a 1st level support of a critical application for traders, working directly with them on the trading floor. The application consisted of multiple client side applications and a centralized database with various pricing servers running located in Paris. I was also responsible to provide local IT support (e.g debugging network printers on a Sun servers) and development for the traders (advanced excel macros, specially for basket trading)
 
 ### 1st Level Support and Developer
-- June 1997 - December 1997 (6 months)
-- Company: Societe Generale - IT Equity Derivatives Trading Markets
-- Location: Paris, France
+- ***June 1997 - December 1997 (6 months)***
+- Company: *Societe Generale - IT Equity Derivatives Trading Markets*
+- Location: *Paris, France*
 
 Before going to New-York, I had to train and learn all the different applications and system I would have to support there and I have also been able to actively participate to many development fronts:
 
@@ -151,10 +151,10 @@ Before going to New-York, I had to train and learn all the different application
 - Design and development of a monitoring server with an HTML front-end to provide health dashboard of the different database, replication services and pricing servers running.
 
 ## Developer (internship)
-- May 1996 - September 1996 (5 months)
-- Company: IBM
-- Location: La Gaude, France
-- Technologies: `C++`, `ISDN Protocols`, `HTTP servers`, `HTML`
+- ***May 1996 - September 1996 (5 months)***
+- Company: *IBM*
+- Location: *La Gaude, France*
+- Technologies: *`C++`, `ISDN Protocols`, `HTTP servers`, `HTML`*
 
 I joined a team that was actively developing the ISDN network stack for the IBM 2220 Nways Broadband Switch. I have developed an application to perform checks of the protocol. The application was producing a HTML report with a web server to easily verify visually the correctness of the protocol implementation. With this tool, I have been able to identify some problems and helped the team to debug and fix various bugs.
 
@@ -163,30 +163,30 @@ ___
 # Personal Projects
 
 ## Demomaking - PC
-- June 2007 - June 2010 (3 years)
-- Technologies: `C/C++`, `Assembly x86`
-- Platform: `Windows`
+- ***June 2007 - June 2010 (3 years)***
+- Technologies: *`C/C++`, `Assembly x86`*
+- Platform: *`Windows`*
  
 I got caught back into my early passion when I was a teenager. I participated to the demogroup [Frequency](http://frequency.fr) where I gave a bit of my spare time and experience to help in the making of some intros.
 
 I developed a 4k intro called [Ergon](https://www.youtube.com/watch?v=i_feg-bpqTY), using the raymarching technique. This intro finished 3rd place at Breakpoint 2010.
 
 ## Backpacking World Tour
-- January 2004 - November 2004 (11 months)
+- ***January 2004 - November 2004 (11 months)***
 
 While working at Societe Generale, I took a sabbatical year to do a backpacking trip around the world, all on my own. I spent 11 months in Africa (Burkina Faso, Mali, Benin, Togo, Ghana), South-America (Peru, Bolivia, Argentine, Chili), Isla de Pasqua, Tahiti, Australia, Indonesia, Singapore, Thailand, Nepal and India. While traveling I was actively writing and updating my website [diteoo.com](http://diteoo.com) (In French, it means *"Where are you?"*)  
 This travel has considerably transformed my vision of life.
 
 ## Realtime 3D visualization with GPS for the EDHEC sailing cup 
-- November 1995 - April 1996
-- Technologies: `Watcom C++`, `dos4/gw` `Assembly x86`
+- ***November 1995 - April 1996***
+- Technologies: *`Watcom C++`, `dos4/gw` `Assembly x86`*
 
 With a group of enthusiast computer and electronic students at INSA de Lyon, we built a project to track GPS position of boats in a sailing cup and display them in 3D real-time. I was the lead developer of the 3D renderer that was using the popular BSP rendering and texture mapping technique at this time.
 
 ## Demomaking - Amiga
-- 1989 - 1992 (3 years)
-- Technologies: `GFA Basic`, `Assembler 68000`
-- Platform: `Amiga`
+- ***1989 - 1992 (3 years)***
+- Technologies: *`GFA Basic`, `Assembler 68000`*
+- Platform: *`Amiga`*
 
 I spent my spare time learning democoding and developed several dozens of effects (3D, sprites, bspline rendering, plasma/copper bar, character animation...) I joined the french demoscene group IRIS and released 1 intro and 2 demos ([SpaceDepths](http://www.pouet.net/prod.php?which=2893) and the [Olympia Demo](http://www.pouet.net/prod.php?which=52813))  
 I composed also many musics on this platform.
@@ -212,19 +212,19 @@ ___
 
 # Diplomas
 
-- Social/Specialized Educator, IRTS Marne La Vallee (2006 - 2009, 3 years)  
+- **Social/Specialized Educator**, IRTS Marne La Vallee (2006 - 2009, 3 years)  
   After my world tour, I took a break of my computer activities and enrolled into a school
   to learn social education and got a diploma of specialized educator.
   After this diploma, I worked part-time for one year in a small structure helping kids in a neighborhood in Paris, but my passion in software development got back and I had to stop working there as I was not enough focus on this difficult job.
-- Software Engineer, INSA Lyon (1992 - 1997, 5 years)
-- Baccalaureat Mathematics and Physics, with honors, Lycee Francois-Arago, Perpignan (1992)
+- **Software Engineer**, INSA Lyon (1992 - 1997, 5 years)
+- **Baccalaureat Mathematics and Physics**, with honors, Lycee Francois-Arago, Perpignan (1992)
 
 ___
 
 # Interests
-- Guitar classic/folk (learned for few years during my 5 years in Software Engineering)
-- Music composition on computers with musictracker: composed many musics on Amiga back in the 1990's and more recently 
+- **Guitar classic/folk** (learned for few years during my 5 years in Software Engineering)
+- **Music composition on computers** with musictracker: composed many musics on Amiga back in the 1990's and more recently 
   several [unfinished musics](https://soundcloud.com/xoofx) around 2003 with Renoise.
-- Philosophy: Read many authors after my world tour. One of my favorite philosopher is [Henry Bergson](https://en.wikipedia.org/wiki/Henri_Bergson)
-- Hicking, many during my world tour, at least one hike every month since then.
-- Swimming: several competitions when I was younger and now more a casual swimmer
+- **Philosophy**, read many authors after my world tour. One of my favorite philosopher is [Henry Bergson](https://en.wikipedia.org/wiki/Henri_Bergson)
+- **Hicking**, many during my world tour, at least one hike every month since then.
+- **Swimming**, with several competitions when I was younger and now more a casual swimmer

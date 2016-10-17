@@ -180,7 +180,7 @@ This travel has considerably transformed my vision of life.
 - November 1995 - April 1996
 - Technologies: `Watcom C++`, `dos4/gw` `Assembly x86`
 
-With a group of enthusiast computer and electronic students at INSA de Lyon, we built a project to track GPS position of boats in a sailing cup and display them in 3D real-time. I was the lead developer of the 3D renderer that was using the popular BSP rendering and texture mapping technique at this time. The 3D renderer 
+With a group of enthusiast computer and electronic students at INSA de Lyon, we built a project to track GPS position of boats in a sailing cup and display them in 3D real-time. I was the lead developer of the 3D renderer that was using the popular BSP rendering and texture mapping technique at this time.
 
 ## Demomaking - Amiga
 - 1989 - 1992 (3 years)

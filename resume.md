@@ -92,13 +92,13 @@ My work spanned from various aspects of the development of this product, includi
 
 I have been a lead developer on various challenging projects.
 
-#### Software Architect: Prototyping new technologies
+### Software Architect: Prototyping new technologies
 - December 2005 - June 2007 (1.5 years)
 - Team Size: 15
 
 During this period, I have contributed to study the integration of various technologies for frontend applications, including the challenge to aggregate efficiently trading positions using an Oracle OLAP Database.
 
-#### Software Architect: redesigning of the Profit&Loss application for the J2EE Platform  
+### Software Architect: redesigning of the Profit&Loss application for the J2EE Platform  
 - April 2003 - December 2004 (1.5 years)
 - Team Size: 15
 
@@ -107,13 +107,13 @@ Part of a large project (120+ people) aiming at redesigning several key componen
 - Technical follow up and mentoring with the team to ensure that implementation details and problems are retro-feedback to the global design of the migration
 - Coordination with other architects and teams, participating to technical commitees
 
-#### Senior Software Developer for the integration of CFD products
+### Senior Software Developer for the integration of CFD products
 - October 2002 - March 2003 (6 months)
 - Team Size: 8
 
 Lead developer to incorporate an external solution called Calypso (Java application) and develop a new product CFD. Integration with existing legacy systems (front-office, middle office, back office).
 
-#### Project Leader / Software Architect for a distributed data system
+### Project Leader / Software Architect for a distributed data system
 - April 1999 - September 2002 (3.5 years)
 - Team Size: 5-8
 
@@ -126,14 +126,14 @@ Started as a prototype in a project where the code was mostly a large C/C++ appl
 - Provide assistance to other applications to use this service.
 - Management of the project and technical follow-up with the team.
 
-#### 1st Level Support - Trading Floor
+### 1st Level Support - Trading Floor
 - January 1998 - April 1999 (1.5 years)
 - Company: Societe Generale - IT Equity Derivatives Trading Markets
 - Location: New-York, US
 
 As part of my duty for the French miliary service, I had an opportunity to work in New-York as a 1st level support of a critical application for traders, working directly with them on the trading floor. The application consisted of multiple client side applications and a centralized database with various pricing server running located in Paris. I was also responsible to provide local IT support (e.g debugging network printers on a Sun servers) and development for the traders (advanced excel macros, specially for basket trading)
 
-#### 1st Level Support and Developer
+### 1st Level Support and Developer
 - June 1997 - December 1997 (6 months)
 - Company: Societe Generale - IT Equity Derivatives Trading Markets
 - Location: Paris, France

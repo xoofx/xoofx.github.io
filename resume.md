@@ -165,7 +165,7 @@ ___
 - June 2007 - June 2010 (3 years)
 - Technologies: `C/C++`, `Assembly x86`
 - Platform: `Windows`
-- 
+ 
 I got caught back into my early passion when I was a teenager. I participated to the demogroup [Frequency](http://frequency.fr) where I gave a bit of my spare time and experience to help in the making of some intros.
 
 I developed a 4k intro called [Ergon](https://www.youtube.com/watch?v=i_feg-bpqTY), using the raymarching technique. This intro finished 3rd place at Breakpoint 2010.

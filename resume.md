@@ -189,7 +189,7 @@ With a group of enthusiast computer and electronic students at INSA de Lyon, we 
 Technologies: *`GFA Basic`, `Assembler 68000`*  
 Platform: *`Amiga`*  
 
-I spent my spare time learning democoding and developed several dozens of effects (3D, sprites, bspline rendering, plasma/copper bar, character animation...) I joined the french demoscene group IRIS and released 1 intro and 2 demos ([SpaceDepths](http://www.pouet.net/prod.php?which=2893) and the [Olympia Demo](http://www.pouet.net/prod.php?which=52813))  
+I spent my spare time learning democoding and developed several dozens of effects (3D, sprites, bspline rendering, plasma/copper bar, character animation...) I joined the french demoscene group IRIS and released 1 intro and 2 demos ([SpaceDepths](http://www.pouet.net/prod.php?which=2893) and the [Olympia Demo](http://www.pouet.net/prod.php?which=52813)). As I was living in the country side of France, It was really difficult at this time to get access to relevant technical documentations about how to use the hardware, so I had often to disassemble existing demos to learn from the best coder's techniques. It is also a period where I have written most assembly code in my life.
 I composed also many musics on this platform.
 
 ___

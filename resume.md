@@ -78,7 +78,7 @@ My work spanned from diversified aspects of the development of this product, inc
 - Development of a **gamma correct full asset pipeline**, from texture assets handling to rendering on the screen.
 - Design and development of a **Physically based material system**, supporting layered materials with multi-BRDF (pluggable)
 - Design and implementation of the **scene graphics compositor** to render a scene graph into multiple render targets
-- Design and implementation of the **asset management system**, storage (including fork of yaml parser/serializer SharpYaml), compilation, **asset templating**, **advanced prefabs** and diff 3 ways on an object graph, package system.
+- Design and implementation of the **asset management system**, storage (including fork of yaml parser/serializer SharpYaml), compilation, **asset templating**, **advanced/nested prefabs** and diff 3 ways on an object graph, package system.
 - Design and implementation of the **full packaging, distribution and installer of the engine using nuget** for the infrastructure
 - Design and implementation of the **metric system**, with an ASP.NET server to collect the data
 - Design and development of an **ASP.NET server to handle user CLA on github**

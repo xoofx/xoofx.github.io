@@ -70,7 +70,7 @@ public static double getShapeSurface(Shape shape)
 
 With discriminated unions as valuetypes, we could more efficiently represents and manipulates them.
 
-# Syntax in C#
+# Syntax in C\#
 
 I will introduce here just a simple syntax for the main purpose of describing after how it will be projected back to the implementation. So syntax is less critical here, though I will try to avoid introducing a new keyword to make it a bit more plausible.
 

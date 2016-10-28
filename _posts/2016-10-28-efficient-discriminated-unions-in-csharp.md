@@ -29,9 +29,7 @@ type Shape =
     | Triangle of width : float * height : float
 ```
 
-And the generated .NET code for it:
-
-{% gist xoofx/8e9be7d027e2eb0c359da37f77a1bb8a %}
+You can check the generated .NET code for it on [this gist](https://gist.github.com/xoofx/8e9be7d027e2eb0c359da37f77a1bb8a)
 
 While a F# pattern matching:
 

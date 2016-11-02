@@ -23,13 +23,17 @@ I love to work on complex systems, improve their designs, empower the users and 
 
 When working on a project, I particularly care about direction, performance, quality, extensibility, maintainability, simplicity and usability.
 
-I'm currently working on developing a product to empower developers and apps development.
-
-If you are looking for a CTO or a Software Architect, and we could have a strong common synergy, I'm open for discussions! Remote work preferred.
-
+I'm currently working at [Unity Technologies](https://unity3d.com).
 ___
 
 # Experience
+
+## Developer on the Unity game engine .NET runtime
+***November 2016 - present***  
+Company: *Unity Technologies*  
+Location: *Grenoble, France*  
+
+Working to make .NET performance more awesome.
 
 ## Lead Developer of several OSS projects
 ***September 2010 - Today (6 years)***  

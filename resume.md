@@ -29,7 +29,7 @@ ___
 
 # Experience
 
-## Developer on the Unity game engine .NET runtime
+## Developer on the Unity Game Engine .NET Runtime
 ***November 2016 - present***  
 Company: *Unity Technologies*  
 Location: *Grenoble, France*  

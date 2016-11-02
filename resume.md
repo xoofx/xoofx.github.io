@@ -24,6 +24,7 @@ I love to work on complex systems, improve their designs, empower the users and 
 When working on a project, I particularly care about direction, performance, quality, extensibility, maintainability, simplicity and usability.
 
 I'm currently working at [Unity Technologies](https://unity3d.com).
+
 ___
 
 # Experience

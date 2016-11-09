@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Efficient discriminated unions in C#
+title: Efficient discriminated unions in C#7
 tags:
  - C#
  - .Net

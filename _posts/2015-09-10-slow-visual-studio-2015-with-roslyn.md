@@ -5,6 +5,7 @@ tags:
  - Visual Studio 2015
  - Roslyn
 comments: true
+noindex: true
 ---
 
 > **Update 10 October 2015**: I just tried the Hotfix KBs mentioned in the [comment from Lee Coward

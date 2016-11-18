@@ -4,6 +4,7 @@ title: Goodbye project.json
 tags:
  - msbuild
 comments: true
+noindex: true
 ---
 This is a follow-up about [`project.json` being abandoned in favour of msbuild](https://twitter.com/xoofx/status/730223811895779328)
 

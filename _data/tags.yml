@@ -13,6 +13,7 @@ nshader: nshader
 softsynth: softsynth
 sharpdx: SharpDX
 slimdx: SlimDX
+stark: Stark
 csharp: C#
 d3d11: D3D11
 directx: DirectX

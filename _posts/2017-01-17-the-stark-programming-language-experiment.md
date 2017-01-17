@@ -284,7 +284,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
 
 - **Designed primarily for AOT**, may allow JIT for fast iteration
 - Use **LLVM for the compiler backend** infrastructure
-- While many instances will be instantiated on the stack or on static immutable section in the shared library, standard **Reference type will be using a Garbage Collector** but that doesn't mean that it will necessarily a tracing GC, but could use at the beginning bohem like conservative first, CoreCLR GC/conservative after, immix/immix+rc later... once LLVM has statepoint fully working in scenarios supported by the languages (similar constraints than CoreRT with stack maps, value types...etc.)
+- While many objects will be instantiated on the stack or on static immutable section in the shared library, standard **Reference type will be using a Garbage Collector** but that doesn't mean that it will be necessarily a tracing GC, but we could still use at the beginning a conservative bohem GC first, CoreCLR GC/conservative after, immix/immix+rc later... once LLVM has statepoint fully working in scenarios supported by the languages (similar constraints than CoreRT with stack maps, value types...etc.)
 - The whole **runtime should be implemented in the language itself**: No C/C++ runtime (apart for calling existing kernel functions or well established native libraries)
 - **trait types will be handled as a double pointers** (trait implem vtable + this)
 - immutable static data instances loaded directly from readonly sections (no runtime init cost)

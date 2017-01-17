@@ -111,7 +111,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
       some(T)
   }
   ```
-- Try to fix The Billion Dollar Mistake a 1 Million mistake by having a `null` safe language
+- Try to fix The Billion Dollar Mistake by having a `null` safe language
 
   ```csharp
   process(string name, string? valueMayBe)

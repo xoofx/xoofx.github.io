@@ -224,7 +224,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   // Equivalent to the pipe forward operator
   public TResult operator<T,TResult>(T v "|>" function TResult f(T)) => f(v)
   ```
-- **generics with higher-kinded types** and template parameters (so yes, more templates than generics actually)
+- **generics with [higher kind types](https://en.wikipedia.org/wiki/Kind_(type_theory))** and template parameters (so yes, more templates than generics actually)
 
   ```csharp
   trait Functor<F<_>> // _ means any type

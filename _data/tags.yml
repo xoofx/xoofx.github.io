@@ -17,7 +17,7 @@ stark: Stark
 csharp: C#
 d3d11: D3D11
 directx: DirectX
-net: .Net
+net: ".Net"
 d3d10: D3D10
 direct2d: Direct2D
 crinkler: crinkler
@@ -37,3 +37,5 @@ roslyn: Roslyn
 coreclr: CoreCLR
 markdown: Markdown
 markdig: Markdig
+compiler: Compiler
+llvm: LLVM

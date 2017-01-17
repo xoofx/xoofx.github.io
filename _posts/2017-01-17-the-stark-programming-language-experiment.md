@@ -7,7 +7,7 @@ tags:
  - LLVM
  - C#
  - .Net
- comments: true
+comments: true
 ---
 
 <img src="/images/stark.png" style="width:150px; height: 150px; float: right;"/>

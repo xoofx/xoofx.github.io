@@ -40,6 +40,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   - make primitives more coherent (`int32`, `uint32`, `int16`, `uint16` ...etc.)
   - No need for most of trailing ';'
   - Without parenthesis in `if`, `while`... etc.
+  
     ```csharp 
     // Variable are immutable by default
     int32 x = 5

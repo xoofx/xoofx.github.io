@@ -245,6 +245,25 @@ Let's try to draw a dream wish list with an emphasis balance between performance
 - **concurrency**/controlled side effects: `isolated`, no static mutable allowed, pure constructors (no storing of this). Basically what has been done by Midori team. Check the blog post [15 years of concurrency](http://joeduffyblog.com/2016/11/30/15-years-of-concurrency/)
 - No more built-in `lock` but usage of synchronization primitives (because they monopolize valuable bits for the memory flags attached to a reference type)
 - "Modern" **error model**: panic/fatal for programmer errors, checked exceptions for other cases with `throws` and `try` semantic (note that implementation details doesn't mean real exceptions)
+- Support for easy lambda/closure function declaration (delegates in C#), allocated on the stack by default (without a `new` keyword)
+
+  ```csharp
+  // Note that the function is marked as transient (cannot be stored)
+  public void process(uintz count, transient function callback(string text))
+  {
+      for i in 0..<count
+      {
+          callback("HelloWorld from function")
+      }
+  }
+
+  // Call process with our callback (allocated on the stack)
+  process(10, text => println(text))
+
+  // Or allocated on the heap if it was necessary (not transient)
+  process(10, new text => println(text))
+  ``` 
+  
 - `defer`: allow to defer code execution at the end of a scoped (TBD, still need to figure out the syntax, RAI struct or not...etc.)
 - `async`/`await` (with any types as async result), similar to the way C# implements it
 - `macros` as compiler extensions, similar to what Rust has been providing

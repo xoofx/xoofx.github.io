@@ -172,7 +172,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   }
   ```
 
-- Better **control on memory** and **locality**: allow class on the stack. via `fixed` for arrays/class inlined in class or struct. These variables can only be passed via `transient` locals/parameters. The default would be that the `new` keyword is only used when allocating on the heap (either GC managed or not)... otherwise it will be a normal constructor call (e.g `let x = Vector2(1, 2)` ). There will be also a single ownership allocation that will allow allocate on the heap but without having the GC to track these references (would be tracked by single ownership and destruction on last owner disposed)
+- Better **control on memory** and **locality**: allow class on the stack via `fixed` but also inline members in a class or struct. These variables can only be passed via `transient` locals/parameters. The default would be that the `new` keyword is only used when allocating on the heap (either GC managed or not)... otherwise it will be a normal constructor call (e.g `let x = Vector2(1, 2)` ). There will be also a single ownership allocation that will allow allocate on the heap but without having the GC to track these references (would be tracked by single ownership and destruction on last owner disposed)
 
   ```csharp
   // struct allocated on the stack 

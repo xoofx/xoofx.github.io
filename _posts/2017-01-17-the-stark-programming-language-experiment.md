@@ -38,7 +38,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
 
 - Syntax familiar to a C# developer, with some cosmetic changes:
   - make primitives more coherent (`int32`, `uint32`, `int16`, `uint16` ...etc.)
-  - No need for most of trailing ';'
+  - No mandatory need for most of trailing ';'
   - Without parenthesis in `if`, `while`... etc.
 
     ```csharp 

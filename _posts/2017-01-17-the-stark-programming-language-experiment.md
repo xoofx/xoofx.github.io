@@ -40,20 +40,21 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   - make primitives more coherent (`int32`, `uint32`, `int16`, `uint16` ...etc.)
   - No need for most of trailing ';'
   - Without parenthesis in `if`, `while`... etc.
-  ```csharp 
-  // Variable are immutable by default
-  int32 x = 5
-  // Similar to var in C# (but immutable)
-  let y = 6
-  // Specify mutable before the variable name
-  let mutable z = 7
-  // Remove ( )
-  if x >= 5
-  {
-      z++
-  }
-  ```
+    ```csharp 
+    // Variable are immutable by default
+    int32 x = 5
+    // Similar to var in C# (but immutable)
+    let y = 6
+    // Specify mutable before the variable name
+    let mutable z = 7
+    // Remove ( )
+    if x >= 5
+    {
+        z++
+    }
+    ```
 - `class` (reference type) and `struct` (value type)
+
   ```csharp
   // Always contains a vtable and a memory management flags, by default not heritable
   // Use of virtual to allow inheritance
@@ -67,6 +68,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
 
   ```
 - `trait` instead of interfaces (trait type) to allow a better extensibility story via `extends`
+
   ```csharp
   // Example of Iterator
   // Inspired by Jared Parson blog post "Rethinking IEnumerable: http://blog.paranoidcoding.com/2014/08/19/rethinking-enumerable.html
@@ -91,6 +93,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   }
   ```
 - builtin syntax for `tuple` (valuetypes) with deconstructors
+
   ```csharp
   let a = (1, "value")
   let x = a.0  // get 1
@@ -98,6 +101,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   let (y, str2) = a // deconstruct tuple into variables
   ```
 - `enum sum-type`/discriminated unions with the cool pattern matching
+
   ```csharp
   // The type behind T?
   enum Option<T>
@@ -107,6 +111,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   }
   ```
 - Try to fix The Billion Dollar Mistake a 1 Million mistake by having a `null` safe language
+
   ```csharp
   process(string name, string? valueMayBe)
   {
@@ -123,6 +128,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   }
   ```
 - modules/namespaces, global functions, export type aliases
+
   ```csharp
   // By default, namespace will be deduced from folder hierarchy
   // So most files in a project won't have to declare any namespaces
@@ -135,6 +141,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   ```
 
 - builtin `contracts`: for pre and post conditions via `requires` and `ensures`
+
   ```csharp
   public virtual class List<T>
   {
@@ -162,12 +169,10 @@ Let's try to draw a dream wish list with an emphasis balance between performance
           }
       }
   }
-
-
-
   ```
 
 - Better **control on memory** and **locality**: allow class on the stack. via `fixed` for arrays/class inlined in class or struct. These variables can only be passed via `transient` locals/parameters. The default would be that the `new` keyword is only used when allocating on the heap (either GC managed or not)... otherwise it will be a normal constructor call (e.g `let x = Vector2(1, 2)` ). There will be also a single ownership allocation that will allow allocate on the heap but without having the GC to track these references (would be tracked by single ownership and destruction on last owner disposed)
+
   ```csharp
   // struct allocated on the stack 
   // or static global if declared at a namespace level
@@ -196,6 +201,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   }
   ```
 - **UTF8 string**, so a char is a unicode (int), declared as immutable
+
   ```csharp
   // static string literal (not creating any GC object)
   let mystr = "mystring" 
@@ -212,11 +218,13 @@ Let's try to draw a dream wish list with an emphasis balance between performance
   ```
 - support for slice over array/native memory (syntax yet to be defined)
 - **custom operators**
+
   ```csharp
   // Equivalent to the pipe forward operator
   public TResult operator<T,TResult>(T v "|>" function TResult f(T)) => f(v)
   ```
 - **generics with higher-kinded types** and template parameters (so yes, more templates than generics actually)
+
   ```csharp
   trait Functor<F<_>> // _ means any type
   {
@@ -240,10 +248,11 @@ Let's try to draw a dream wish list with an emphasis balance between performance
 - `async`/`await` (with any types as async result), similar to the way C# implements it
 - `macros` as compiler extensions, similar to what Rust has been providing
 - `annotations` on types/members, but also on code IR. **conditionnal compilation/config features** (to disable part of some code/types...etc.) ala Rust
-```csharp
-## noinline
-public int32 increment(int32 val) => val++
-```
+
+  ```csharp
+  ## noinline
+  public int32 increment(int32 val) => val++
+  ```
 - `partial` types/methods
 - `unsafe`/pointers code only in unsafe region allowed only by a compiler switch
 - **Easy native interop** (ala `DllImport`), also allow to link with static libs
@@ -259,6 +268,7 @@ public int32 increment(int32 val) => val++
 - The whole **runtime should be implemented in the language itself**: No C/C++ runtime (apart for calling existing kernel functions or well established native libraries)
 - **trait types will be handled as a double pointers** (trait implem vtable + this)
 - immutable static data instances loaded directly from readonly sections (no runtime init cost)
+
   ```csharp
   // implictly immutable global static variable
   // allocated directly into a readonly section  

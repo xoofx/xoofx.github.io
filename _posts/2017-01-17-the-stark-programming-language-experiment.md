@@ -279,7 +279,7 @@ Let's try to draw a dream wish list with an emphasis balance between performance
 
 This is a glimpse of the gigantic work that I would love to be able to bring (note the conditionnal all around), but more presumably, will at least try to implement most of the challenging bits... maybe some enthusiastic folks will be interested in helping this work.
 
-In the next blog posts, I will try to code the early part of this project that will be available on github https://github.com/stark-lang/stark
+In the next blog posts, I will try to code the early part of this project that will be available on github [https://github.com/stark-lang/stark](https://github.com/stark-lang/stark)
 
 For the ease of development, most of the code will be developed in C#.
 

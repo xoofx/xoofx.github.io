@@ -7,7 +7,7 @@ tags:
 comments: true
 ---
 
-Before going deeper into the implementation of the lexer and parser, we definitely need to decide the overall syntax of the language, or at least some structural foundations. We don't need to go through every single tiny corner cases (macros for example are not critical, it is often not that difficult to integrate them afterwards) but we still have to figure-out some details that may affect usability or complicate parsing or may produce a grammar that is not even possible to parse easily...
+After my introduction post about the [Stark Language Experiment](/blog/2017/01/17/the-stark-programming-language-experiment/), and before going deeper into the implementation of the lexer and parser, we definitely need to decide the overall syntax of the language, or at least some structural foundations. We don't need to go through every single tiny corner cases (macros for example are not critical, it is often not that difficult to integrate them afterwards) but we still have to figure-out some details that may affect usability or complicate parsing or may produce a grammar that is not even possible to parse easily...
 
 Let's start by defining most of the language tokens necessary for developing the lexer (the lexer part will contain a more formal definition for matching tokens): 
 

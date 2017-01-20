@@ -96,7 +96,7 @@ public struct int32 : ...
 }
 ```
 
-While it requires still a strong cooperation with the compiler (for the example annotation `##nativeType`, special treatment behind because you can't easily declare in the language itself how to perform a `+` operation for example, or because literals need to map to them at some point), I like the idea that even primitive types are not marked as keywords but actual defined types. While developing a HLSL parser in the past, I discovered that forcing keywords for things like `float4x4` was actually more annoying then it is (and I had actually to reroute these types to something like `vector<float, 4>`)
+While it requires still a strong cooperation with the compiler (for the example annotation `##nativeType`, special treatment behind because you can't easily declare in the language itself how to perform a `+` operation for example, or because literals need to map to them at some point), I like the idea that even primitive types are not marked as keywords but actual defined types. While developing a HLSL parser in the past, I discovered that forcing keywords for things like `float4x4` was actually more annoying than it is (and I had actually to reroute these types to something like `vector<float, 4>`)
 
 Note that as I will explain a bit more in my next post about the lexer, why these `int32`, `char`...etc will not be considered as specific tokens for the lexer...
 

@@ -185,7 +185,7 @@ While the prefix syntax looks more compact, there is a lot more to favour a post
   ```csharp
   operator(f ">>" g) => g(f)
   ``` 
-  note I don't yet if we will end up with automatic type inference like this... but for sure, it looks a lot more appealing
+  note I don't know yet if we will end up with automatic type inference like this... but for sure, it looks a lot more appealing
 
 - Possibly less potential problems of running into a context sensitive grammar. This happens typically when using pointers `int32* x`: is it a variable `int32` multiplied by `x`? I could fix this by requiring the pointer to be prefix but then... I don't know how Roslyn typically handle this, but I'm afraid that it requires to defer the interpretation of such a simple statement... and for a parser, that's bad... and it is also most likely bad for a human reader unfamiliar with pointers
 

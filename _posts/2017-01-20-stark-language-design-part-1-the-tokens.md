@@ -168,7 +168,7 @@ Actually, in addition to many old, many recent "modern" languages have been adop
 
 While the prefix syntax looks more compact, there is a lot more to favour a postfix syntax:
 
-- The variable/method name comes first. Reading from left to right feels more natural (this is my function name, here is its 1st parameter and its type, here is the return type of the function)
+- The variable/method name comes first. Reading from left to right feels more natural (this is my function name, here is its 1st parameter and its type, here is the return type of the function). Member names of a struct/class are more naturally aligned whatever return parameter they have...
 - It makes possible to use implicit type inference more easily. Typically in F# you can write something like this:
 
   ```fsharp

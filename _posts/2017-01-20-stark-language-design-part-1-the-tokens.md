@@ -102,7 +102,7 @@ Note that as I will explain a bit more in my next post about the lexer, why thes
 
 # Identifiers
 
-Nothing crazy there, it is quite similar to C# with a starting `[_a-zA-Z]` followed by `[_a-zA-Z0-9]*`. The slight difference here is that the special case where an identifier is only composed of `_` may generate a different token (underscore only) instead of a token identifier. This may be used as a way to differentiate the any type `_` that we plan to use for higher kind types. Plus, I find quite confusing to allow a variable composed only of `_` or `_______` or `_____` (C# typically allows this!)
+Nothing crazy there, it is quite similar to C#, with something similar to a starting `[_a-zA-Z]` and followed by `[_a-zA-Z0-9]*` (note that in reality like C#, we will have to cover other unicode characters and will follow the [UAX31](http://unicode.org/reports/tr31/) specification with `XID_START`, `XID_CONTINUE`) . The slight difference here is that the special case where an identifier is only composed of `_` may generate a different token (underscore only) instead of a token identifier. This may be used as a way to differentiate the any type `_` that we plan to use for higher kind types. Plus, I find quite confusing to allow a variable composed only of `_` or `_______` or `_____` (C# typically allows this!)
 
 Note also that I'm not introducing anything about special identifiers prefixed by `$` for example (e.g used for a macro processing)... We will see later how we need to deal with them. Most likely for macros as far as I can predict... but let's not hold this for granted, because the macro syntax might require a more subtile way of handling special identifiers substitution/expansion...
 

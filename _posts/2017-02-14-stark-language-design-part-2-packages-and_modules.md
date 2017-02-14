@@ -301,6 +301,10 @@ This is important because we can guarantee some invariants:
 - a public type is declared only in a specific public module
 - a public module is declared only in a specific package
 
+Also an important difference is the `import` inside types/functions/traits files: Unlike in Rust, an **import defined in a file is local to the file** (this is similar to how C# is working with namespaces) except for the module file `module.sk`.
+
+As we explained earlier, only the `module.sk` is sharing its imports with other files in its folder. It means also that you can't `public import` from types/functions/traits files : This is the responsibility of the `module.sk`.
+
 ## Declare an `extern package`
 
 The `extern package` directive allows to explicit in the code the dependencies to a specific package. Note that it doesn't say which version of the package we are looking for (this will be stored in the package descriptions)
@@ -343,9 +347,10 @@ Let's try to recap and highlight some of the major differences with Rust crates/
 - import is explicit: there is no implicit import of outer scope module
 - you can't modify the content of the module outside of its original folder/content
 - you can have a visibility on a module (`public` or `private`) in addition to the visibility on types/functions/constants
+- import inside a types/functions/contants file is local to that file. import inside a module file (`module.sk`) is shared between all files in this module. 
 - types/functions/constants can be `private` inside a module (not accessible outside), `internal` (accessible from other modules from the same package) or `public` (accessible from any modules)
-- you can re-export a private module to a different public module
-- you can re-export a public type of a private module to a different public module
+- you can re-export a private module to a different public module (only from a module file `module.sk`)
+- you can re-export a public type of a private module to a different public module (only from a module file `module.sk`)
 - you declare your package dependencies from the code through `extern package`
 - import paths are absolute (like namespace in C# but not like Rust that is relative to the current crate)
 - the root module of a package in a registry serves as a domain entry that you own. Any sub package/modules using the same root module are part of this package tree (and are owned by a single entity).

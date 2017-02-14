@@ -333,7 +333,7 @@ This is different here from Rust where `extern crate` link and import into the m
 - `extern package mymodule2` is a linking directive and defines an import accessibility for sub modules where the extern package directive is issued. The path of the root module of the package is still absolute, but its import visibility is restricted to where the `extern package` was issued.
 - you still need an explicit `import mymodule2` to effectively import the root module (or a sub module of the package). This import can only be issued where an `extern package` has been declared from the current module or a parent module from the same package.
 
-## Differences with Rust and C#
+## Differences with C# and Rust
 
 Let's try to recap and highlight some of the major differences with Rust crates/modules and C# namespaces/assembly/nugets.
 

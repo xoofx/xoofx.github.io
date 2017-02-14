@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Stark, Tokens specification and Tokenizer implementation
+title: Stark - Tokens specification and Tokenizer implementation
 tags:
  - Stark
  - C#

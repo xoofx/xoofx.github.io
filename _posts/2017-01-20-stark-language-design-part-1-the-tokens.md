@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Stark, Language Design Part I - The Tokens
+title: Stark - Language Design Part I - The Tokens
 tags:
  - Stark
  - C#

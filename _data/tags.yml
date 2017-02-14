@@ -39,3 +39,4 @@ markdown: Markdown
 markdig: Markdig
 compiler: Compiler
 llvm: LLVM
+rust: Rust

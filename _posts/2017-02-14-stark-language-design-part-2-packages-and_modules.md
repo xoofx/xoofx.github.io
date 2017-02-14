@@ -35,7 +35,7 @@ To be clear, none of the above have been making namespaces awfully impractical. 
 
 # Rust Crates and Modules, too powerful?
 
-Modules in Rust are very powerful and yet quite difficult to grasp. It is said that they have been inspired by JavaScript modules which were inspired from Racket/Scheme [^1^](https://www.reddit.com/r/rust/comments/24n5q2/crates_and_the_module_system/ch9lf58/)
+Modules in Rust are very powerful and yet quite difficult to grasp. It is said that they have been inspired by JavaScript modules which were inspired from Racket/Scheme ([1](https://www.reddit.com/r/rust/comments/24n5q2/crates_and_the_module_system/ch9lf58/))
 
 As I haven't used Rust intensively, I will try to re-transcript what I have understood from their Module system. The documentation ["Crates and Modules"](https://doc.rust-lang.org/book/crates-and-modules.html) is quite informative, but it still doesn't express all the implications of their system.
 

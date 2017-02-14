@@ -262,7 +262,7 @@ For example, If we  are in a type in the module `mymodule::sub1::sub2` and there
 // importing types from sub module sub3 from sub2
 import this::sub3::*
 // is equivalent to
-import mymodule::sub1::sub2::*
+import mymodule::sub1::sub2::sub3::*
 
 // Import from parent of parent
 import base::base::*

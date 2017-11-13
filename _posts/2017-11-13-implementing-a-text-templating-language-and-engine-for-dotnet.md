@@ -7,7 +7,7 @@ tags:
 comments: true
 ---
 {% raw %}
-<img align="right" width="140px" height="140px" src="https://raw.githubusercontent.com/lunet-io/scriban/master/img/scriban.png">
+<a href="https://github.com/lunet-io/scriban"><img align="right" width="140px" height="140px" src="https://raw.githubusercontent.com/lunet-io/scriban/master/img/scriban.png"></a>
 
 Last year, before developing [`markdig`](http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/), I spent a few weeks developing a brand new text templating language and engine called [`scriban`](https://github.com/lunet-io/scriban). 
 

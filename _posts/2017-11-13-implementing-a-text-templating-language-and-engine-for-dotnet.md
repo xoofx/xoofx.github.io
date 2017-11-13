@@ -317,8 +317,8 @@ This mode of saving back a `scriban` AST to text can open lots of opportunities,
 
 This round trip mode has been tested quite extensively in scriban, so that all scriban test templates (and liquid tests) are actually parsed, run, re-saved to code, re-parsed and re-run to check that:
 
-1) we get almost the same code than the existing template. Almost because there are very few cases where the parser is still "compacting" the information (typically when you use the whitespace controls on both start and end, like in `-}}   {{-`, it will keep only one whitespace control, because the other is not relevant... otherwise it tries to keep everything consistent and identical.
-2) we get the exact same output when running the template. Obviously, this one, we want a strict correspondence and not an almost!
+1. we get almost the same code than the existing template. Almost because there are very few cases where the parser is still "compacting" the information (typically when you use the whitespace controls on both start and end, like in `-}}   {{-`, it will keep only one whitespace control, because the other is not relevant... otherwise it tries to keep everything consistent and identical.
+2. we get the exact same output when running the template. Obviously, this one, we want a strict correspondence and not an almost!
 
 To my knowledge, at least in the .NET ecosystem, **`scriban` is the only text templating language and engine that allows such a scenario of modifying the AST in memory and saving it back to the disk**, in the addition to support `liquid` templates as-is and translate them to a new more powerful runtime.
 
@@ -365,8 +365,8 @@ When working with .NET objects, the runtime is able to pass .NET objects almost 
 
 You can still control how the .NET objects are exposed through a:
 
-1) [`MemberRenamerDelegate`](https://github.com/lunet-io/scriban/blob/master/doc/runtime.md#member-renamer) that gives you control over the naming convention used for naming fields/properties exposed.
-2) [`MemberFilterDelegate`](https://github.com/lunet-io/scriban/blob/master/doc/runtime.md#member-filter) that allows to filter members of a type being exposed
+1. [`MemberRenamerDelegate`](https://github.com/lunet-io/scriban/blob/master/doc/runtime.md#member-renamer) that gives you control over the naming convention used for naming fields/properties exposed.
+2. [`MemberFilterDelegate`](https://github.com/lunet-io/scriban/blob/master/doc/runtime.md#member-filter) that allows to filter members of a type being exposed
 
 ### And more...
 

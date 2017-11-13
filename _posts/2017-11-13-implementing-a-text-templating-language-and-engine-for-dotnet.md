@@ -6,7 +6,7 @@ tags:
  - .Net
 comments: true
 ---
-
+{% raw %}
 <img align="right" width="140px" height="140px" src="https://raw.githubusercontent.com/lunet-io/scriban/master/img/scriban.png">
 
 Last year, before developing [`markdig`](http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/), I spent a few weeks developing a brand new text templating language and engine called [`scriban`](https://github.com/lunet-io/scriban). 
@@ -578,3 +578,4 @@ I don't know if I will ever have the time and courage to further prototype `lune
 I'm going to keep the 1.0.0-beta-xxx for a few weeks, before stamping it to a final 1.0.0, so if you have any issues using this library, let me know directly on the [scriban](https://github.com/lunet-io/scriban) GitHub issues.
 
 Happy Coding!
+{% endraw %}

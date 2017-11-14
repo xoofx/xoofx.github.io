@@ -505,16 +505,16 @@ Processor=Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), ProcessorCount=8
   [Host]     : .NET Framework 4.7 (CLR 4.0.30319.42000), 32bit LegacyJIT-v4.7.2556.0
   DefaultJob : .NET Framework 4.7 (CLR 4.0.30319.42000), 32bit LegacyJIT-v4.7.2556.0
 
-                    Method |         Mean |       Error |        StdDev |    Gen 0 |    Gen 1 |   Gen 2 |  Allocated |
--------------------------- |-------------:|------------:|--------------:|---------:|---------:|--------:|-----------:|
-        'Scriban - Parser' |     12.74 us |   0.0427 us |     0.0399 us |   0.6561 |        - |       - |    2.72 KB |
-      'DotLiquid - Parser' |     71.24 us |   0.2168 us |     0.2028 us |   2.1973 |        - |       - |    9.47 KB |
-        'Stubble - Parser' |     12.09 us |   0.0884 us |     0.0827 us |   1.6327 |        - |       - |    6.74 KB |
-       'Nustache - Parser' |     53.35 us |   0.0965 us |     0.0806 us |   4.0894 |        - |       - |   16.84 KB |
- 'Handlebars.NET - Parser' |  1,009.46 us |  17.2727 us |    16.1569 us |  25.3906 |   1.9531 |       - |  106.81 KB |
-         'Cottle - Parser' |     13.51 us |   0.1446 us |     0.1352 us |   1.7090 |        - |       - |    7.02 KB |
-          'Fluid - Parser' |     27.41 us |   0.2426 us |     0.2151 us |   3.8147 |        - |       - |   15.63 KB |
-          'Razor - Parser' | 14,517.78 us | 455.0174 us | 1,341.6292 us | 471.2500 | 269.6875 | 76.2500 | 2524.49 KB |
+                Method |         Mean |       Error |       StdDev |   Gen 0 |   Gen 1 |  Gen 2 |  Allocated |
+---------------------- |-------------:|------------:|-------------:|--------:|--------:|-------:|-----------:|
+       'Scriban-Parser'|     12.74 us |   0.0427 us |    0.0399 us |  0.6561 |       - |      - |    2.72 KB |
+     'DotLiquid-Parser'|     71.24 us |   0.2168 us |    0.2028 us |  2.1973 |       - |      - |    9.47 KB |
+       'Stubble-Parser'|     12.09 us |   0.0884 us |    0.0827 us |  1.6327 |       - |      - |    6.74 KB |
+      'Nustache-Parser'|     53.35 us |   0.0965 us |    0.0806 us |  4.0894 |       - |      - |   16.84 KB |
+'Handlebars.NET-Parser'|  1,009.46 us |  17.2727 us |   16.1569 us | 25.3906 |  1.9531 |      - |  106.81 KB |
+        'Cottle-Parser'|     13.51 us |   0.1446 us |    0.1352 us |  1.7090 |       - |      - |    7.02 KB |
+         'Fluid-Parser'|     27.41 us |   0.2426 us |    0.2151 us |  3.8147 |       - |      - |   15.63 KB |
+         'Razor-Parser'| 14,517.78 us | 455.0174 us |1,341.6292 us |471.2500 |269.6875 |76.2500 | 2524.49 KB |
 
 // * Legends *
   Mean      : Arithmetic mean of all measurements

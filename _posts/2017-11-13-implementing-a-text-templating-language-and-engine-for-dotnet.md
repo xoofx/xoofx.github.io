@@ -84,7 +84,7 @@ I also looked a bit outside the .NET world at what other platforms were providin
 
 - [Hugo with Go's `html/template`](https://gohugo.io/templates/introduction/) has some interesting approaches, the language being quite simple and enough versatile (though no function declaration for example), but among a few things, I was quite disturbed by the implicit target of properties (`.MyTitle`) 
 
-- [Jina in Python](http://jinja.pocoo.org/) this one was probably the one I liked the most, and by looking at it again while writing this blog post, I have likely been influenced by it too when choosing the syntax for `scriban`. It has even quite a few features that I haven't put in `scriban` - thought some of them are a bit too much in my opinion (and it starts to make the language a big patchwork machinery language that could be too scary to consider...), so I might have some other opportunities in the future to improve `scriban`!
+- [Jinja in Python](http://jinja.pocoo.org/) this one was probably the one I liked the most, and by looking at it again while writing this blog post, I have likely been influenced by it too when choosing the syntax for `scriban`. It has even quite a few features that I haven't put in `scriban` - thought some of them are a bit too much in my opinion (and it starts to make the language a big patchwork machinery language that could be too scary to consider...), so I might have some other opportunities in the future to improve `scriban`!
 
 I got a even bit influenced also by Javascript... (nooooo!!!)... okay, only for the ability to create objects and functions directly into the language...
 
@@ -351,7 +351,7 @@ Though, compared to Razor, a `scriban` template (similar a `liquid` template) ca
 
 ### Built-in functions and pre-computed delegates
 
-The runtime comes with [**90+ builtin functions**](https://github.com/lunet-io/scriban/blob/master/doc/builtins.md#builtins) and in order to make this functions as fast as possible, I have pre-computed the delegates that are calling these functions to avoid using `System.Reflection`
+The runtime comes with [**90+ builtin functions**](https://github.com/lunet-io/scriban/blob/master/doc/builtins.md#builtins) and in order to make these functions as fast as possible, I have pre-computed the delegates that are calling these functions to avoid using `System.Reflection`
 
 In the repository, there is a program `Scriban.CodeGen` that will take the `Scriban` assembly and generates all the relevant marshalling delegates:
 

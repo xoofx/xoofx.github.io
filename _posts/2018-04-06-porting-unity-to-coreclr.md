@@ -76,7 +76,7 @@ So this is where porting Unity to CoreCLR (and later CoreRT) is going to lower t
 
 The .NET Core Runtime aka [CoreCLR](https://github.com/dotnet/coreclr) is the cross-platform OSS .NET runtime, that has been released with a very permissive MIT license by Microsoft around 3 years ago in early 2015. Large part of its implementation were coming from the well established .NET Desktop Runtime (the one that has been shipped by default with Windows for years), including the JIT, the GC and base .NET types.
 
-I would like to emphasis three main aspects on why CoreCLR is important for Unity game developers:
+I would like to emphasis three main aspects on why CoreCLR could be important for Unity game developers:
 
 1. **Performance** is probably the main reason and I will detail why below
 2. **Community** is another aspect, related to performance, but not only
@@ -84,7 +84,7 @@ I would like to emphasis three main aspects on why CoreCLR is important for Unit
 
 ### Performance with CoreCLR
 
-There can be quite large difference in performance between different .NET runtime. That's the main reason why CoreCLR is going to be great for Unity game developers, as it will provide a significant boost in performance, by an order of **2x to 5x compare to the Mono runtime** sometimes up to x10 on some workload! I'm pretty sure that many Unity developers would be very happy to get this boost without having to change a single line of code in their game.
+There can be quite large difference in performance between different .NET runtime. That's the main reason why CoreCLR could be great for Unity game developers, as it will provide a significant boost in performance, by an order of **2x to 5x compare to the Mono runtime** sometimes up to x10 on some workload! I'm pretty sure that many Unity developers would be very happy to get this boost without having to change a single line of code in their game...
 
 What about IL2CPP? IL2CPP has been already providing quite significant performance improvements as well. Though on many benchmarks (on Windows MSVC, though Clang should be overall better), you will notice that the performance, on average, is still behind by a factor of 2x to .NET CoreCLR. You may wonder why, as the generated code is in C++? 
 

@@ -132,7 +132,7 @@ One little fact for example in the Unity Editor related to this: In order to all
 
 Over the recent years, many external contributors have been able to improve the JIT and also the GC, while still more difficult to approach
 
-But also, you will notice also many work related to ARM32 and ARM64... and that's where the Community - including corporate work from Samsung for the Tizen platform - has been able to help a lot!
+But also, you will notice lots of work related to ARM32 and ARM64... and that's where the Community - including corporate work from Samsung for the Tizen platform - has been able to help a lot!
 
 CoreCLR is one part of the runtime, but also many performance improvements have been made to the core .NET libraries, as for example [Ben Adams long list of PR performance oriented to corefx](https://github.com/dotnet/corefx/pulls?utf8=✓&q=is%3Apr+author%3Abenaadams+)
 

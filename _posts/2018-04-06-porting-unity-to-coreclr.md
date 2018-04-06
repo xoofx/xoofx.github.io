@@ -11,7 +11,7 @@ comments: true
 
 > NOTE: This work was a *prototype* as we don't have yet an official roadmap and timetable in mind to bring this to Unity, more on that later this year hopefully ;)
 >
-> This blog post is also my own opinionated vision on the subject, but Unity may have different plan and constraints across the Teams involved on the subject. So it may not be the direction Unity will take in the end!
+> This blog post is also my own _opinionated_ vision on the subject, but Unity may have different plans and constraints across the teams involved on this. So it may not be the direction Unity will take in the end!
 
 <img align="right" src="/images/2018-04-06-unity-coreclr/unity-coreclr.png">
 

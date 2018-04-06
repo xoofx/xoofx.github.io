@@ -9,6 +9,8 @@ tags:
 comments: true
 ---
 
+<img align="right" src="/images/2018-04-06-unity-coreclr/unity-coreclr.png">
+
 Every year Unity organize a coding week event called **#HackWeek** during which R&D developers at Unity are invited to spend a week to unleash their imagination with passion, and work on something they would love to bring to the Unity platform (or to work on, or to just open their mind to different domains/skills... etc.). It is also a great opportunity to meet other coders there and to work on something else. It reminded me a bit the demo-scene coding parties, without the ranking at the end - the continuous music around, or the crowd shouting "Amiggaaaaaaa"... but in the end, a very similar amazing experience! ;)
 
 During this full HackWeek of work opportunity in May 2017, I decided to try to port the Unity Engine to the .NET Core platform and I was happy to welcome 3 other developers to challenge this idea. For many observers, the general feeling was that it would be barely possible to achieve this in one week but I was - cautiously -  optimistic about this. It turns out that we were able to run a simple Unity player with a spinning cube, on both Windows and Mac! While sounding quite a limited result, this was a significant achievement, and we were all delighted to get that so far.

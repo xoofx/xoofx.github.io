@@ -299,10 +299,10 @@ I will give a lot more details about it in an upcoming blog post, hopefully you 
 
 If you can't wait, you should have a look at the talk that Andreas Fredickson gave at GDC 2018 about _C# to Machine Code_ that gives a few hints about our work:
 
-<iframe width="560" height="315" src="https://www.youtube.com/watch?v=NF6kcNS6U80" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/NF6kcNS6U80" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 Also I recommend you to watch Mike Acton GDC 2018 presentation about _"Democratizing Data-Oriented Design: A Data-Oriented Approach to Using Component Systems"_ which gives insights about how Unity is going to help you design efficient data-oriented programming game
 
-<iframe width="560" height="315" src="https://www.youtube.com/watch?v=p65Yt20pw0g" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/p65Yt20pw0g" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 Happy coding!

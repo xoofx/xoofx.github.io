@@ -9,13 +9,17 @@ tags:
 comments: true
 ---
 
+> NOTE: This work was a *prototype* as we don't have yet an official roadmap and timetable in mind to bring this to Unity, more on that later this year hopefully ;)
+>
+> This blog post is also my own opinionated vision on the subject, but Unity may have different plan and constraints across the Teams involved on the subject. So it may not be the direction Unity will take in the end!
+
 <img align="right" src="/images/2018-04-06-unity-coreclr/unity-coreclr.png">
 
 Every year Unity organize a coding week event called **#HackWeek** during which R&D developers at Unity are invited to spend a week to unleash their imagination with passion, and work on something they would love to bring to the Unity platform (or to work on, or to just open their mind to different domains/skills... etc.). It is also a great opportunity to meet other coders there and to work on something else. It reminded me a bit the demo-scene coding parties, without the ranking at the end - the continuous music around, or the crowd shouting "Amiggaaaaaaa"... but in the end, a very similar amazing experience! ;)
 
 During this full HackWeek of work opportunity in May 2017, I decided to try to port the Unity Engine to the .NET Core platform and I was happy to welcome 3 other developers to challenge this idea. For many observers, the general feeling was that it would be barely possible to achieve this in one week but I was - cautiously -  optimistic about this. It turns out that we were able to run a simple Unity player with a spinning cube, on both Windows and Mac! While sounding quite a limited result, this was a significant achievement, and we were all delighted to get that far.
 
-This post (my apologize for not writing it earlier!) is going to give more details about the work involved and will try give hints about why .NET CoreCLR, how we did it and why this is important for the future of Unity.
+This post (my apologize for not writing it earlier!) is going to give more details about the work involved and will try give hints about why .NET CoreCLR, how we did it and why this is in my opinion, an important for the future of Unity.
 
 ## Unity and the .NET platforms
 
@@ -155,8 +159,6 @@ If you think about Unity as a Platform, not only as an engine, but with a full d
 So, let's see how we were able to integrate CoreCLR to Unity... I'm worried that this post is getting too long... I hope that I will not squash too much the following parts that might have more interests for you! 
 
 ## How CoreCLR was integrated to Unity?
-
-> NOTE: Let me restate that this work was a *prototype* as we don't have yet an official roadmap timetable in mind to bring this to Unity, more on that at the end...
 
 It all started during the Christmas period in December 2016, before that I had a few discussions with some technical fellow at Unity that were pointing that it might be a huge task to try to run CoreCLR in Unity... but knowing a bit how the underlying things are glue together in this domain (both at mono and CoreCLR side), I was more optimistic... (though I'm not minoring the fact that It will require \*lots\* of work!). 
 

@@ -72,7 +72,7 @@ So this is where porting Unity to CoreCLR (and later CoreRT) is going to lower t
 
 The .NET Core Runtime aka [CoreCLR](https://github.com/dotnet/coreclr) is the cross-platform OSS .NET runtime, that has been released with a very permissive MIT license by Microsoft around 3 years ago in early 2015. Large part of its implementation were coming from the well established .NET Desktop Runtime (the one that has been shipped by default with Windows for years), including the JIT, the GC and base .NET types.
 
-I would like too put the emphasis on three main aspects on why CoreCLR is important for Unity game developers:
+I would like to emphasis three main aspects on why CoreCLR is important for Unity game developers:
 
 1. **Performance** is probably the main reason and I will detail why below
 2. **Community** is another aspect, related to performance, but not only

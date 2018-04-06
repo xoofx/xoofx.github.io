@@ -281,9 +281,9 @@ The changes to the Unity runtime were surprisingly very minor, but the truth is 
 
 The main change was to modify the offset to the first field of Managed Objects when accessing them from C++, as Unity was using some a fixed value bound to the way Mono had layout its object.
 
-The second, sneaky change, was related to some C++ code accessing the field of a managed class from `mscorlib` directly with an hardcoded pointer offset. The details of implementation of `mscorlib` (e.g private fields of `System.MulticastDelegate` for example) are largely varying between .NET runtime, so we had to be careful about these kind of access, but fortunately, we had only one or two places to fix in Unity to proceed further. Though it took quite some time to find this illegal access (basically resulting in a `NullReferenceException` on an unrelated managed object)
+The second, sneaky change, was related to some C++ code accessing the field of a managed class from `mscorlib` directly with a hardcoded pointer offset. The details of implementation of `mscorlib` (e.g private fields of `System.MulticastDelegate` for example) are largely varying between .NET runtime, so we had to be careful about this kind of access, but fortunately, we had only one or two places to fix this in Unity to proceed further. Though it took quite some time to find this illegal access (basically resulting in a `NullReferenceException` on an unrelated managed object)
 
-But we were so excited to get to this screen with a happy spinning cube in the middle:
+But we were all so excited to get to this screen with a happy spinning cube in the middle:
 
 ![Unity CoreCLR Final](/images/2018-04-06-unity-coreclr/unity-coreclr-final.png)
 

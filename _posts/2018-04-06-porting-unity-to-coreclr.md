@@ -19,7 +19,7 @@ Every year Unity organize a coding week event called **#HackWeek** during which 
 
 During this full HackWeek of work opportunity in May 2017, I decided to try to port the Unity Engine to the .NET Core platform and I was happy to welcome 3 other developers to challenge this idea. For many observers, the general feeling was that it would be barely possible to achieve this in one week but I was - cautiously -  optimistic about this. It turns out that we were able to run a simple Unity player with a spinning cube, on both Windows and Mac! While sounding quite a limited result, this was a significant achievement, and we were all delighted to get that far.
 
-This post (my apologize for not writing it earlier!) is going to give more details about the work involved and will try give hints about why .NET CoreCLR, how we did it and why this may be, in my opinion, an important step for the future of Unity.
+This post (my apologize for not writing it earlier!) is going to give more details about the work involved and will try give hints about why .NET CoreCLR, how we did it and why this is, in my opinion, an important step for the future of Unity.
 
 ## Unity and the .NET platforms
 
@@ -96,7 +96,7 @@ A more critical reason is **the type of GC used and how well it is integrated wi
 
 So, in order for a GC to be really efficient with the codegen, it is usually using what is called a young generation where newly allocated objects are stored. It is much faster to allocate within this young generation, because it is only a matter of advancing a pointer in memory instead of going through more complicated allocation patterns (e.g a free list to scan - as for example C++ malloc is often working). When this young collection is full, the GC will stop the threads and identify the objects to move from gen0 to gen1. How is this working? By using write barriers, a small code that is executed whenever you store a reference of an object into another field object (or to a static field) and that will record that you may have store a reference of a gen0 object to an older gen1/gen2 object. In order to be able to move these objects to an older collection, the GC will have to copy the data to another memory location and to update the pointers that were referencing these gen0 objects.
 
-Obviously, lots of reference to these gen0 objects can come from from the stack, so even when the GC is doing this small gen0 collection, it has to go through the stack to collect the gen0 object references, called **stack roots**. This is where it gets impossible for a C++ codegen to fight against a GC aware codegen, mainly because a GC aware codegen knows exactly where are these GC references at almost any point in the code (though usually, you use what is called stack maps at well know points to reduce the number of places where you need this information). Not only the GC is able to track these object references on the stack but it is also often able to do this on registers directly! When a GC has a precise information of the stack roots, it can quickly iterate on these stack root memory locations, and update these managed references. 
+Obviously, lots of reference to these gen0 objects can come from the stack, so even when the GC is doing this small gen0 collection, it has to go through the stack to collect the gen0 object references, called **stack roots**. This is where it gets impossible for a C++ codegen to fight against a GC aware codegen, mainly because a GC aware codegen knows exactly where are these GC references at almost any point in the code (though usually, you use what is called stack maps at well know points to reduce the number of places where you need this information). Not only the GC is able to track these object references on the stack but it is also often able to do this on registers directly! When a GC has a precise information of the stack roots, it can quickly iterate on these stack root memory locations, and update these managed references. 
 
 But with a non aware GC codegen, you can't update stack roots like this because you don't know exactly where they are. So instead, non aware GC codegen has to use what is called a "**conservative GC for stack roots**". Typically, the GC will have to scan the whole stack memory (not only the stack roots), on every pointer size (usually aligned, so it can iterate on a pointer size) and try to determine if a particular memory location *could be* a reference to a managed object. The _"could be"_ is where it gets difficult and dirty: usually, the GC has to compare a upper/lower bound of a memory to check if an object reference belongs to some GC owned memory. So what's the problem, we get the reference too no?
 
@@ -146,7 +146,7 @@ Initiative like [BenchmarkDotNet](http://benchmarkdotnet.org) actively improved 
 
 ### Convergence and Evolution with CoreCLR
 
-The undergoing work around [CoreRT](https://github.com/dotnet/corert/), the AOT solution for .NET (while CoreCLR is the related to JIT) is also very promising. 
+The undergoing work around [CoreRT](https://github.com/dotnet/corert/), the AOT solution for .NET (while CoreCLR provides a JIT) is also very promising. 
 
 First, one of the backend is leveraging the CoreCLR RyuJIT GC aware codegen, meaning that we can get a very efficient AOT code that is working cooperatively with the GC. 
 
@@ -162,19 +162,17 @@ So, let's see how we were able to integrate CoreCLR to Unity... I'm worried that
 
 It all started during the Christmas period in December 2016, before that I had a few discussions with some technical fellow at Unity that were pointing that it might be a huge task to try to run CoreCLR in Unity... but knowing a bit how the underlying things are glue together in this domain (both at mono and CoreCLR side), I was more optimistic... (though I'm not minoring the fact that It will require \*lots\* of work!). 
 
-So during my holidays, I started to work on this PR [\[WIP\] Collectible Assemblies and AssemblyLoadContext](https://github.com/dotnet/coreclr/pull/8677). What's the link with Unity? Because I originally wanted to challenge ths most difficult part, related to the Unity Editor that is using AppDomains to reload the entire game assemblies. As CoreCLR have dropped support for AppDomain (which I really agree with), there was quite some work to bring a similar feature to life (i.e. Collectible Assemblies), so I challenged myself to enter the CoreCLR codebase from this side. 
+So during my holidays, I started to work on this PR [\[WIP\] Collectible Assemblies and AssemblyLoadContext](https://github.com/dotnet/coreclr/pull/8677). What's the link with Unity? Because I originally wanted to challenge the most difficult part, related to the Unity Editor that is using AppDomains to reload the entire game assemblies. As CoreCLR has dropped support for AppDomains (which I really agree with), there was quite some work to bring a similar feature to life (i.e. Collectible Assemblies), so I challenged myself to enter the CoreCLR codebase from this side. 
 
 I also started to roughly prototype how I would make this integration. The idea was pretty simple: As  Mono is a very approachable C API (I would love to see this kind of easy API in CoreCLR - as it is one of the negative point) that is exported to a shared library runtime, **the idea is simply to provide this exact same Mono C API but by providing a full implementation based on CoreCLR**.
 
-After a few days of work, I had collectible assemblies working quite well, but along the route, I discovered that I would have to develop also other critical parts (like `DllImport` not supported in Collectible Assemblies, or the inefficiency of static variables in Collectible Assemblies), and that was way beyond what I wanted to do for a prototype... (and my spare-time is really precious, as everybody here right?) so I decided to put this idea on a hold... just to receive a few weeks later an invitation to this HackWeek, and I immediately thought that it would be a fantastic opportunity to challenge this idea and be able to work for a full week on this with few other folks to help!
+After a few days of work, I had collectible assemblies working quite well, but along the route, I discovered that I would have to develop also other critical parts (like `DllImport` not supported in Collectible Assemblies, or the inefficiency of static variables in Collectible Assemblies...etc.), and that was way beyond what I wanted to do for a prototype... (and my spare-time is really precious, as everybody here right?) so I decided to put this idea on a hold... just to receive a few weeks later an invitation to the Unity HackWeek, and I immediately thought that it would be a fantastic opportunity to challenge this idea and be able to work for a full week on this with few other folks to help!
 
-Hackweek came around May 2017, but since December, quite a few things happened in the meantime for .NET CoreCLR. Specifically a preview CoreCLR 2.0 was released and with the good experience I had already with `netstandard1.6`, I was pretty confident that it would secure a lot more the problems of compiling Unity with this new surface API. I was also lucky to be able to use the 2.0 preview that was  released a few weeks just before the HackWeek, as it enabled us to use plain nuget packages with a custom CoreCLR compiled. Due to my experience with implementing Collectible Assemblies which was quite painful due to the convoluted building process between CoreCLR and CoreFX, I didn't want to have to face these build limitation issues. So being able to use plain nuget official preview packages saved quite a bit of time.
+Hackweek came around May 2017, but since December, quite a few things happened in the meantime for .NET CoreCLR. Specifically a preview CoreCLR 2.0 was released and with the good experience I had already with `netstandard1.6`, I was pretty confident that it would secure a lot more the problems of compiling Unity with this new surface API. I was also lucky to be able to use the 2.0 preview that was released a few weeks just before the HackWeek, as it enabled us to use plain nuget packages with a custom CoreCLR compiled. Due to my experience with implementing Collectible Assemblies which was quite painful because of the convoluted building process between CoreCLR and CoreFX, I didn't want to have to face these build limitation issues.
 
 ### The overall plan for the week
 
-First, was to focus only on the StandalonePlayer, not the Unity Editor. It simplified the missing AppDomains and it likely narrowed down the number of Mono API we had to implement. So the overall goal was to run a very simple scene, with just a cube rotating on the screen.
-
-Then:
+First, was to focus only on the StandalonePlayer, not the Unity Editor. It simplified the missing AppDomains and it likely narrowed down the number of Mono API we had to implement. So the overall goal was to run a very simple scene, with just a cube rotating on the screen, and in order to get there, we wanted to:
 
 - Develop a simple program using Mono runtime hosting API to load a class, and invoke a static method on it, used as a very simple Mono Hosting HelloWorld program
 - In the meantime, develop the relevant API used by this simple program on top of CoreCLR
@@ -194,7 +192,7 @@ With this list, it was also much easier to dispatch our work. With a shared spre
 
 We developed the entire Mono extension within a fork of CoreCLR (in a private repository).
 
-The idea was to integrate as part of the `coreclr.dll` the Mono API exposed functions and to call directly the internals of CoreCLR. Using this mode of development made the whole experience a lot more easier to work with, as we had quite a few parts to modify in CoreCLR directly.
+The idea was to integrate directly as part of the `coreclr.dll` the Mono API exposed functions and to call the internals of CoreCLR. Using this mode of development made the whole experience a lot more easier to work with, as we had also to modify a few parts in CoreCLR as well.
 
 #### 1) Develop a simple Mono HelloWorld program
 
@@ -216,7 +214,6 @@ int main()
 #### 2) Implement the Mono API
 
 we had a single file inside `coreclr/src/vm/mono/mono_coreclr.cpp` that was implementing the whole Mono API.
-
 
 Typically, the function `mono_domain_assembly_open` was implemented like this:
 

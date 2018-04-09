@@ -19,7 +19,7 @@ Every year Unity organize a coding week event called **#HackWeek** during which 
 
 During this full HackWeek of work opportunity in May 2017, I decided to try to port the Unity Engine to the .NET Core platform and I was happy to welcome 3 other developers to challenge this idea. For many observers, the general feeling was that it would be barely possible to achieve this in one week but I was - cautiously -  optimistic about this. It turns out that we were able to run a simple Unity player with a spinning cube, on both Windows and Mac! While sounding quite a limited result, this was a significant achievement, and we were all delighted to get that far.
 
-This post (my apologize for not writing it earlier!) is going to give more details about the work involved and will try give hints about why .NET CoreCLR, how we did it and why this is, in my opinion, an important step for the future of Unity.
+This post (my apologize for not writing it earlier!) is going to give more details about the work involved, why .NET CoreCLR?, how we did it? and why this is in my opinion, an important step for the future of Unity...
 
 ## Unity and the .NET platforms
 

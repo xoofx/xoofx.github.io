@@ -13,7 +13,7 @@ comments: true
 >
 > This blog post is also my own _opinionated_ vision on the subject, but Unity may have different plans and constraints across the teams involved on this. So it may not be the direction Unity will take in the end!
 >
-> NOTE about IL2CPP: Even if Unity could use a dedicated GC aware codegen for some platforms, **IL2CPP is and will remain the best option to quickly target and support new platforms** (or even very old platforms). Only once we could generate GC aware codegen for this platform then we could switch to a more suitable option. This post is really not about replacing IL2CPP but about providing new optimization opportunities for some targeted platforms.
+> NOTE about IL2CPP: Even if Unity could use a dedicated GC aware codegen like CoreCLR/CoreRT for some platforms, **IL2CPP is and will remain the best option to quickly target and support new platforms** (or even very old platforms). Only once we could generate GC aware codegen for this platform then we could switch to a more suitable option. This post is really not about replacing IL2CPP but about providing new optimization opportunities for some targeted platforms.
 
 <img align="right" src="/images/2018-04-06-unity-coreclr/unity-coreclr.png">
 

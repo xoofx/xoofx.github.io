@@ -162,7 +162,7 @@ A vtable is simply an array of pointers to virtual methods implementations, uniq
 
 The implementation respects a vtable ABI to expose the methods of its interface (C++ compiler specific, but luckily, enough accepted that it is valid across compilers, and we can reason about from C#). This pattern is add the base of how COM objects are working, with the root interface `IUnknown` that provides basic lifecycling (reference count through AddReference/Release), but also extensibility by allowing through the `QueryInterface(GUID, IUnknown** outInterface)` to expose other interfaces from an existing IUnknown implementation.
 
-```csharp
+```
              CILJit Instance
 jit ->      +--------------+                  CILJit vtable
         [0] |  JitVtable   |  ---->     +-------------------------+
@@ -275,7 +275,7 @@ var trampoline = (CompileMethodDelegate)Marshal.GetDelegateForFunctionPointer(tr
 
 So what does the magical `AllocateTrampoline`? It is some native code that will call our delegate. In x64, we simply create this trampoline like this:
 
-``` C#
+```csharp
 private static readonly byte[] DelegateTrampolineCode = {
     // mov rax, 0000000000000000h ;Pointer address to _overrideCompileMethodPtr
     0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

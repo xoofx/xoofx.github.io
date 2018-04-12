@@ -172,6 +172,7 @@ jit ->      +--------------+                  CILJit vtable
             | ...          |        [32]+ getVersionIdentifierPtr +
             +--------------+        [_] + ...                     +
                                         +-------------------------+
+```
 
 So with the following code:
 

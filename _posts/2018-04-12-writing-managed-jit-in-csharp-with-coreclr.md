@@ -558,7 +558,7 @@ private void ReplaceCompile(MethodBase method, IntPtr ilCodePtr, int ilSize, Int
 
 As we have a static method, the first parameter `int a` is passed to `ecx` register, and `int b` is passed to `edx` (in the x64 calling convention of the CLR). Then we simply add the two, put the result in `eax` which is in the x64 ABI expected to be the result of the function, and we increment the `eax` value just to provide a feedback that it is our actual JIT code that is running.
 
-I have used this handy online https://defuse.ca/online-x86-assembler.htm x86/x64 asm/disasm compiler to generate the code above.
+I have used this handy [online x86/x64 asm/disasm compiler](https://defuse.ca/online-x86-assembler.htm) to generate the code above.
 
 #### 4) But and the GC?
 

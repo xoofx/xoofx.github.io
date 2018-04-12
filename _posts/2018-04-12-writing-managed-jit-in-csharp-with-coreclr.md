@@ -158,7 +158,7 @@ You can see that we are fetching some Vtable information. If you are not familia
 
 1) We get a pointer to the vtable of the instance of the returned `ICorJitCompiler`:
 
-A vtable is simply an array of pointers to virtual methods implementations, unique for one implementation the `ICorJitCompiler`. As this is an interface (in the sense of C#), the implementation will be provided by another type (typically in CoreCLR, we have `CILJit` but also many "interceptors" JIT...etc.)
+A vtable is simply an array of pointers to virtual methods implementations, unique for each implementation of `ICorJitCompiler`. As this is an interface (in the sense of C#), the implementation will be provided by another type (typically in CoreCLR, we have `CILJit` but also many "interceptors" JIT...etc.)
 
 The implementation respects a vtable ABI to expose the methods of its interface (C++ compiler specific, but luckily, enough accepted that it is valid across compilers, and we can reason about from C#). This pattern is at the base of how COM objects are working, with the root interface `IUnknown` that provides basic lifecycling (reference count through AddReference/Release), but also extensibility by allowing through the `QueryInterface(GUID, IUnknown** outInterface)` to expose other interfaces from an existing IUnknown implementation.
 

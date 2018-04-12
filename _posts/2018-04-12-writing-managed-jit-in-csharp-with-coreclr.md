@@ -70,7 +70,7 @@ All of this is done by hacking into the JIT compiler and not by using the well k
 
 CoreCLR is pretty modular, and the JIT is sitting into its own shared library called `clrjit.dll` (For .NET Framework, that was in `mscorjit.dll`)
 
-In fact, the Jit is exposed through a simple exported symbol from the shared library [`getJit`](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corjit.h#L382):
+In fact, the Jit is exposed through a simple exported symbol [`getJit`](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corjit.h#L382) from the shared library:
 
 ```csharp
 extern "C" ICorJitCompiler* __stdcall getJit();

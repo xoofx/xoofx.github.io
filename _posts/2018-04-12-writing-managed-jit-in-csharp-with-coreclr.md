@@ -363,7 +363,7 @@ So, are we installed? Yes, after the call to `InstallManagedJit` any new method 
 
 ### Writing the ManagedJit.CompileMethod
 
-So, this blog post is maybe a bit misleading, as we you don't expect me to write an entire JIT in C# right? Instead we are going to do a very simple hardcoded JIT that will be able to recognize our sample function `JitReplaceAdd` and provide a different native code.
+So, this blog post is maybe a bit misleading, as you don't expect me to write an entire JIT in C# right? Instead we are going to do a very simple hardcoded JIT that will be able to recognize our sample function `JitReplaceAdd` and provide a different native code.
 
 But first, we need to sort out a few bits.
 

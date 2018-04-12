@@ -240,7 +240,7 @@ Ok, we got a pointer to the jit vTable and a delegate to the original `compileMe
 
 So the basic approach, as described earlier with the vtable of `ICorJitCompiler` is to modify the first entry of `compileMethod` (for which we have already saved the pointer and create a managed delegate from it) to call our C# implemented `compileMethod`.
 
-But in order to do this, this is where it gets a bit more tricky:
+But in order to achieve this, it gets a bit more tricky:
 
 #### 1) Store `CompileMethodDelegate` of our `ManagedJit.CompileMethod` instance method
 

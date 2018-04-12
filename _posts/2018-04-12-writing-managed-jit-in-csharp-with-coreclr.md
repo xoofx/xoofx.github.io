@@ -37,7 +37,7 @@ So let's see how this is working.
 
 The simple following program from the repository [`ManagedJit`](https://github.com/xoofx/ManagedJit) shows how it is used in practice:
 
-```c#
+```csharp
 class Program
 {
     static void Main(string[] args)
@@ -72,13 +72,13 @@ CoreCLR is pretty modular, and the JIT is sitting into its own shared library ca
 
 In fact, the Jit is exposed through a simple exported symbol from the shared library [`getJit`](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corjit.h#L382):
 
-```C#
+```csharp
 extern "C" ICorJitCompiler* __stdcall getJit();
 ```
 
 It returns a very minimalist interface [`ICorJitCompiler`](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corjit.h#L391) which contains a few pure C++ virtual methods (the `= 0` at the end of the method declaration, this is important to how we can hack into this), and most notably, the first method is the famous [`compileMethod`](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corjit.h#L394-L411) that is called ultimately by a typical `MethodDesc::MakeJitWorker` whenever it needs to JIT a managed method to native code:
 
-```C#
+```csharp
 class ICorJitCompiler
 {
 public:
@@ -119,7 +119,7 @@ So in the static initializer of our [ManagedJit class](https://github.com/xoofx/
 - Then we need to check the version via the method provided `ICorJitCompiler::getVersionIdentifier` that returns a `GUID` that is stored in the `corjit.h`. Why? Because the `ICorJitInfo` provided as a first parameter to `ICorJitCompiler::compileMethod` is being changed constantly, methods are being added to this interface, and as we are late binding on these methods via an index in the vtable, the index can change, so we need to verify that we bind to a known Jit version we can work with.
 
 
-```C#
+```csharp
 foreach (ProcessModule module in process.Modules)
 {
     if (Path.GetFileName(module.FileName) == "clrjit.dll")
@@ -162,7 +162,7 @@ A vtable is simply an array of pointers to virtual methods implementations, uniq
 
 The implementation respects a vtable ABI to expose the methods of its interface (C++ compiler specific, but luckily, enough accepted that it is valid across compilers, and we can reason about from C#). This pattern is add the base of how COM objects are working, with the root interface `IUnknown` that provides basic lifecycling (reference count through AddReference/Release), but also extensibility by allowing through the `QueryInterface(GUID, IUnknown** outInterface)` to expose other interfaces from an existing IUnknown implementation.
 
-```C#
+```csharp
              CILJit Instance
 jit ->      +--------------+                  CILJit vtable
         [0] |  JitVtable   |  ---->     +-------------------------+
@@ -175,27 +175,27 @@ jit ->      +--------------+                  CILJit vtable
 
 So with the following code:
 
-```C#
+```csharp
 JitVtable = Marshal.ReadIntPtr(jit);
 ```
 
 We are simply loading the `JitVtable` pointer that is used later to fetch the `getVersionIdentifier` and `compileMethod` methods:
 
-```C#
+```csharp
 var getVersionIdentifierPtr = Marshal.ReadIntPtr(JitVtable, IntPtr.Size * getVersionIdentifierVTableIndex);
 var getVersionIdentifier = (GetVersionIdentifierDelegate)Marshal.GetDelegateForFunctionPointer(getVersionIdentifierPtr, typeof(GetVersionIdentifierDelegate));
 ```
 
 If you have already used A C# delegate to wrap a a native function, this is exactly what we are doing here by using `Marshal.GetDelegateForFunctionPointer`. The only difference is that our delegate takes the hidden this parameter of the object instance:
 
-```C#
+```csharp
 [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 private delegate void GetVersionIdentifierDelegate(IntPtr thisPtr, out Guid versionIdentifier /* OUT */);
 ```
 
 The `ExpectedJitVersion` in our `ManagedJit` class is a Guid directly extracted from [`corinfo.h`](https://github.com/dotnet/coreclr/blob/bb01fb0d954c957a36f3f8c7aad19657afc2ceda/src/inc/corinfo.h#L191-L221):
 
-```C++
+```cpp
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
@@ -245,7 +245,7 @@ But in order to do this, this is where it gets a bit more tricky:
 
 This is the very first step. We need to create a delegate `CompileMethodDelegate` that is going to be re-routed to an instance method `CompileMethod` of our `ManagedJit`:
 
-```C#
+```csharp
 // 1) Converts a reference to our compile method to a `CompileMethodDelegate`
 _overrideCompileMethod = CompileMethod;
 ```
@@ -266,7 +266,7 @@ And you can understand now why we need this: If we don't try to force the compil
 
 So with this knowledge, what we need to do is to **simulate a reverse P/Invoke call to our delegate**, and this is where we are going to create a trampoline:
 
-```C#
+```csharp
 // 2) Build a trampoline that will allow to simulate a call from native to our delegate
 _overrideCompileMethodPtr = Marshal.GetFunctionPointerForDelegate(_overrideCompileMethod);
 var trampolinePtr = AllocateTrampoline(_overrideCompileMethodPtr);
@@ -299,7 +299,7 @@ private static IntPtr AllocateTrampoline(IntPtr ptr)
 
 Now that our trampoline is in place, we can call the trampoline that will call our delegate (in the meantime it will call the existing JIT to compile the reverse delegate) that will call ultimately our `ManagedJit.CompileMethod` method:
 
-```C#
+```csharp
 // 3) Call our trampoline
 IntPtr value;
 int size;
@@ -312,7 +312,7 @@ What we get with this calling sequence is that the Jit will compile the delegate
 
 Note that in the code above, we are passing `IntPtr.Zero` to allow to call our `CompileMethod`, so we handle this gracefully in the code to early exit, as we know that it until our JIT is not hooked up, we don't need to proceed further:
 
-```C#
+```csharp
     private int CompileMethod(
         IntPtr thisPtr,
         IntPtr comp, // ICorJitInfo* comp, /* IN */
@@ -340,7 +340,7 @@ This is important to let also the existing JIT to compile our future JIT method,
 
 So we just need to patch the first pointer of the `JitVtable` that contains a pointer to the `compileMethod`:
 
-```C#
+```csharp
 // 4) Once our `CompileMethodDelegate` can be accessible from native code, we can install it
 InstallManagedJit(_overrideCompileMethodPtr);
 _isHookInstalled = true;
@@ -372,7 +372,7 @@ Now that we have our JIT in C#, the code involved could go very deeply, spread o
 
 What we can do is simply to use a counter to track when we enter our JIT (counter++) and when we leave from our method (counter--)
 
-```C#
+```csharp
 var compileEntry = _compileTls ?? (_compileTls = new CompileTls());
 compileEntry.EnterCount++;
 try
@@ -410,7 +410,7 @@ This code is using a thread static local storage, as the JIT can be used from mu
 
 If you look at the ICorJitCompiler::compileMethod, we have several parameters that gives us the context of the method to compile:
 
-```C++
+```cpp
     virtual CorJitResult __stdcall compileMethod (
             ICorJitInfo                 *comp,               /* IN */
             struct CORINFO_METHOD_INFO  *info,               /* IN */
@@ -424,7 +424,7 @@ If you look at the ICorJitCompiler::compileMethod, we have several parameters th
   But you can see that it actually derives from `ICorDynamicInfo` declared [in `corinfo.h` here](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corinfo.h#L2803) and that `ICorDynamicInfo` derives from `ICorStaticInfo` declared [in `corinfo.h` here](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corinfo.h#L1946)
   In total, we the inheritance, we have **more than 160+ methods in these interfaces!** That's a lot!
 - `CORINFO_METHOD_INFO*` provides a pointer to a structure that gives some information of the method being compiled, declared [in `corinfo.h` here](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corinfo.h#L1194-L1206)
-  ```C#
+  ```csharp
     struct CORINFO_METHOD_INFO
     {
         CORINFO_METHOD_HANDLE       ftn;
@@ -450,7 +450,7 @@ The steps are:
 1. Get the .NET IL token of the method being compiled
    We can query this by using the method `ICorJitInfo::getMethodDefFromMethod` declared [in `corinfo.h` here](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corinfo.h#L2760-L2764)
 
-   ```C#
+   ```csharp
     var vtableCorJitInfo = Marshal.ReadIntPtr(comp);
 
     var getMethodDefFromMethodPtr = Marshal.ReadIntPtr(vtableCorJitInfo, IntPtr.Size * ICorJitInfo_getMethodDefFromMethod_index);
@@ -461,7 +461,7 @@ The steps are:
 2. We need to get the equivalent `System.Reflection.Assembly` for the method being compiled. Unfortunately, this part is a bit more convoluted, as I haven't found an easy to do this. 
    The idea is to query an assembly handle from `ICorJitInfo::getModuleAssembly` from the current IL module of the method. Than with this handle, we can iterate on the assemblies in the AppDomain, compare the name of the assembly, and if we can find it, we will store a reference to it.
 
-   ```C#
+   ```csharp
     var getModuleAssemblyDelegatePtr = Marshal.ReadIntPtr(vtableCorJitInfo, IntPtr.Size * ICorJitInfo_getModuleAssembly_index);
     var getModuleAssemblyDelegate = (GetModuleAssemblyDelegate)Marshal.GetDelegateForFunctionPointer(getModuleAssemblyDelegatePtr, typeof(GetModuleAssemblyDelegate));
     var assemblyHandle = getModuleAssemblyDelegate(comp, info.scope);
@@ -499,7 +499,7 @@ The steps are:
 
 3. Once we have the token and managed assembly, we can simply query for the `MethodBase` managed object:
 
-   ```C#
+   ```csharp
     // Find the method with the token
     MethodBase method = null;
     if (assemblyFound != null)
@@ -518,7 +518,7 @@ The steps are:
    ```
 4. If we have found the method, we can call our method replacer:
 
-   ```C#
+   ```csharp
     if (method != null)
     {
         ReplaceCompile(method, info.ILCode, info.ILCodeSize, nativeEntry, nativeSizeOfCode);
@@ -530,7 +530,7 @@ The steps are:
 
 This is our simple JIT that going to replace the method `JitReplaceAdd` with some custom code:
 
-```C#
+```csharp
 private void ReplaceCompile(MethodBase method, IntPtr ilCodePtr, int ilSize, IntPtr nativeCodePtr, int nativeCodeSize)
 {
     if (method.Name != nameof(Program.JitReplaceAdd))
@@ -568,7 +568,7 @@ Well, this is a hack, and actually, not really sustainable, because in order to 
 This is usually done by using some of the following `ICorJitInfo` methods:
 
 - [`ICorJitInfo ::allocMem`](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corjit.h#L466-L475) to alocate JIT memory code (with support for hot/cold path, a cold path being for example typically a catch that should not happen often)
-  ```C++
+  ```cpp
       virtual void allocMem (
             ULONG               hotCodeSize,    /* IN */
             ULONG               coldCodeSize,   /* IN */
@@ -581,7 +581,7 @@ This is usually done by using some of the following `ICorJitInfo` methods:
             ) = 0;
   ```
 - [`ICorJitInfo ::allocGCInfo`](https://github.com/dotnet/coreclr/blob/c51aa9006c035ccdf8aab2e9a363637e8c6e31da/src/inc/corjit.h#L525-L527) 
-  ```C++
+  ```cpp
       virtual void * allocGCInfo (
             size_t                  size        /* IN */
             ) = 0;

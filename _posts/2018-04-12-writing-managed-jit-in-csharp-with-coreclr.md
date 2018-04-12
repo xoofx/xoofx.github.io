@@ -29,7 +29,7 @@ But when looking at it, and the fact that CoreCLR is now OSS, the solution prese
 
 At that time, I was not able to get a solution entirely in C#, so I used a C++ solution and as far as I know, all existing solutions around the net will use the same setup. Thankfully, with a bit more experience in the meantime, I finally found a workaround to get this running in C#, without any C++ code in the middle. That makes it maybe the first JIT implemented in C# for .NET?
 
-Actually, while writing this lines, I found this post about [_Analyzing the nasty .NET protection of the Ploutus.D malware._](http://antonioparata.blogspot.fr/2018/02/analyzing-nasty-net-protection-of.html) and it seems that a  malware written in C# is hooking into a similar way that I'm going to describe here... Interesting!
+Actually, while writing these lines, I found this post about [_Analyzing the nasty .NET protection of the Ploutus.D malware._](http://antonioparata.blogspot.fr/2018/02/analyzing-nasty-net-protection-of.html) and it seems that a  malware written in C# is hooking into a similar way that I'm going to describe here... Interesting!
 
 So let's see how this is working.
 

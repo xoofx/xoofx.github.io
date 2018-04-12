@@ -625,3 +625,5 @@ Is there any possible life beyond this prototype? Well, it would require some wo
 Anyway, I find this whole hack very cool to develop, so in the meantime, you can also enjoy toying with this C# ManagedJit hack!
 
 Happy coding!
+
+PS: Oh, I forgot, back to the original story of sharplab.io, this is probably too hacky and It would be nicer to have a more adequate and simpler public infrastructure, quite resilient to JIT changes, to just provide the few relevant bits to decompile a JIT native method!

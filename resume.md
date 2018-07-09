@@ -11,7 +11,7 @@ Situation: *Married, 2 children*
 Location: *Grenoble, France*  
 Email: *alexandre_mutel at live.com*  
 Social medias: [@xoofx](https://twitter.com/xoofx) on Twitter, [Github](https://github.com/xoofx/), [StackOverflow](http://stackoverflow.com/users/1356325/xoofx)  
-***Latest update: 1 November 2016***
+***Latest update: 9 July 2018***
 
 ___
 
@@ -29,7 +29,7 @@ ___
 
 # Experience
 
-## Senior Developer on the Unity Game Engine .NET Runtime
+## Software Architect at Unity Technologies
 ***November 2016 - present***  
 Company: *Unity Technologies*  
 Location: *Grenoble, France*  

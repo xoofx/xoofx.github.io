@@ -9,7 +9,7 @@ $navbar-default-link-color:                #ccc;
 $navbar-default-link-hover-color:          #888;
 $navbar-default-link-active-color:        #fff;
 
-$link-color:      #800000;
+$link-color:      #920000;
 $blockquote-border-color: #4060c0;
 $link-hover-color: #400000;
 
@@ -23,8 +23,12 @@ $link-hover-color: #400000;
  */
 
 body {
-  font-family: "Open Sans", sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 100;
+}
+
+p {
+  margin-bottom: 15px;
 }
 
 hr {
@@ -260,8 +264,10 @@ article h1.title a
 
 article h1.title a:hover, a:focus
 {
-	color: $link-color;
-	text-decoration-line: none;
+  color: $link-color;
+  font-weight: bold;
+  text-decoration-line: none;
+  
 }
 
 .entry-content

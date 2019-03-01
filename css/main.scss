@@ -265,14 +265,17 @@ article h1.title a
 article h1.title a:hover, a:focus
 {
   color: $link-color;
-  font-weight: bold;
-  text-decoration-line: none;
-  
+  text-decoration-line: none; 
 }
 
 .entry-content
 {
 	padding-bottom: 10px;
+}
+
+article .entry-content a
+{
+  font-weight: bold;
 }
 
 .navbar

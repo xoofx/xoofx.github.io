@@ -1,3 +1,4 @@
+// credits: http://donw.io/post/github-comments/
 // use of ajax vs getJSON for headers use to get markdown (body vs body_htmml)
 // todo: pages, configure issue url, open in new window?
 

@@ -1,14 +1,3 @@
-{% if page.ghcommentid %}
-<div id="gh-comments">
-  <h2>Comments</h2>
-  <div id="gh-comments-list"></div>
-  <a href="javascript:void(0)" id="gh-load-comments" class="btn" style="display:none">Load more comments</a>
-</div>
-<script src="{{ "/scripts/github-comments.js" | prepend: site.baseurl }}" type="text/javascript"></script>
-<script type="text/javascript">
-  DoGithubComments({{ page.ghcommentid }});
-</script>
-{% endif %}
 <p>Copyright &copy; 2016 - 2019, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="http://jekyllrb.com/">Jekyll</a></p>
 <script>
   $(document).ready(function() {

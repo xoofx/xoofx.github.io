@@ -27,7 +27,7 @@ Because the code was also using some virtual/abstract methods for the model of t
 
 This first selection of methods was very easy to express with Roslyn:
 
-```c#
+```csharp
 var workspace = MSBuildWorkspace.Create();
 
 var solution = await workspace.OpenSolutionAsync(@"..\..\..\..\scriban.sln");
@@ -84,7 +84,7 @@ Once we have this first set of mandatory async/await methods, we want to go thro
 
 In our case, we are navigating through these methods using the `SymbolFinder.FindCallersAsync`. I originally tried to use the Syntax Tree but I as actually having a problem storing these in a hashmap, asking this on stackoverflow [_"How to collect all MethodDeclarationSyntax transitively with Roslyn?"_](https://stackoverflow.com/q/53866637/1356325) and it turns out that I could work entirely with `IMethodSymbol` (the semantic model) instead of bouncing between the syntax tree and semantic model (Thanks Marius for the tip!)
 
-```c#
+```csharp
 // ----------------------------------------------------------------------------------
 // 2) Collect method graph calls
 // ----------------------------------------------------------------------------------
@@ -176,21 +176,21 @@ Once we have our graph, we just need to iterate through the syntax tree, duplica
 
 - Change the signature of the method from `XXX(...)` to `XXXAsync(...)`
 
-  ```c#
+  ```csharp
   // Rename method with `Async` postfix
   method = method.WithIdentifier(Identifier(method.Identifier.Text + "Async"));
   ```
 
 - Add the keyword `async` to these methods:
 
-  ```c#
+  ```csharp
   // Add async keyword to the method
   method = method.WithModifiers(method.Modifiers.Add(Token(SyntaxKind.AsyncKeyword).WithTrailingTrivia(Space)));
   ```
 
 - Change the return type from `void` to `Task` or from `MyTypeXXX` to `Task<MyTypeXXX>`
 
-  ```c#
+  ```csharp
   TypeSyntax asyncReturnType;
   if (methodModel.ReturnsVoid)
   {
@@ -212,7 +212,7 @@ Once we have our graph, we just need to iterate through the syntax tree, duplica
 
 - Update classes being modified to add the keyword partial and save the changes at the end (note that I didn't handle nested classes):
 
-  ```c#
+  ```csharp
   if (typeDecl.Modifiers.All(x => x.Text != "partial"))
   {
       var rootSyntax = typeDecl.SyntaxTree.GetRoot();
@@ -230,7 +230,7 @@ Once we have our graph, we just need to iterate through the syntax tree, duplica
 
 - Update all call sites replacing synchronous code with `await` expressions with the proper usage of ConfigureAwait (I'm not including all the cases but it mostly boils down to the following):
 
-  ```c#
+  ```csharp
   method = method.ReplaceNodes(callingMethod.CallSites, (callSite, r) =>
   {
       // We have other cases in the transform (`MemberBindingExpressionSyntax`, `IdentifierNameSyntax`...)
@@ -258,7 +258,7 @@ Once we have our graph, we just need to iterate through the syntax tree, duplica
 
 An example of the code generated is like this:
 
-```c#
+```csharp
     public partial class ScriptReturnStatement
     {
         public override async ValueTask<object> EvaluateAsync(TemplateContext context)
@@ -271,7 +271,7 @@ An example of the code generated is like this:
 
 while the original method was like this:
 
-```c#
+```csharp
         public override object Evaluate(TemplateContext context)
         {
             context.FlowState = ScriptFlowState.Return;

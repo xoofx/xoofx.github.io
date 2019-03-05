@@ -328,7 +328,7 @@ Once the AST is in memory, we can interpret each syntax node. This is one of the
 
 Each node in an AST implements the following method:
 
-```c#
+```csharp
 /// <summary>
 /// Evaluates this instance with the specified context.
 /// </summary>
@@ -391,7 +391,7 @@ There is one exception where I have used C# documentation to generate markdown d
 
 - All C# documentation of builtin functions are written actually in XML, but with a Markdown content (frankly, I would love to do this for regular C# code as well). For example, the function `string.append` is defined like this in C#:
 
-  ```C#
+  ```csharp
     /// <summary>
     /// Concatenates two strings
     /// </summary>

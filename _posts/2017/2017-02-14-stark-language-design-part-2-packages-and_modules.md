@@ -320,7 +320,7 @@ Package: ModuleFullName;
 
 This is primarily a **linking directive**. But this provides also an **import accessibility**. The package can be imported from any sub modules from the same package that reference it:
 
-```c#
+```csharp
 // We are linking with mymodule2 package
 extern package mymodule2
 

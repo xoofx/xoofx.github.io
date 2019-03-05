@@ -3,11 +3,11 @@
 ---
 
 $body-bg: #16212C;
-$navbar-default-bg: #16212C;
+// $navbar-default-bg: #16212C;
 
 $navbar-default-link-color:                #ccc;
 $navbar-default-link-hover-color:          #888;
-$navbar-default-link-active-color:        #fff;
+$navbar-default-link-active-color:        #000;
 
 $link-color:      #920000;
 $blockquote-border-color: #4060c0;
@@ -126,7 +126,6 @@ article  h1.title  {
   margin-top: 20px;
   margin-bottom: 20px;
   font-size: 40px;
-  font-weight: bold;
 }
 
 .blog-description {
@@ -200,7 +199,6 @@ article .post {
 .blog-post-title {
   margin-bottom: 5px;
   font-size: 60px;
-  font-weight: bold;
 }
 .blog-post-meta {
   margin-bottom: 20px;

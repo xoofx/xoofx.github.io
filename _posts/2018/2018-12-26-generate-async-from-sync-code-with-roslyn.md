@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Generate automatically async/await code from sync code with Roslyn
+ghcommentid: 4
 tags:
  - C#
  - .NET

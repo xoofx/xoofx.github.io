@@ -65,13 +65,19 @@ function DoGithubComments(comment_id, page_id)
                 });
 
                 // Setup comments button if there are more pages to display
-                var links = ParseLinkHeader(jqXHR.getResponseHeader("Link"));
-                if ("next" in links)
+                var reslinks = jqXHR.getResponseHeader("Link");
+                var nextLinkDisplayed = false;
+                if (reslinks)
                 {
-                    $("#gh-load-comments").attr("onclick", "DoGithubComments(" + comment_id + "," + (page_id + 1) + ");");
-                    $("#gh-load-comments").show();
+                    var links = ParseLinkHeader(reslinks);
+                    if ("next" in links)
+                    {
+                        $("#gh-load-comments").attr("onclick", "DoGithubComments(" + comment_id + "," + (page_id + 1) + ");");
+                        $("#gh-load-comments").show();
+                        nextLinkDisplayed = true;
+                    }
                 }
-                else
+                if (!nextLinkDisplayed)
                 {
                     $("#gh-load-comments").hide();
                 }

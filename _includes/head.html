@@ -12,7 +12,7 @@
   <meta name="twitter:site"    content="@{{ site.twitter_user }}">
   <meta name="twitter:title"   content="{{ page.title }}">
   {% if page.title %}
-  <meta name="twitter:description" content="{{ post.excerpt | strip_html | strip_newlines | truncatewords:75 | escape }}">
+  <meta name="twitter:description" content="{{ post.excerpt | strip_html | strip_newlines | truncatewords:25 }}">
   {% else %}
   <meta name="twitter:description" content="{{ site.description }}">
   {% endif %}

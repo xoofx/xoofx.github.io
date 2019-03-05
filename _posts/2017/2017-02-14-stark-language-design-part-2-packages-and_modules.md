@@ -119,7 +119,7 @@ We will cover the following declarations:
 - How to use/`import` an existing `module`
 - How to use/`import` an existing `package`
 
-## Declare a `module`
+## Declare a module
 
 In Stark, a module is declared from the code like this:
 
@@ -192,7 +192,7 @@ With the import declaration, we will see also that while a module can be private
 
 The **root module is public** and its visibility cannot be changed.
 
-## Declare a `package`
+## Declare a package
 
 A package is not declared from a Stark source code but it will use meta declaration from a data-oriented language (e.g `TOML`, `JSON`... etc.).
 
@@ -205,7 +205,7 @@ When a package is pushed, the system will exactly know which modules are exporte
 
 We will detail much later how a package will declare and embed additional resources.
 
-## `import` a `module`
+## import a module
 
 When declaring a `module`, it is imported implicitly from the module where it is declared. An import means that you can refer to a type inside this module in the code by prefixing by the module name (e.g `mymodule::mytype`)
 
@@ -305,7 +305,7 @@ Also an important difference is the `import` inside types/functions/traits files
 
 As we explained earlier, only the `module.sk` is sharing its imports with other files in its folder. It means also that you can't `public import` from types/functions/traits files : This is the responsibility of the `module.sk`.
 
-## Declare an `extern package`
+## Declare an extern package
 
 The `extern package` directive allows to explicit in the code the dependencies to a specific package. Note that it doesn't say which version of the package we are looking for (this will be stored in the package descriptions)
 

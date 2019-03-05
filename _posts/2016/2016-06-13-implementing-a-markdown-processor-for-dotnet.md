@@ -305,7 +305,7 @@ So for instance, if you load the full Markdown document to process into a single
 
 For this case, I wanted to use a dedicated optimized slice for strings (with useful attached method that cannot be put as extension methods, as we don't have yet implicit ref for them!). Otherwise, I can suggest also [Slice.net](https://github.com/joeduffy/slice.net) by Joe Duffy for a generic version of it.
 
-## 2) Use custom struct `List<T>`
+## 2) Use custom struct List\<T\>
 
 Any time I had to use a `List<T>` as an internal object state to store a variable array of items, I have replaced it with a version handling directly the array.
 
@@ -347,7 +347,7 @@ public class StringBuilderCache : DefaultObjectCache<StringBuilder>
 
 It is quite common that you need to substitute from a string some elements (which requires more than a Replace parsing method) and return a new string. Most of the time, a naive implementation is to create a new `StringBuilder` and start to process the original string. In the end, if nothing was really changed, we have still allocated two objects for nothing! (The `StringBuilder` and its `StringBuilder.ToString()`), and if this could be the most common case, that would hurt the perf!
 
-## 5) `string.IndexOf()` and `string.IndexOfAny()`
+## 5) string.IndexOf() and string.IndexOfAny()
 
 If there is a need to scan for a particular character in a string and process things afterwards from this position, you may think that a custom `string.IndexOf` would be better, but it is actually implemented in the CoreCLR as almost an intrinsic, much faster than whatever you could come with a managed and unsafe equivalent, so trust `IndexOf`, it is fast!
 
@@ -393,7 +393,7 @@ public unsafe int IndexOfOpeningCharacter(string text, int start, int end)
 }
 ```
 
-## 5) `TextReader.ReadLine()` fast but...
+## 5) TextReader.ReadLine() fast but...
 
 I started the implementation by using `TextReader.ReadLine()` when reading the input Markdown document. The great thing about the implementations of this method is that they are usually enough fast.
 
@@ -407,7 +407,7 @@ Markdig is no longer using these methods but instead is loading the full Markdow
 
 Also one thing that was a bit frustrating when trying to squeeze out some performance from string handling was the internal accessibility of the [`FastAllocateString`](https://github.com/dotnet/coreclr/blob/6cd92b2da7b3aac86598e7b8d7b6fad063239b6b/src/mscorlib/src/System/String.cs#L1554) which allows to allocate a string on the heap without zeroing it, very useful, used in [many places in the .NET framework](https://github.com/dotnet/coreclr/search?utf8=%E2%9C%93&q=FastAllocateString) but inaccessible for us, unfortunately... :(
 
-## 6) `List<T>` or `T[]` instead of `Dictionary<string, T>`
+## 6) List\<T\> or T[] instead of Dictionary\<string, T\>
 
 This is also not something new, but for small Dictionary (last time I checked, I guess it was for less than 10 elements, may be around 7-8), an array gives actually a faster access and also is much cheaper in terms of memory. This is used in Markdig to store attached [HtmlAttributes](https://github.com/lunet-io/markdig/blob/c80ac89e9645e5b4da55d1fe85957fe3afcb3b3a/src/Markdig/Renderers/Html/HtmlAttributes.cs) to each syntax tree and it helped to save a few mega bytes when you have hundred of thousands of instances all around when parsing large documents!
 

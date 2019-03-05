@@ -281,7 +281,7 @@ while the original method was like this:
 
 All the generated code is saved to a file [ScribanAsync.generated.cs](https://github.com/lunet-io/scriban/blob/master/src/Scriban/ScribanAsync.generated.cs) and as you can see, it is in the end significant amount of code!
 
-## Performance with `ValueTask<T>`
+## Performance with ValueTask\<T\>
 
 I started the codegen using `Task<T>` but running a benchmark with the synchronized version, to was unsurprisingly generating a huge amount of allocations. I switched easily the codegen to use `ValueTask<T>` and I was able to divide by 5 the amount of allocations. 
 

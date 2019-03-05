@@ -130,7 +130,7 @@ So in order to support this scenario, we need to define how this is going to wor
 - This is done first by introducing a new keyword `transient` to identify a variable that cannot be stored outside of the stack.
 - Then we can revisit the `stackalloc` operator to support the physical allocation on the stack.
 
-### The `transient` variable modifier
+### The transient variable modifier
 
 Lets start by defining the concept of a `transient` variable:
 
@@ -162,7 +162,7 @@ When compiling the `transient` keyword, it would only be stored to a `TransientA
 
 This is introducing a new keyword, something that the language team is not going to take easily for granted!
 
-### New `stackalloc` operator
+### New stackalloc operator
  
 If you have never used the `stackalloc` operator, it allows to instantiate an array of blittable valuetypes on the stack:
 
@@ -201,7 +201,7 @@ In the case of the lambda above, I haven't work out how the syntax would be used
     var matchElement = list.FirstOrDefault(transient t => t.Name == name);
 ```
 
-### Safe `transient` class for `this` access
+### Safe transient class for this access
 
 > This part is an addition to the issue mentioned by [@jaredpar](https://twitter.com/jaredpar) in the comments at the bottom of this post. 
 
@@ -403,7 +403,7 @@ Basically, we need to be able to:
 2. Allow to retrieve the current method table for a particular class. This will be required to instantiate and initialize the class on the stack.
 
 
-### 3) Some changes to the file `/src/jit/lclvars.cpp`
+### 3) Some changes to the file /src/jit/lclvars.cpp
 
 This is where we are starting to store the information about local variables declared as class on the stack:
 
@@ -418,7 +418,7 @@ It is a first step to generate a compliant class layout on the stack. A class is
 
 Notice that in the generated code here, I still don't output the small `ObjHeader` that is required for a GC object. It required a bit more changes...
 
-### 5) Changes made to the `ObjHeader`
+### 5) Changes made to the ObjHeader
 
 The commit [265453c4fd](https://github.com/xoofx/coreclr/commit/265453c4fd26e83ee957952fd442f58524bf76a2) is making the following changes:
 
@@ -438,11 +438,11 @@ Then there are a couple of commits to make [object.Validate()](https://github.co
 > If I had to rebuild an `ObjHeader` and had an opportunity to create a new language, I would completely remove support for `lock(object)` in the language, as these things can be done with dedicated mutex objects. The fact is that the `ObjHeader` can generates a shadow object called the `syncblk` that will contains the `hashcode` (if it was requested by a method), the monitor on the object, some stuff related to COM...etc. While I don't mind to have metadatas associated to object instance, having a cluttered `ObjHeader` that is basically encoding a pointer to this `syncblk` is restricting some interesting optims for the GC (for example, when I implemented a basic Immix GC, I used the `ObjHeader` to store the size of the object in order to quickly scan them without having to go through the `MethodTable` for example)  
 
 
-### 6) [Generate proper x64 code for `initobj` opcode for class](https://github.com/xoofx/coreclr/commit/48a3840b0f006f50f8d03b31e258004b3a25bb90)
+### 6) [Generate proper x64 code for initobj opcode for class](https://github.com/xoofx/coreclr/commit/48a3840b0f006f50f8d03b31e258004b3a25bb90)
 
 This commit is mostly dealing with generating proper code for the `initobj` keyword. The changes mostly consist in shifting the current address loaded from the shadow variable to feed `initobj` (recall above the `ldloca.s`), as it is pointing to the start of the object (including the methodtable pointer), but we don't want the `initobj` generated code to clear this methodtable that is setup just once at the prolog of the method. So in the case of a `initobj` performed on a class on stack, we are shifting by a pointer size the start where things are zeroed (and we decrease of course the size of the data to zeroed) 
 
-### 7) [Use `JIT_CheckedWriteBarrier` instead of `JIT_WriteBarrier`](https://github.com/xoofx/coreclr/commit/e16f85f350ad43ee490d92cbbd658a148ab3e68a)
+### 7) [Use JIT_CheckedWriteBarrier instead of JIT_WriteBarrier](https://github.com/xoofx/coreclr/commit/e16f85f350ad43ee490d92cbbd658a148ab3e68a)
 
 This was my last commit in order to get something working correctly with the GC. The `JIT_CheckedWriteBarrier` is basically a small shell around the regular [WriteBarrier](http://www.iecc.com/gclist/GC-algorithms.html) (a write barrier is used in the context of generational GC: whenever an object is stored in the field of another object, the write barrier allow to store somewhere in a cardtable the reference to the object that is receiving the reference source object in order to quickly identify which object should be scan - the object receiver - and which source object is most likely to be promoted - in case of the gen0 allocation)
 

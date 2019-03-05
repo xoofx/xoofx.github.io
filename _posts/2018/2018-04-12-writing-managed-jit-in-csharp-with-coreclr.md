@@ -66,7 +66,7 @@ instead of `JitReplaceAdd: 1 + 2 = 3!`
 
 All of this is done by hacking into the JIT compiler and not by using the well known other technique of post-patching the code via `RuntimeHelpers.PrepareMethod` and `MethodInfo.MethodHandle.GetFunctionPointer()` (though we will see that we are somewhat forced to post-patch at JIT time, more on that later)
 
-## The `ICorJitCompiler`
+## The ICorJitCompiler
 
 CoreCLR is pretty modular, and the JIT is sitting into its own shared library called `clrjit.dll` (For .NET Framework, that was in `mscorjit.dll`)
 
@@ -234,7 +234,7 @@ SELECTANY const GUID JITEEVersionIdentifier = { /* f00b3f49-ddd2-49be-ba43-6e49f
 
 This is important to check this version, because the offset in the vtable will likely change on new versions of CoreCLR.
 
-### Hacking the `compileMethod`
+### Hacking the compileMethod
 
 Ok, we got a pointer to the jit vTable and a delegate to the original `compileMethod`, now we need to plug our own C# method in-place of the existing.
 
@@ -242,7 +242,7 @@ So the basic approach, as described earlier with the vtable of `ICorJitCompiler`
 
 But in order to achieve this, it gets a bit more tricky:
 
-#### 1) Store `CompileMethodDelegate` of our `ManagedJit.CompileMethod` instance method
+#### 1) Store CompileMethodDelegate of our ManagedJit.CompileMethod instance method
 
 This is the very first step. We need to create a delegate `CompileMethodDelegate` that is going to be re-routed to an instance method `CompileMethod` of our `ManagedJit`:
 
@@ -253,7 +253,7 @@ _overrideCompileMethod = CompileMethod;
 
 Why storing it? Because as we are going after to store an unmanaged reference to this delegate in the vtable, we need to make sure that the GC will not collect our delegate in the mean time! This is a very common pattern whenever you have to pass a Delegate as a function pointer from C# to C++.
 
-#### 2) Create a trampoline delegate `CompileMethodDelegate` to simulate a native call to our managed delegate
+#### 2) Create a trampoline delegate CompileMethodDelegate to simulate a native call to our managed delegate
 
 You may wonder why we need to create another delegate indirection. This reflects the way C# managed delegates are exposed to C++.
 
@@ -407,7 +407,7 @@ This code is using a thread static local storage, as the JIT can be used from mu
 - Otherwise, it is a method of our C# JIT that needs to be compiled, and we let the original JIT handle it
 - We decrement the counter
 
-#### 2) Accessing `System.Reflection` from native information
+#### 2) Accessing System.Reflection from native information
 
 If you look at the ICorJitCompiler::compileMethod, we have several parameters that gives us the context of the method to compile:
 

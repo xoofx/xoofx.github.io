@@ -298,7 +298,7 @@ if (shapes[0] == null)  // this would be case, as shapes[0] hasn't been initiali
 }
 ```
 
-### `ref` and `out` aliasing
+### ref and out aliasing
 
 Similar to the struct inheritance pitfalls, cares must be also taken with the usage of `ref` and structured enums.
 

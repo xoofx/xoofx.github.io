@@ -6,13 +6,13 @@
   <meta name="robots" content="noindex">  
   {% endif %}
   <title>{{ page.title }} | {{ site.title }}</title>
-  <meta name="description" content="{% if post.excerpt %}{{ post.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
+  <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
 
   <!-- Twitter cards -->
   <meta name="twitter:site"    content="@{{ site.twitter_user }}">
   <meta name="twitter:title"   content="{{ page.title }}">
-  {% if post.excerpt %}
-  <meta name="twitter:description" content="{{ post.excerpt | strip_html | strip_newlines | truncatewords:35 }}">
+  {% if page.excerpt %}
+  <meta name="twitter:description" content="{{ page.excerpt | strip_html | strip_newlines | truncatewords:35 }}">
   {% else %}
   <meta name="twitter:description" content="{{ site.description }}">
   {% endif %}

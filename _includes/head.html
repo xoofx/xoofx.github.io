@@ -11,8 +11,8 @@
   <!-- Twitter cards -->
   <meta name="twitter:site"    content="@{{ site.twitter_user }}">
   <meta name="twitter:title"   content="{{ page.title }}">
-  {% if page.title %}
-  <meta name="twitter:description" content="{{ post.excerpt | strip_html | strip_newlines | truncatewords:25 }}">
+  {% if page.excerpt %}
+  <meta name="twitter:description" content="{{ page.excerpt | strip_html | strip_newlines | truncatewords:35 }}">
   {% else %}
   <meta name="twitter:description" content="{{ site.description }}">
   {% endif %}

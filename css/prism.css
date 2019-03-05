@@ -8,7 +8,7 @@ https://prismjs.com/download.html#themes=prism-coy&languages=markup+clike+c+csha
 
 code[class*="language-"],
 pre[class*="language-"] {
-	color: black;
+	color: #393A34;
 	background: none;
 	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
 	text-align: left;
@@ -70,7 +70,7 @@ pre[class*="language-"] {
 	padding: .2em;
 	border-radius: 0.3em;
 	color: #c92c2c;
-	border: 1px solid rgba(0, 0, 0, 0.1);
+	border: 1px solid #dddddd;
 	display: inline;
 	white-space: normal;
 }
@@ -110,37 +110,51 @@ pre[class*="language-"]:after {
 .token.prolog,
 .token.doctype,
 .token.cdata {
-	color: #7D8B99;
+    color: #008000; font-style: italic;
+}
+
+.token.char,
+.token.string {
+    color: #A31515;
 }
 
 .token.punctuation {
-	color: #5F6364;
+	color: #393A34; /* no highlight */
 }
 
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.function-name,
-.token.constant,
-.token.symbol,
 .token.deleted {
 	color: #c92c2c;
 }
 
-.token.selector,
+.token.function-name,
+.token.function {
+    color: #393A34;
+}
+
+
+.token.tag,
+.token.selector {
+    color: #800000;
+}
+
 .token.attr-name,
-.token.string,
-.token.char,
-.token.function,
+.token.regex,
+.token.entity {
+    color: #ff0000;
+}
+
 .token.builtin,
+.token.url,
+.token.symbol,
+.token.number,
+.token.boolean,
+.token.variable,
+.token.constant,
 .token.inserted {
-	color: #2f9c0a;
+    color: #36acaa;
 }
 
 .token.operator,
-.token.entity,
-.token.url,
 .token.variable {
 	color: #a67f59;
 	background: rgba(255, 255, 255, 0.5);
@@ -150,10 +164,19 @@ pre[class*="language-"]:after {
 .token.attr-value,
 .token.keyword,
 .token.class-name {
-	color: #1990b8;
+    color: #0000ff;
 }
 
-.token.regex,
+.token.directive.tag  .tag {
+    background: #ffff00;
+    color: #393A34;
+}
+
+.token.class-name,
+.token.property {
+    color: #2B91AF;
+}
+
 .token.important {
 	color: #e90;
 }
@@ -164,8 +187,9 @@ pre[class*="language-"]:after {
 	background: rgba(255, 255, 255, 0.5);
 }
 
-.token.important {
-	font-weight: normal;
+.token.important,
+.token.bold {
+    font-weight: bold;
 }
 
 .token.bold {
@@ -295,7 +319,7 @@ pre[class*="language-"].line-numbers > code {
 	left: -3.8em;
 	width: 3em; /* works for line-numbers below 1000 lines */
 	letter-spacing: -1px;
-	border-right: 1px solid #999;
+	border-right: 1px solid #a5a5a5;
 
 	-webkit-user-select: none;
 	-moz-user-select: none;
@@ -312,7 +336,7 @@ pre[class*="language-"].line-numbers > code {
 
 		.line-numbers-rows > span:before {
 			content: counter(linenumber);
-			color: #999;
+			color: #2B91AF;
 			display: block;
 			padding-right: 0.8em;
 			text-align: right;

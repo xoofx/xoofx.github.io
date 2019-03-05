@@ -11,11 +11,11 @@
   <!-- Twitter cards -->
   <meta name="twitter:site"    content="@{{ site.twitter_user }}">
   <meta name="twitter:title"   content="{{ page.title }}">
-  <!-- {% if post.excerpt %}
-  <meta name="twitter:description" content="{{ post.excerpt | strip_html | escape_once }}">
-  {% else %} -->
+  {% if page.content %}
+  <meta name="twitter:description" content="{{ page.content | strip_html | escape_once | truncatewords:35 }}">
+  {% else %}
   <meta name="twitter:description" content="{{ site.description }}">
-  <!-- {% endif %} -->
+  {% endif %}
   <meta name="twitter:card"  content="summary">
   <meta name="twitter:image" content="{{ "/images/blog_logo.png" | prepend: site.baseurl }}">
   <!-- end of Twitter cards -->

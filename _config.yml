@@ -3,7 +3,7 @@ author: Alexandre Mutel
 title: xoofx
 description: xoofx website
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://xoofx.com" # the base hostname & protocol for your site
+url: "https://xoofx.com" # the base hostname & protocol for your site
 encoding: UTF-8
 
 # Github repository

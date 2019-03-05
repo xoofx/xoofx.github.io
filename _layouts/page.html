@@ -13,14 +13,3 @@ layout: default
     {% endif %}
     <div class="entry-content">{{ content }}</div>
 </article>
-{% if post.ghcommentid %}
-<div id="gh-comments">
-  <h2>Comments</h2>
-  <div id="gh-comments-list"></div>
-  <a href="javascript:void(0)" id="gh-load-comments" class="btn" style="display:none">Load more comments</a>
-</div>
-<script src="{{ "/scripts/github-comments.js" | prepend: site.baseurl }}" type="text/javascript"></script>
-<script type="text/javascript">
-  DoGithubComments({{ post.ghcommentid }});
-</script>
-{% endif %}

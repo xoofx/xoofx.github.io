@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Writing a Managed JIT in C# with CoreCLR
+ghcommentid: 5
 tags:
  - C#
  - .NET

@@ -55,8 +55,10 @@ h6, .h6
   font-weight: normal;
   color: #333;
   border-bottom-style: solid;
+  code {
+    border-bottom-style: solid;
+  }
 }
-
 
 /*
  * Override Bootstrap's default container.

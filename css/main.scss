@@ -24,12 +24,13 @@ $code-color: #256cc7;
  */
 
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Menlo", "Meslo LG", monospace;
   font-weight: 100;
 }
 
 p {
   margin-bottom: 15px;
+  text-align: justify;
 }
 
 hr {
@@ -48,7 +49,6 @@ h4, .h4,
 h5, .h5,
 h6, .h6 
 {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: normal;
   color: #333;
 }
@@ -279,7 +279,6 @@ article .entry-content a
 
 .navbar
 {
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	border-width: 0px;
 }
 

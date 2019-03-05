@@ -13,8 +13,5 @@
 		<div class="blog-post-meta">
 			- <span class="date"><time datetime="{{ date | datetime | date_to_xmlschema }}" itemprop="datePublished">{{ date | date: "%b %e" }}</time></span>
 			{% include post/tags.html %}
-		    {% if site.disqus_short_name and post.comments == true and site.disqus_show_comment_count == true %}
-		    <span class="fa fa-comments"></span>{% include post/comments_link.html %}
-		    {% endif %}
 		</div>
 	</li>

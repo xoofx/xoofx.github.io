@@ -14,10 +14,6 @@ github_repo_url: https://github.com/xoofx/xoofx.github.io/
 twitter_user: xoofx
 twitter_tweet_button: true
 
-# Disqus Comments
-disqus_short_name: xoofx
-disqus_show_comment_count: true
-
 # Jekyll settings
 permalink: /blog/:year/:month/:day/:title/
 # try to fix excerpt separator

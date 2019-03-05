@@ -28,7 +28,9 @@ paginate_path: "/blog/page:num/"
 markdown: kramdown
 kramdown:
     input: GFM
-highlighter: rouge
+    syntax_highlighter_opts:
+      disable : true
+highlighter: none
 
 sass:
     style: :compressed

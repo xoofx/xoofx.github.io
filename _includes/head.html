@@ -8,6 +8,18 @@
   <title>{{ page.title }} | {{ site.title }}</title>
   <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
 
+  <!-- Twitter cards -->
+  <meta name="twitter:site"    content="@{{ site.twitter_user }}">
+  <meta name="twitter:title"   content="{{ page.title }}">
+  {% if page.title %}
+  <meta name="twitter:description" content="{{ post.excerpt | strip_html | strip_newlines | truncatewords:75 | escape }}">
+  {% else %}
+  <meta name="twitter:description" content="{{ site.description }}">
+  {% endif %}
+  <meta name="twitter:card"  content="summary">
+  <meta name="twitter:image" content="{{ "/images/blog_logo.png" | prepend: site.baseurl }}">
+  <!-- end of Twitter cards -->
+
   <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Fjalla+One|Open+Sans:400" type="text/css">
   <link rel="stylesheet" href="{{ "/css/main.css" | prepend: site.baseurl }}">
   <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">

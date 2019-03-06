@@ -5,7 +5,7 @@ title: Blog
 
 <div class="rss"><a href="{{ "/feed.xml" | prepend: site.baseurl }}"><span class="fa fa-rss-square"/></a></div>
 <div class="archives" itemscope itemtype="http://schema.org/Blog">
-{% for post in site.posts reverse %}
+{% for post in site.posts %}
 {% if post.layout == 'post' %}
 	{% include archive_post.html %}
 {% endif %}

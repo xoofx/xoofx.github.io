@@ -4,6 +4,7 @@ spheretracing: SphereTracing
 demoscene: demoscene
 tools: Tools
 assembler: assembler
+burst: burst
 x86: x86
 visualstudio: Visual Studio
 rmasm: rmasm

@@ -42,7 +42,23 @@ hr {
 }
 
 .navbar {
-  margin-bottom: 0px;
+  margin-bottom: 0px;  
+}
+
+@media (min-width: 1600px) {
+  .toc {
+    width: 400px;
+  }
+}
+
+.node-name--H2 {
+  border-style: dashed;
+  border-width: 0px;
+  border-bottom-width: 1px;
+}
+
+.is-active-link {
+  background-color: #FFF4F4;
 }
 
 h1, .h1,
@@ -58,6 +74,7 @@ h6, .h6
   margin-top: 30px;
   margin-bottom: 20px;
   padding-bottom: 5px;
+  outline: none;
   code {
     border-bottom-style: solid;
     padding-bottom: 5px;

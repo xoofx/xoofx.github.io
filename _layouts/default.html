@@ -6,11 +6,34 @@
 	{% include header.html %}		
 	<div class="container">
 		<div class="row">		
-			<div class="col-md-12 blog-main">
+{% if page.id %}			
+			<div class="col-lg-9 blog-main">
 				{{ content }}
 			</div>
+			<div class="col-lg-3 align-self-start sticky-top">
+				<nav class="js-toc toc py-5"></nav>
+			</div>
+{% else %}			
+			<div class="col-lg-12 blog-main">
+			{{ content }}
+			</div>
+{% endif %}			
 		</div>
   </div>
+
+<script src="{{ "/scripts/tocbot.min.js" | prepend: site.baseurl }}" type="text/javascript"></script>
+<script type="text/javascript">
+tocbot.init({
+	// Where to render the table of contents.
+	tocSelector: '.js-toc',
+	// Where to grab the headings to build the table of contents.
+	contentSelector: '.js-toc-content',
+	// Which headings to grab inside of the contentSelector element.
+	headingSelector: 'h1, h2, h3, h4, h5',
+	collapseDepth: 3,
+	orderedList: true,
+});
+</script>
 
 	<footer class="blog-footer">
 		{% include footer.html %}

@@ -4,7 +4,6 @@ single: true
 ---
 {% include post_tags.html %}
 <article class="post js-toc-content" itemscope itemtype="http://schema.org/BlogPosting">{% include article.html %}</article>
-<div class="js-toc"></div>
 <div id="page-navigation"> 
         <div class="previous"> 
         {% if page.previous.url %} 
@@ -32,14 +31,4 @@ single: true
   DoGithubComments({{ page.ghcommentid }});
 </script>
 {% endif %}
-<script src="{{ "/scripts/tocbot.min.js" | prepend: site.baseurl }}" type="text/javascript"></script>
-<script type="text/javascript">
-  tocbot.init({
-    // Where to render the table of contents.
-    tocSelector: '.js-toc',
-    // Where to grab the headings to build the table of contents.
-    contentSelector: '.js-toc-content',
-    // Which headings to grab inside of the contentSelector element.
-    headingSelector: 'h2, h3, h4, h5',
-  });
-</script>
+

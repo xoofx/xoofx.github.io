@@ -31,9 +31,9 @@ But in this era of OSS goodness, we can rely on the shoulders of existing giants
 
 <blockquote class="twitter-tweet"><p lang="en" dir="ltr">Finally, here is a capture of the boot sequence of a HelloWorld program with <a href="https://twitter.com/hashtag/starklang?src=hash&amp;ref_src=twsrc%5Etfw">#starklang</a> on top of the seL4 micro-kernel. <br>This marks the end of the 1st vertical prototype by bringing up together a front-end compiler, native compiler and micro-kernel integration! ❤️ <a href="https://t.co/kEQ2esGHj4">pic.twitter.com/kEQ2esGHj4</a></p>&mdash; Alexandre Mutel (@xoofx) <a href="https://twitter.com/xoofx/status/1226962715656278022?ref_src=twsrc%5Etfw">February 10, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
-In this blog post I would like to go through:
+Though, apart [sharing my progess on Twitter](https://twitter.com/search?q=%23starklang&src=typed_query&f=live), I haven't taken the time so far to explain what this is all about... So before continuing further this experiment, It is time for me to share more about this project in a proper blog post, and more specifically:
 
-- More details about the "why" of this project
+- Give more details about the "why?" of this project
 - How was built this first milestone prototype?
 - Where is it going?
 
@@ -41,11 +41,11 @@ In this blog post I would like to go through:
 
 ### Stark - The language
 
-The goals might have changed slightly since I wrote ["Going Native 2.0, The future of WinRT"](https://xoofx.com/blog/2012/08/08/going-native-20-future-of-winrt/) or more recently about [stark](https://xoofx.com/blog/2017/01/17/the-stark-programming-language-experiment/), but they are basically a delicate balance and tradeoffs between the 3 following pillars:
+I have realized that I never took the time to write down the requirements and goals of this language. They might have changed slightly since I wrote ["Going Native 2.0, The future of WinRT"](https://xoofx.com/blog/2012/08/08/going-native-20-future-of-winrt/) or more recently about [stark](https://xoofx.com/blog/2017/01/17/the-stark-programming-language-experiment/), but in the end, they are tactical tradeoffs between the 3 following pillars:
 
-- Safe
-- Efficient
-- Productive
+- [Safe](#safe)
+- [Efficient](#efficient)
+- [Productive](#productive)
 
 #### Safe
 
@@ -62,7 +62,7 @@ As a programmer, this language should help me to:
          <td>
             <ul>
                 <li>An object cannot be de-allocated if it is still in used somewhere.</li>
-            <ul>
+            </ul>
         </td>
       </tr>
       <tr>
@@ -71,16 +71,16 @@ As a programmer, this language should help me to:
             <ul>
                 <li>Assignment in constructors are mandatory if the struct/class contains references.</li>
                 <li>You can't create an array of references (direct or indirect) without assigning them at creation.</li>
-            <ul>
+            </ul>
         </td>
       </tr>
       <tr>
          <td>Avoid race conditions related to multi-threading.</td>
          <td>
             <ul>
-                <li>Shared mutable static should not possible.</li>
-                <li>Shared mutable data between threads should not possible.</li>
-            <ul>
+                <li>Globally shared mutable data should not possible.</li>
+                <li>Same mutable data between threads should not possible.</li>
+            </ul>
         </td>
       </tr>
       <tr>
@@ -90,7 +90,7 @@ As a programmer, this language should help me to:
                 <li>A constructor should assign all its mandatory members before proceeding anywhere else.</li>
                 <li>The this pointer cannot escape a constructor if its object is not fully initialized.</li>
                 <li>Calling virtual methods in a constructor is not possible.</li>
-            <ul>
+            </ul>
         </td>
       </tr>
       <tr>
@@ -98,7 +98,7 @@ As a programmer, this language should help me to:
          <td>
             <ul>
                 <li>Mostly transparent.</li>
-            <ul>
+            </ul>
         </td>
       </tr>
       <tr>
@@ -106,12 +106,13 @@ As a programmer, this language should help me to:
             <ul>
                 <li>Recoverable errors: Exceptions.</li>
                 <li>Non-recoverable errors: Aborts.</li>
-            <ul>
+            </ul>
          </td>
          <td>
             <ul>
-                <li>TODO.</li>
-            <ul>
+                <li>Use checked user exceptions as part of method signature intent.</li>
+                <li>Use contracts and asserts for aborts.</li>
+            </ul>
         </td>
       </tr>
       <tr>
@@ -120,15 +121,148 @@ As a programmer, this language should help me to:
             <ul>
                 <li>Detect at compile time contracts on e.g method arguments that would not be fullfil.</li>
                 <li>Otherwise run these contracts at runtime which could lead to a program abort.</li>
-            <ul>
+            </ul>
         </td>
       </tr>      
+      <tr>
+         <td>Allow unsafe (in the safe section? Are you crazy?)</td>
+         <td>
+            <ul>
+                <li>Only via explicit unsafe in the code and by enabling it via a compiler command line switch.</li>
+                <li>It should be possible to remove safety for some of the cases above.</li>
+            </ul>
+        </td>
+      </tr>
   </table>
 </div>
 
 #### Efficient
 
+<div class="table-responsive">
+  <table class="table">
+      <tr>
+         <th>Requirements</th>
+         <th>Impact on the language</th>
+      </tr>
+      <tr>
+         <td>Compile time optimizations.</td>
+         <td>
+            <ul>
+                <li>Codegen should be AOT only.</li>
+                <li>Codegen optimizations should range from fast compilation with good enough optimizations to heavily optimized -O3 code.</li>
+            </ul>
+        </td>
+      </tr>  
+      <tr>
+         <td>Zero cost for const data.</td>
+         <td>
+            <ul>
+                <li>Const data known at compile time should not involve any initialization at runtime.</li>
+                <li>All const data at compile time should be readonly in a readonly data section in the executable. No heap allocations should occur for these data.</li>
+            </ul>
+        </td>
+      </tr>       
+      <tr>
+         <td>Provide control over data locality.</td>
+         <td>
+            <ul>
+                <li>By-value fixed array should be supported as a core type.</li>
+                <li>Allocation on the stack of reference types should be possible.</li>
+                <li>Control how an object is co-located on the heap with other objects.</li>
+            </ul>
+        </td>
+      </tr>  
+      <tr>
+         <td>More explicit control over heap allocation and lifetime.</td>
+         <td>
+            <ul>
+                <li>The concept of lifetime should be accessible to a developer.</li>
+                <li>It should be possible to allocate objects with similar lifetime to a same region in memory.</li>
+                <li>Memory handling should provide an automatic assistance but also manual awareness and control for the developer.</li>
+                <li>De-allocation of memory blocks should be smoothed but controlled over time.</li>
+                <li>Lifetime of an object should be known locally and statically (e.g attached to the app, attached to a request, attached to a level in a game...etc.).</li>
+                <li>A local lifetime provided by a library can be re-mapped by the user of this library.</li>
+                <li>An application should have an allowed budget memory by its parent application.</li>
+                <li>It should be possible to recover from not having enough memory budget (instead of aborting).</li>
+                <li>No destructors.</li>                
+            </ul>
+        </td>
+      </tr>  
+      <tr>
+         <td>Lightweight async and await.</td>
+         <td>
+            <ul>
+                <li>Async should be the norm when using external services.</li>
+                <li>Await should be a free operation and should allow inline across methods.</li>
+                <li>Await should not involve any heap operation.</li>
+            </ul>
+        </td>
+      </tr>
+      <tr>
+         <td>Minimize object runtime cost and footprint.</td>
+         <td>
+            <ul>
+                <li>Minimum required metadata at runtime, mainly for inheritance.</li>
+                <li>No default virtual methods on objects (no Equals, GetHashCode, ToString methods).</li>
+                <li>No reflection/introspection accessible by default.</li>
+                <li>Attached attributes are only compile time by default. No cost at runtime, no space occupied.</li>
+                <li>Static function pointers should be only a pointer, no heap allocation involved.</li>
+                <li>Closure function pointers should be composed of an object reference (for the state) and a function pointer. They are fat function pointers (e.g instance method of an object).</li>
+                <li>An interface reference is not an object reference but a fat pointer/value type with the original object and a virtual method table.</li>
+            </ul>
+        </td>
+      </tr>  
+      <tr>
+         <td>Efficient monomorphization.</td>
+         <td>
+            <ul>
+                <li>Value type in generics are always resulting in a monomorphization.</li>
+                <li>Interface constraints on reference type can result in a monomorphization depending on optimization opportunities.</li>
+                <li>It should be possible to request explicit monomorphization.</li>
+                <li>Codegen dependencies with monomorphization should be known to allow incremental recompilation.</li>
+                <li>Generic virtual methods are not possible.</li>
+                <li>Cost of monomorphization should be made known to a developer (code size occupied per type... etc.).</li>
+            </ul>
+        </td>
+      </tr>              
+  </table>
+</div>
+
+
 #### Productive
+
+<div class="table-responsive">
+  <table class="table">
+      <tr>
+         <th>Requirements</th>
+         <th>Impact on the language</th>
+      </tr>
+      <tr>
+         <td>Concise syntax but not cryptic.</td>
+         <td>
+            <ul>
+                <li>Avoid language separators when they don't bring enough cognitive value. Trailing `;` should be optional. Parenthesis in control flows should not be mandatory.</li>
+            </ul>
+         </td>
+      </tr>  
+      <tr>
+         <td>Compile time.</td>
+         <td>
+            <ul>
+                <li>Codegen should be as fast as possible when debug/dev iteration is involved.</li>
+            </ul>
+        </td>
+      </tr>  
+      <tr>
+         <td>TODO other items.</td>
+         <td>
+            <ul>
+                <li>TODO.</li>
+            </ul>
+        </td>
+      </tr>  
+  </table>
+</div>
 
 
 ### Melody - The operating System

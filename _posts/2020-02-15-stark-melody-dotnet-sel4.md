@@ -176,6 +176,7 @@ As a programmer, this language should help me to:
          <td>More explicit control over heap allocation and lifetime.</td>
          <td>
             <ul>
+                <li>Implicit or explicit boxing of value type should not be possible.</li>
                 <li>The concept of lifetime should be accessible to a developer.</li>
                 <li>It should be possible to allocate objects with similar lifetime to a same region in memory.</li>
                 <li>Memory handling should provide an automatic assistance but also manual awareness and control for the developer.</li>
@@ -224,7 +225,17 @@ As a programmer, this language should help me to:
                 <li>Cost of monomorphization should be made known to a developer (code size occupied per type... etc.).</li>
             </ul>
         </td>
-      </tr>              
+      </tr>
+      <tr>
+         <td>SIMD and Low level.</td>
+         <td>
+            <ul>
+                <li>SIMD types should be part of the core types.</li>
+                <li>It should be possible to use explicitly CPU dependent intrinsics.</li>
+                <li>The language and compiler infrastructure should provide way to emit non-standard low level code (e.g unsafe IL or assembler required by the runtime and/or an OS kernel).</li>
+            </ul>
+        </td>
+      </tr>      
   </table>
 </div>
 
@@ -238,10 +249,32 @@ As a programmer, this language should help me to:
          <th>Impact on the language</th>
       </tr>
       <tr>
+         <td>Functional, object and data oriented programming.</td>
+         <td>
+            <ul>
+                <li>While more imperative than functional at his heart, the language should offer ways to solve problems with different programming approaches and allow to combine them.</li>
+                <li>But the language should not be a Zoo of programming approaches.</li>                
+            </ul>
+         </td>
+      </tr>        
+      <tr>
+         <td>Unified and integrated development experience.</td>
+         <td>
+            <ul>
+                <li>Build, Package, Tests, Benchmarks, Code coverage, Deploy should be part of the core experience and integrated.</li>
+                <li>Code should allow to define integrated tests and benchmarks along the library being developed.</li>
+                <li>Compiled code should contain all configuration paths (e.g depending on CPU target). No preprocessor #ifdef techniques but use instead selectors per config.</li>
+                <li>Should be possible to work with pre-compiled code or pull git package source dependencies.</li>
+                <li>Should provide good intellisense (completion, navigation, refactoring) and IDE support.</li>                
+            </ul>
+        </td>
+      </tr>        
+      <tr>
          <td>Concise syntax but not cryptic.</td>
          <td>
             <ul>
                 <li>Avoid language separators when they don't bring enough cognitive value. Trailing `;` should be optional. Parenthesis in control flows should not be mandatory.</li>
+                <li>The language should provide a simple and "intuitive" left-to-right code reading experience.</li>
             </ul>
          </td>
       </tr>  
@@ -253,22 +286,12 @@ As a programmer, this language should help me to:
             </ul>
         </td>
       </tr>  
-      <tr>
-         <td>TODO other items.</td>
-         <td>
-            <ul>
-                <li>TODO.</li>
-            </ul>
-        </td>
-      </tr>  
   </table>
 </div>
 
-
-### Melody - The operating System
+### Melody - The Operating System
 
 ### Why both?
-
 
 <!-- <img src="stark-platform.png"/> -->
 

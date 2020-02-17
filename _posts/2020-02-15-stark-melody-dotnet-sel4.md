@@ -239,7 +239,6 @@ As a programmer, this language should help me to:
   </table>
 </div>
 
-
 #### Productive
 
 <div class="table-responsive">
@@ -263,7 +262,7 @@ As a programmer, this language should help me to:
             <ul>
                 <li>Build, Package, Tests, Benchmarks, Code coverage, Deploy should be part of the core experience and integrated.</li>
                 <li>Code should allow to define integrated tests and benchmarks along the library being developed.</li>
-                <li>Compiled code should contain all configuration paths (e.g depending on CPU target). No preprocessor #ifdef techniques but use instead selectors per config.</li>
+                <li>Compiled code should contain all configuration paths (e.g depending on CPU target). No preprocessor #ifdef techniques but use instead features/selectors via config.</li>
                 <li>Should be possible to work with pre-compiled code or pull git package source dependencies.</li>
                 <li>Should provide good intellisense (completion, navigation, refactoring) and IDE support.</li>                
             </ul>
@@ -289,16 +288,38 @@ As a programmer, this language should help me to:
   </table>
 </div>
 
-### Melody - The Operating System
+### Melody - A Micro Operating System
 
-### Why both?
+Melody is the name of the Operating System that will be built with the Stark language.
 
-<!-- <img src="stark-platform.png"/> -->
+<img src="melody.png"/>
 
-## The 2019 prototype 
+Why developing an operating system while you would have already enough work for the rest of your entire life with just the language?
+
+This experiment is first an opportunity to enjoy again hacking "bare metal" low level parts, to revisit foundations that I took for granted (resource management, memory management, interrupt handlers, processes/threads lifecycle, kernel vs user code...) and to better understand the constraints of designing an operating system.
+
+Secondly, using the language in a low-level situation should hopefully help to drive and focus the implementation of its requirements. But this should be also a two-way feedback process, where the language could benefit some OS features and vice e versa.
+
+Lastly, I can't resign myself that the 2 existing dominant operating systems should obliterate the need to look for a better architecture or that the future of OS development will remain in these two solely. Even if the existing OS have been able to adapt some modern challenges (e.g Web), they feel still very brittle in their overall monolithic kernel approach, specially when security is involved. In this era of rising IoT, it feels even more surprising that [object-capability](https://en.wikipedia.org/wiki/Object-capability_model) based OS are still not mainstream. Also, I believe that It was a mistake to abandon the project [Midori](http://joeduffyblog.com/2015/11/03/blogging-about-midori/).
+
+Melody will be driven by the following 3 pillars:
+
+- Secure:
+  - Capabilities should be at the heart of managing HW resources and used for connecting services. 
+  - All drivers should live in user land. 
+  - The operating system should be built on a secure micro-kernel.
+  - Dynamic loading of code should be disallowed.
+- Efficient:
+  - Should scale well from IoT to Cloud.
+  - IPC between services should be fast.
+  - Async based events should be the primary communication between services
+  - Processes should not be backed to disk (no-swap) but instead use a resume/suspend/restore lifecycle.
+- Lightweight:
+  - Footprint of a HTTP client/server app with the OS should be minimal (a few Mb)
+
+## The 2019 prototype
 
 ### Overview
-
 
 ### The front-end compiler
 

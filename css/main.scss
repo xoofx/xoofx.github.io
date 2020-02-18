@@ -30,6 +30,10 @@ body {
   font-weight: 100;
 }
 
+.toc {
+  width: 500px;
+}
+
 p {
   margin-bottom: 15px;
   text-align: justify;
@@ -164,7 +168,7 @@ article  span.title  {
  */
 
 .blog-main {
-  font-size: 18px;
+  font-size: 1.0rem;
   line-height: 1.5;
   background-color: #fff;
 }

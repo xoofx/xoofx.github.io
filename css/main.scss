@@ -13,7 +13,6 @@ $navbar-padding-horizontal: 0px;
 $navbar-padding-horizontal: 0px;
 
 $link-color:      #920000;
-$blockquote-border-color: #4060c0;
 $link-hover-color: #400000;
 $code-color: #256cc7;
 
@@ -62,6 +61,14 @@ h6, .h6
     border-bottom-style: solid;
     padding-bottom: 5px;
   }
+}
+
+span.subtitle {
+  display: table;
+  font-size: 1.0rem;
+  color: #777;
+  font-style: italic;
+  margin-bottom: 8px;
 }
 
 /*
@@ -133,16 +140,24 @@ a.more-link
 }
 
 article  h1.title  {
+  font-size: 40px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  border-bottom-style: none;  
+}
+
+article  span.title  {
   margin-top: 20px;
   margin-bottom: 20px;
-  font-size: 40px;
+  border-bottom-style: solid;  
+  width: 100%;
+  display: table;
 }
 
 .blog-description {
   font-size: 20px;
   color: #999;
 }
-
 
 /*
  * Main column and sidebar layout
@@ -210,8 +225,10 @@ article .post {
   font-size: 60px;
 }
 .blog-post-meta {
-  margin-bottom: 20px;
   color: #bbb;
+}
+article div.blog-post-meta {
+  margin-bottom: 20px;
 }
 
 /*
@@ -242,7 +259,11 @@ article .post {
 
 blockquote {
 	color: #777;
-	background-color: #fcfcfc;
+  background-color: #fcfcfc;
+  border-left-color: #4060c0;
+  border-left-style: solid;
+  border-left-width: 6px;
+  padding-left: 10px;
 }
 
 .blog-post-meta  a {

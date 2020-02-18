@@ -42,3 +42,5 @@ compiler: Compiler
 llvm: LLVM
 rust: Rust
 unity: Unity
+melody: Melody
+os: OS

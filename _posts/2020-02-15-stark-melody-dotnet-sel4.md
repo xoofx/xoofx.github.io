@@ -1,8 +1,11 @@
 ---
 layout: post
-title: Stark and Melody - Prototyping a language and OS with the help of the .NET ecosystem and the seL4 micro-kernel
+title: Stark and Melody
+subtitle: Prototyping a language and OS with the help of the .NET ecosystem and the seL4 micro-kernel
 tags:
  - Stark
+ - Melody
+ - OS
  - Compiler
  - LLVM
  - C#
@@ -10,7 +13,7 @@ tags:
 comments: true
 ---
 
-<img src="../images/stark.png" style="width:150px; height: 150px; float: right;"/>
+<img src="/images/stark.png" style="width:150px; height: 150px; float: right;"/>
 
 What would it take these days to build a prototype of a new language and operating system built on top of it, just for fun? 
 
@@ -46,6 +49,10 @@ I have realized that I never took the time to write down the requirements and go
 - [Safe](#safe)
 - [Efficient](#efficient)
 - [Productive](#productive)
+
+> Note: Stark is not a fork of C# nor it can be a compatible .NET language.
+>
+> Many of the following features are requiring such significant breaking changes that they can't be retro-fitted in an existing platform like .NET.
 
 #### Safe
 
@@ -292,7 +299,7 @@ As a programmer, this language should help me to:
 
 Melody is the name of the Operating System that will be built with the Stark language.
 
-<img src="../images/melody.png"/>
+<img src="/images/melody.png"/>
 
 Why developing an operating system while you would have already enough work for the rest of your entire life with just the language?
 

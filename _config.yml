@@ -29,7 +29,8 @@ kramdown:
 highlighter: rouge
 
 sass:
-    style: :compressed
+   style: :compressed
+   sourcemap: never
 
 gems:
   - jekyll-sitemap

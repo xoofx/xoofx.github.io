@@ -119,13 +119,13 @@ As a programmer, this language should help me to:
          <td>Design by contracts.</td>
          <td>
             <ul>
-                <li>Detect at compile time contracts on e.g method arguments that would not be fullfil.</li>
+                <li>Detect at compile time contracts on e.g method arguments that would not be fulfilled.</li>
                 <li>Otherwise run these contracts at runtime which could lead to a program abort.</li>
             </ul>
         </td>
       </tr>      
       <tr>
-         <td>Allow unsafe (in the safe section? Are you crazy?)</td>
+         <td>Allow unsafe</td>
          <td>
             <ul>
                 <li>Only via explicit unsafe in the code and by enabling it via a compiler command line switch.</li>
@@ -292,21 +292,21 @@ As a programmer, this language should help me to:
 
 Melody is the name of the Operating System that will be built with the Stark language.
 
-<img src="melody.png"/>
+<img src="../images/melody.png"/>
 
 Why developing an operating system while you would have already enough work for the rest of your entire life with just the language?
 
-This experiment is first an opportunity to enjoy again hacking "bare metal" low level parts, to revisit foundations that I took for granted (resource management, memory management, interrupt handlers, processes/threads lifecycle, kernel vs user code...) and to better understand the constraints of designing an operating system.
+This experiment is first an opportunity to enjoy again hacking "bare metal" low level parts over the hardware, to revisit foundations that I took for granted (resource management, memory management, interrupt handlers, processes/threads lifecycle, kernel vs user code...) and to better understand the constraints of designing an operating system.
 
 Secondly, using the language in a low-level situation should hopefully help to drive and focus the implementation of its requirements. But this should be also a two-way feedback process, where the language could benefit some OS features and vice e versa.
 
-Lastly, I can't resign myself that the 2 existing dominant operating systems should obliterate the need to look for a better architecture or that the future of OS development will remain in these two solely. Even if the existing OS have been able to adapt some modern challenges (e.g Web), they feel still very brittle in their overall monolithic kernel approach, specially when security is involved. In this era of rising IoT, it feels even more surprising that [object-capability](https://en.wikipedia.org/wiki/Object-capability_model) based OS are still not mainstream. Also, I believe that It was a mistake to abandon the project [Midori](http://joeduffyblog.com/2015/11/03/blogging-about-midori/).
+Lastly, I can't resign myself that the 2 existing dominant operating systems should obliterate the need to look for a better architecture or that the future of OS development will remain in these two solely. Even if the existing OS have been able to adapt some modern challenges (e.g Web, hypervisors, containers...), they feel still very brittle in their overall monolithic kernel approach, specially when security is involved. In this era of rising IoT, it feels even more surprising that [object-capability](https://en.wikipedia.org/wiki/Object-capability_model) based OS are still not mainstream. Also, I believe that It was a mistake to abandon the project [Midori](http://joeduffyblog.com/2015/11/03/blogging-about-midori/).
 
 Melody will be driven by the following 3 pillars:
 
 - Secure:
   - Capabilities should be at the heart of managing HW resources and used for connecting services. 
-  - All drivers should live in user land. 
+  - All drivers/services/apps should live in user land. 
   - The operating system should be built on a secure micro-kernel.
   - Dynamic loading of code should be disallowed.
 - Efficient:

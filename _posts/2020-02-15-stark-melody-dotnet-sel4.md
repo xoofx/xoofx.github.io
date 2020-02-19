@@ -299,7 +299,7 @@ As a programmer, this language should help me to:
 
 Melody is the name of the Operating System that will be built with the Stark language.
 
-<img src="/images/melody.png"/>
+<img src="/images/melody.png" class="mx-auto" style="display: block"/>
 
 Why developing an operating system while you would have already enough work for the rest of your entire life with just the language?
 
@@ -326,6 +326,19 @@ Melody will be driven by the following 3 pillars:
 
 ## The 2019 prototype
 
+The overall goal of this first year prototype was relatively simple:
+
+> A HelloWorld x86_64 Stark program running on a bare metal "OS" similar to the one I did with C# and CoreRT for the Raspberry Pi
+
+The steps to achieve this goal would involve:
+
+- Prototype the syntax of the Stark language
+- Simple IDE integration (syntax highlighting)
+- Use only the Stark language for both the HelloWorld program and its core library
+- Implement a front-end compiler for translating Stark to an intermediate binary library (e.g Assemblies in .NET)
+- Implement a back-end compiler for converting the binary library to native code
+- Prototype the micro-kernel with the minimum required to bootstrap the HelloWorld program
+
 ### Overview
 
 ### The front-end compiler
@@ -338,6 +351,36 @@ Melody will be driven by the following 3 pillars:
 Details:
 
 - Remove inheritance of ValueType from object
+
+```stark
+import core.runtime
+
+public class Yoyo {
+
+}
+
+public interface Tada {
+
+}
+
+// Example of a comment
+public partial module console_apps
+{
+    public struct ConsoleOut
+    {
+        public func printfn(text: string) {
+            for c in text {
+                debug_output_char(c)
+            }
+            debug_output_char('\n')
+        }
+
+        @ExternImport("kernel_debug_output_char")
+        private static extern func debug_output_char(c: u32)
+    }
+}
+```
+
 - Implementation of language parser changes
 - Implementation of the module syntax
 - Implementation of checked exceptions

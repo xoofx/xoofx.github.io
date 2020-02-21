@@ -26,33 +26,33 @@ This brought me back to my teenager time when I had so much fun running assembly
 
 So one year ago, I decided to re-focus the work on [the stark programming language experiment](http://xoofx.com/blog/2017/01/17/the-stark-programming-language-experiment/) and to extend its goal by building, not only a safe and efficient system programming language, but also a fast, secure and lightweight micro-kernel and capability based operating system, IoT and cloud ready (game OS also, why not?), async/await event/driven based, but also built with data oriented techniques... 
 
-I believe that there are still large and exciting areas to explore and challenge in this domain, as much as I'm eager to be technically challenged, learn and share from this experiment!
+There are still large and exciting areas to explore and challenge in this domain, as much as I'm eager to be technically challenged, learn and share from this experiment!
 
 Though while I have been enjoying the early design/prototyping of stark, It became also obvious that starting entirely from scratch a whole compiler would not allow me to make enough sustainable progress and to keep enough motivation during my spare-time on the long run... 
 
-But in this era of OSS goodness, we can rely on the shoulders of existing giants to experiment and prototype more quickly what would have been impossible in the past... So during the past year, with the help of the .NET ecosystem and the [seL4 micro-kernel](http://sel4.systems/), I have built a vertical prototype of the language, its core library, its front-end compiler, a native compiler and an embryo-integration with seL4:
+Luckily, thanks to the development of OSS, we can rely on the shoulders of existing giants to experiment and prototype more quickly what would have been impossible in the past... So during the past year, with the help of the .NET ecosystem and the [seL4 micro-kernel](http://sel4.systems/), I was able to  build a vertical prototype of the language, its core library, its front-end compiler, a native compiler and an embryo-integration with seL4:
 
 <blockquote class="twitter-tweet tw-align-center"><p lang="en" dir="ltr">Finally, here is a capture of the boot sequence of a HelloWorld program with <a href="https://twitter.com/hashtag/starklang?src=hash&amp;ref_src=twsrc%5Etfw">#starklang</a> on top of the seL4 micro-kernel. <br>This marks the end of the 1st vertical prototype by bringing up together a front-end compiler, native compiler and micro-kernel integration! ❤️ <a href="https://t.co/kEQ2esGHj4">pic.twitter.com/kEQ2esGHj4</a></p>&mdash; Alexandre Mutel (@xoofx) <a href="https://twitter.com/xoofx/status/1226962715656278022?ref_src=twsrc%5Etfw">February 10, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
-Though, apart [sharing my progess on Twitter](https://twitter.com/search?q=%23starklang&src=typed_query&f=live), I haven't taken the time so far to explain what this is all about... So before continuing further this experiment, It is time for me to share more about this project in a proper blog post, and more specifically:
+Though, apart [sharing my progess on Twitter](https://twitter.com/search?q=%23starklang&src=typed_query&f=live), I haven't taken the time so far to explain what this is all about... So before continuing further this experiment, It is time for me to share more about this project, and more specifically to:
 
 - Give more details about the "why?" of this project
-- How was built this first milestone prototype?
-- Where is it going?
+- Explain how this first milestone prototype was built
+- And where is it going?
 
 ## Foundations
 
 ### Stark - The language
 
-I have realized that I never took the time to write down the requirements and goals of this language. They might have changed slightly since I wrote ["Going Native 2.0, The future of WinRT"](https://xoofx.com/blog/2012/08/08/going-native-20-future-of-winrt/) or more recently about [stark](https://xoofx.com/blog/2017/01/17/the-stark-programming-language-experiment/), but in the end, they are tactical tradeoffs between the 3 following pillars:
+I have realized that I never wrote down at least some high level requirements and goals for this language. They might have changed slightly since I wrote ["Going Native 2.0, The future of WinRT"](https://xoofx.com/blog/2012/08/08/going-native-20-future-of-winrt/) or more recently about [stark](https://xoofx.com/blog/2017/01/17/the-stark-programming-language-experiment/), but in the end, they are tactical tradeoffs between the 3 following pillars:
 
 - [Safe](#safe)
 - [Efficient](#efficient)
 - [Productive](#productive)
 
-> Note: Stark is not a fork of C# nor it can be a compatible .NET language.
+> Note: Stark is not a fork of C# nor it can be compatible with .NET
 >
-> Many of the following features are requiring such significant breaking changes that they can't be retro-fitted in an existing platform like .NET.
+> Many of the following features are requiring such significant breaking changes that they can't be retro-fitted into an existing platform like .NET.
 
 #### Safe
 
@@ -334,12 +334,17 @@ The steps to achieve this goal would involve:
 
 - Prototype the syntax of the Stark language
 - Simple IDE integration (syntax highlighting)
-- Use only the Stark language for both the HelloWorld program and its core library
+- Use the Stark language entirely for both the HelloWorld program and its core library (so no additional C runtime on the side)
 - Implement a front-end compiler for translating Stark to an intermediate binary library (e.g Assemblies in .NET)
 - Implement a back-end compiler for converting the binary library to native code
 - Prototype the micro-kernel with the minimum required to bootstrap the HelloWorld program
 
 ### Overview
+
+After hacking C# with CoreRT on a bare metal OS on the Raspberry Pi, I realized that the .NET ecosystem could help my experiment a lot more than I had planned when starting to work on Stark. Instead of trying to rebuild everything, **let's try to reuse whatever parts that could significantly boost this enterprise**:
+
+- For the front-end compiler, instead of fully building bottom-up a lexer/parser/syntax analyzer/type inference/transform to IL, why not **starting from the Roslyn C# compiler instead**?
+- For the back-end compiler responsible to generate native code, I originally thought that I could rely on CoreRT, but I realized that the design of the compiler and runtime would be so different that I should proceed differently... and came to the conclusion that the most helpful component I could reuse was the **RyuJIT compiler for the IL to native codegen part**. And I will explain why.
 
 ### The front-end compiler
 

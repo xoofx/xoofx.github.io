@@ -85,6 +85,10 @@ span.subtitle {
   }
 }
 
+/* override boostrap */
+b, strong {
+  font-weight: $font-weight-bold !important;
+}
 
 /*
  * Masthead for nav

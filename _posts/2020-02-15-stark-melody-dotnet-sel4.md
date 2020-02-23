@@ -341,12 +341,168 @@ The steps to achieve this goal would involve:
 
 ### Overview
 
-After hacking C# with CoreRT on a bare metal OS on the Raspberry Pi, I realized that the .NET ecosystem could help my experiment a lot more than I had planned when starting to work on Stark. Instead of trying to rebuild everything, **let's try to reuse whatever parts that could significantly boost this enterprise**:
+After hacking C# with CoreRT on a bare metal OS on the Raspberry Pi, I realized that the .NET ecosystem could help my experiment a lot more than I had planned when starting to work on Stark. Instead of trying to rebuild everything, **let's try to find and reuse components that could significantly boost this enterprise**:
 
-- For the front-end compiler, instead of fully building bottom-up a lexer/parser/syntax analyzer/type inference/transform to IL, why not **starting from the Roslyn C# compiler instead**?
-- For the back-end compiler responsible to generate native code, I originally thought that I could rely on CoreRT, but I realized that the design of the compiler and runtime would be so different that I should proceed differently... and came to the conclusion that the most helpful component I could reuse was the **RyuJIT compiler for the IL to native codegen part**. And I will explain why.
+1. For the front-end compiler, instead of fully building bottom-up a [tokenizer](https://xoofx.com/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer/)/parser/syntax analyzer/type inference/transform to IL, why not **starting from the Roslyn C# compiler instead**?
+2. For the back-end compiler responsible to generate native code, I originally thought that I could rely on CoreRT, but realized that the design of the compiler and runtime would be so different that I should proceed differently... and came to the conclusion that the most critical component I could reuse was the **RyuJIT compiler for the IL to native codegen part**. And I will explain more in details why.
+3. For the OS kernel part, I was initially expecting to write the kernel in Stark itself, but while searching about what it would take, **I discovered that the [seL4 micro-kernel](http://sel4.systems/) was exactly what I was looking for for a micro-kernel**, and I would have already plenty of work to do to build a proper OS on top of it. We will see why I'm very enthusiastic about it.
 
-### The front-end compiler
+### Development of the language syntax and front-end compiler
+
+Changing Roslyn to create a new language is very challenging for several reasons:
+
+- The codebase is huge, years of development, with 2 languages C# and VB.
+- The repository is itself compiled with preview of Roslyn fetched from internal NuGet feeds.
+- The projects have lots of dependencies over the VisualStudio SDK and again preview versions.
+- Projects have lots of dependencies, one change in a core project might lead to change 1000+ references in the entire codebase.
+- The codebase is evolving, new features, bug fixes coming upstream. Even if the public API doesn't change much, the internals can.
+- Some design decisions made very early in the development of Roslyn are making changes a lot more laborious. Example:
+  - ref types are not represented by a proper type, so a ref kind has to be propagated all over the places along its associated type
+  - Nullable types are put in a thin struct wrapper around real types. They are also not a proper types in the system.
+
+In order to make some progress for prototyping a new language, I had to cut lots of existing code and take hard decisions:
+
+- I had to remove VB to avoid having to maintain the changes I was making on the C# and core parts of the compiler.
+- I had to rename namespaces (e.g `CSharp` => `Stark`)
+- After a few months trying to [keep the fork](https://github.com/stark-lang/stark-roslyn) up-to-date with upstream, I made a [hard fork](https://github.com/stark-lang/stark/commit/d74fe898c3babb5cf4b407aa53edd7c576cad50c)
+  - Because I was also making changes to `System.Reflection.Metadata` which was in the CoreFx repository, the sync was becoming impossible.
+  - The hard fork allowed me to remove the internal NuGet feeds and complex build pipeline of Roslyn by using a regular .NET Standard 2.0 project without any custom NuGet packages.
+  - After trying to maintain Visual Studio Roslyn Integration, I also removed it: This was a tough decision, but this part is too difficult to keep-up with, and it brings a complexity that I couldn't maintain on my own. I decided that providing a good integration with `Visual Studio Code` would be much easier for the project in the medium term.
+- I removed all the existing tests: This was also too difficult to maintain while prototyping a new syntax. I decided that I would use during the beginning the runtime of stark as a "testing suite". For this reason, the runtime is maintained in the same repository under `src/runtime` folder
+  - A change to the syntax is now sync with the change to the runtime. It makes iteration vastly easier.
+  - Tests will be re-introduced later once the syntax is a bit more stable. Nonetheless, that will be a huge work and some help will be much welcome!
+
+The front-end compiler and runtime of Stark are hosted on <https://github.com/stark-lang/stark>
+
+#### Leaner syntax
+
+Most of the early changes concerned only `LanguageParser.cs` (the lexer/parser) in Roslyn codebase and it was the easiest place to start with and to see how difficult it would be to change the syntax.
+
+As I discovered and explained in my previous posts about the Stark Language syntax, a lean syntax here might be appealing for some but not for others. It highly depends on your personal taste and experience with languages, how long have you been using some particular syntaxes, if you have been navigating between multiple languages and different paradigm (e.g functional vs imperative)...etc. There is no such thing as "natural" programming syntax but there are lots of religion and way of thinking around existing programing languages. So by no surprise, Stark syntax is mostly colored by my personal relation with programing languages and by what I have seen during my career.
+
+Typically, one of the very first change I made was to remove the need for semi-colon `;` (as Swift Language did for example) but I have kept braces `{` and `}`, while I also removed the need for using parenthesis with control flows. 
+
+Originally for Stark, I had a plan to use space sensitive language (like python or F#), but realized that it would be too painful to retrofit in Roslyn and by the fact also that braces can allow compact syntaxes (specially with closures) that are difficult to express without.
+
+Then I started to bring some more important syntax changes:
+
+- Use of `import` keyword instead of `using` to import namespaces 
+- Introduction of modules like in F# (static class in C#) but they would work the same way with `import` (no need to say `import static`)
+  ```stark
+  // Import namespace core
+  import core
+  // Import module core.runtime
+  import core.runtime
+  
+  // Declare an empty module
+  public module my_module { }
+  ```
+  The introduction of module as first class construction is important to make also functions first class.
+
+- Only one `namespace` per file, namespace would not require braces and should come first in the file. This is similar to Java for instance.
+  ```stark
+  namespace core
+
+  public virtual class Object {
+      private unsafe let _type : Type
+      public constructor() {
+      }
+  }
+  ```
+- Use of a simple [naming convention](https://github.com/stark-lang/stark/blob/master/doc/naming-conventions.md) derived from Rust:
+  - Using `UpperCamelCase` for "type-level" constructs (class, struct, enum, interface, union, extension)
+  - And `snake_case` for "value-level" constructs  
+  <br>
+
+  | Item | Convention |
+  | ---- | ---------- |
+  | Package | `snake_case` (but prefer single word) |
+  | Namespace | `snake_case` (but prefer single word) |
+  | Module | `snake_case` (but prefer single word) |
+  | Types: class, struct, interface, enum, union | `UpperCamelCase` |
+  | Union cases | `UpperCamelCase` |
+  | Functions | `snake_case` |
+  | Local variables | `snake_case` |
+  | Static variables | `SCREAMING_SNAKE_CASE` |
+  | Constant variables | `SCREAMING_SNAKE_CASE` |
+  | Enum items | `SCREAMING_SNAKE_CASE` |
+  | Type parameters | concise `UpperCamelCase`, prefixed by single uppercase letter: `T` |
+- Use of a more uniform naming for primitive types, following the syntax of Rust:
+  
+  | C# | Stark |
+  | ---- | ---------- |
+  | `bool` | `bool` |
+  | `byte` | `u8` |
+  | `sbyte` | `i8` |
+  | `short` | `i16` |
+  | `ushort` | `u16` |
+  | `int` | `i32` |
+  | `uint` | `u32` |
+  | `long` | `i64` |
+  | `ulong` | `u64` |
+  | `System.IntPtr` | `int` |
+  | `Systme.UIntPtr` | `uint` |
+  | `float` | `f32` |
+  | `double` | `f64` |
+  | `object` | `object` |
+  | `string` | `string` |
+  
+  <br>You will notice that `int` and `uint` represents actually native integers (e.g an `int` is an `i32` or `i64` depending if the target CPU 32 or 64 bits). In Stark, they are first class types and are for example used as the default type for array/collection size/indexers.
+- Use of `implements` interface inheritance/prototype contracts and `extends` for sub-classing, similar to Java.
+
+  ```stark
+  namespace core
+  public abstract class Array implements ISizeable {}
+  ```
+  ```stark
+  namespace core
+  import core.runtime
+  
+  /// Base class for an exception
+  public abstract immutable class Exception extends Error {
+      protected constructor() {
+      }
+  }
+  ```
+- Use of `virtual` on class definition to specify that they can be sub-classed. They are `sealed` (in C# terminology) by default.
+- Use of only one syntax for `for` which would be equivalent of the `foreach` syntax in C#
+
+  ```stark
+  public static func sun_range(range: Range) -> int {
+      var result : int = 141
+      for x in range {
+          result += x
+      }
+      return result
+  }
+  ```
+  For iterating other an integer range (e.g `for(int i = 0; i < array.size; i++)`) the equivalent in Stark is to use the Range syntax as a Range in Stark is iterable:
+
+  ```stark
+  public static func sun_range(array: []u8) -> int {
+      var result : int = 0
+      for i in 0..<array.size {
+          result += array[i]
+      }
+      return result
+  }
+  ```    
+- Mandatory braces `{` and `}` for all control flows
+- Left to right syntax, to simplify parsing and to make reading "left to right" matching what you are actually writing in the code (similar to Go lang):
+  - A function declaration is: `public func myfunction() {}`
+  - A variable declaration is `var x = 5`
+  - A variable declaration with single assignment is `let y = "test"`
+  - An array of unsigned 8 bits is `[]u8`
+  - An optional object `?object`
+  - An optional array of optional string is `?[]?string`
+ - Make parameters declaration name first and then type, separated by a `:` colon 
+  ```stark
+  public static func process_elements(array: []u8, offset: int, length: int) -> int {
+      // ...
+  }
+  ```       
+
+#### test3
 
 - Departure from ECMA-335
 - Fork of Roslyn
@@ -355,39 +511,8 @@ After hacking C# with CoreRT on a bare metal OS on the Raspberry Pi, I realized 
 
 Details:
 
+- Implementation of for instead of foreach
 - Remove inheritance of ValueType from object
-
-```stark
-import core.runtime
-
-public class Yoyo {
-
-}
-
-public interface Tada {
-
-}
-
-// Example of a comment
-public partial module console_apps
-{
-    public struct ConsoleOut
-    {
-        public func printfn(text: string) {
-            for c in text {
-                debug_output_char(c)
-            }
-            debug_output_char('\n')
-        }
-
-        @ExternImport("kernel_debug_output_char")
-        private static extern func debug_output_char(c: u32)
-    }
-}
-```
-
-- Implementation of language parser changes
-- Implementation of the module syntax
 - Implementation of checked exceptions
 - Implementation of unsafe IL
 - Implementation of literal generic context
@@ -407,14 +532,14 @@ public partial module console_apps
 - Tomlyn
 
 
-### The native compiler
+### Development of the native compiler
 
 - Using RyuJIT
 - CoreRT like
 - LibObjectFile
 - Iced
 
-### The micro-kernel
+### Integration with a micro-kernel
 
 
 ### Feedback

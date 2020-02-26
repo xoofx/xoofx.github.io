@@ -409,6 +409,7 @@ Then I started to bring some more important syntax changes:
       }
   }
   ```
+- Use of the keyword `constructor` for declaring a constructor.
 - Use of a simple [naming convention](https://github.com/stark-lang/stark/blob/master/doc/naming-conventions.md) derived from Rust:
   - Using `UpperCamelCase` for "type-level" constructs (class, struct, enum, interface, union, extension)
   - And `snake_case` for "value-level" constructs 
@@ -555,7 +556,7 @@ var list = new List<*u8>() // declare a list of pointer to u8
 
 > You may wonder why it is important to have that support: It can be useful if you are developing low level parts in a kernel OS where you don't have yet a GC running but you still want to use container classes to manipulate kernel objects and structures.
 
-#### Remove of Array co-variance
+#### Remove Array co-variance
 
 This is one of the big legacy design decision that is now possible to revisit in Stark.
 
@@ -691,6 +692,8 @@ public struct String implements IArray<u8> {
 
 This is very similar to what has been adopted for [strings in GoLang](https://blog.golang.org/strings).
 
+The type `char` has been also replaced by the type `rune` which has the size of an `i32` (unicode codepoint).
+
 #### Generic Literals
 
 In C#, generic parameters are only meant to be Type definitions. You can't easily design something like `SmallList<T, 5>` where the implementation would store 5 consecutive T elements or overflow to a managed array if there is not enough room.
@@ -750,6 +753,85 @@ public struct HalfFixedArray<T, tSize>  where tSize: is const int {
 ```
 
 #### Iterators
+
+In .NET, the `IEnumerable<T>` is a pattern to iterate on a sequence of elements and mostly relevant when used in conjunction with the `foreach` syntax. In [Rethinking Enumerable](https://blog.paranoidcoding.com/2014/08/19/rethinking-enumerable.html) Jared Par explained what is wrong with `IEnumerable<T>` and explored a different way of iterating on elements.
+
+For the same reasons, Stark is departing from .NET `IEnumerable<T>` by introducing `Iterable<T, TIterator>`, where `TIterator` contains the state of the iteration:
+
+```stark
+namespace core
+
+/// Base interface for iterable items
+public interface Iterable<out T, TIterator>
+{
+    /// Starts the iterator
+    readable func iterate_begin() -> TIterator
+
+    /// Returns true if the iterable has a current element
+    readable func iterate_has_current(iterator: ref TIterator) -> bool 
+
+    /// Returns the current element
+    readable func iterate_current(iterator: ref TIterator) -> T
+
+    /// Moves the iterator to the next element
+    readable func iterate_next(iterator: ref TIterator)
+
+    /// Ends the iterator
+    readable func iterate_end(iterator: ref TIterator)
+}
+```
+
+And it's usage in Stark is no different than in C# with `foreach`:
+
+```stark
+public static func sum(indices: List<int>) -> int {
+    var result : int = 0
+    for x in indices {
+        result += x
+    }
+    return result
+}
+```
+
+In the case of `List<int>` the iterator state is simply an integer, the index of the element.
+
+The generated code under the wood is doing something like this:
+
+```stark
+public static func sum(indices: List<int>) -> int {
+    var result : int = 0
+    var iterator = indices.iterate_begin()
+    while indices.iterate_has_current(ref iterator) {
+        var x = indices.iterate_current(ref iterator)
+        result += x
+        indices.iterate_next(ref iterator)
+    }
+    indices.iterate_end(ref iterator)
+
+    return result
+}
+```
+
+The implementation for `List<T>` would inherit from `Iterable<T, int>` with the methods:
+
+```stark
+    readable func Iterable<T, int>.iterate_begin() -> int => 0
+
+    readable func Iterable<T, int>.iterate_has_current(index: ref int) -> bool => index < size
+
+    readable func Iterable<T, int>.iterate_current(index: ref int) -> T => this[index]
+
+    readable func Iterable<T, int>.iterate_next(index: ref int) => index++
+
+    readable func Iterable<T, int>.iterate_end(state: ref int) {}
+```
+
+The major benefits of using such a pattern:
+
+- The iterator state is separated and can be a value-type
+- The generated code doesn't box (in C# you would have to create duck typing GetEnumerator() method to workaround it)
+- The implementation is simple and straightforward, no need for an extra-type (e.g the Enumerator). Many iterators on indexed containers can use the iterator state `int`
+- Implementing `Linq` over this iterator should allow to generate efficient inlined code.
 
 #### Ranges
 

@@ -176,6 +176,7 @@ As a programmer, this language should help me to:
                 <li>By-value fixed array should be supported as a core type.</li>
                 <li>Allocation on the stack of reference types should be possible.</li>
                 <li>Control how an object is co-located on the heap with other objects.</li>
+                <li>Provide a way to easily define SOA (Struct Of Arrays) Layout for objects.</li>
             </ul>
         </td>
       </tr>  
@@ -315,7 +316,6 @@ Melody will be driven by the following 3 pillars:
   - Capabilities should be at the heart of managing HW resources and used for connecting services. 
   - All drivers/services/apps should live in user land. 
   - The operating system should be built on a secure micro-kernel.
-  - Dynamic loading of code should be disallowed.
 - Efficient:
   - Should scale well from IoT to Cloud.
   - IPC between services should be fast.
@@ -411,7 +411,8 @@ Then I started to bring some more important syntax changes:
   ```
 - Use of a simple [naming convention](https://github.com/stark-lang/stark/blob/master/doc/naming-conventions.md) derived from Rust:
   - Using `UpperCamelCase` for "type-level" constructs (class, struct, enum, interface, union, extension)
-  - And `snake_case` for "value-level" constructs  
+  - And `snake_case` for "value-level" constructs 
+  - A departure from C# is that modules and namespaces are following `snake_case`
   <br>
 
   | Item | Convention |
@@ -427,6 +428,8 @@ Then I started to bring some more important syntax changes:
   | Constant variables | `SCREAMING_SNAKE_CASE` |
   | Enum items | `SCREAMING_SNAKE_CASE` |
   | Type parameters | concise `UpperCamelCase`, prefixed by single uppercase letter: `T` |
+  {: .table }
+
 - Use of a more uniform naming for primitive types, following the syntax of Rust:
   
   | C# | Stark |
@@ -446,6 +449,7 @@ Then I started to bring some more important syntax changes:
   | `double` | `f64` |
   | `object` | `object` |
   | `string` | `string` |
+  {: .table }
   
   <br>You will notice that `int` and `uint` represents actually native integers (e.g an `int` is an `i32` or `i64` depending if the target CPU 32 or 64 bits). In Stark, they are first class types and are for example used as the default type for array/collection size/indexers.
 - Use of `implements` interface inheritance/prototype contracts and `extends` for sub-classing, similar to Java.
@@ -501,28 +505,319 @@ Then I started to bring some more important syntax changes:
       // ...
   }
   ```       
+- Casting between types is using the `as` syntax:
+  ```stark
+  var a_float = 123 as f32
+  var an_int = 1.5 as int
+  ```
+- Add if/then/else expression instead of C# ternary `cond ? value_true : value_false`:
+  ```stark
+  // if in an expression
+  var result = if cond then 1 else 2
 
-#### test3
+  // If as a statement
+  if cond then {
+    // ...
+  } else {
+    // ...
+  }
+  ```
+- Attribute syntax is following the Java attributes prefixed by `@`. You can still have multiple attributes but they don't need to be enclosed within brackets and separated by commas.
+  ```stark
+  @AttributeUsage(AttributeTargets.PARAMETER)
+  @ThisIsAnotherWithoutParenthesis
+  public class MyAttribute extends Attribute {
+      public constructor() {}
+  }
+  ```
 
-- Departure from ECMA-335
-- Fork of Roslyn
-- Fork of dnspy
-- Fork of System.Reflection.Metadata
+#### Remove boxing and object default methods
+
+In Stark, boxing a value-type automatically to a managed object is no longer possible. You can't cast an `int` to an `object`, so you can't allocate accidentally on the heap.
+
+The collateral effect of this change is also that you can't cast a struct to an interface even if that struct implements that interface. If you need to call a struct through an interface, it has to go through a generic constraint call.
+
+Also consequently, all the default virtual methods inherited by all objects were removed from `object` class definition: 
+- `~object()` destructor
+- `bool Equals(object)`
+- `int GetHashCode()`
+- `string ToString()`
+
+It should help to have a smaller footprint for runtime metadata for reference types. The VTable for objects in Stark would be empty by default.
+
+An important benefit of these changes is that pointers can now be used as generic arguments:
+
+```stark
+var list = new List<*u8>() // declare a list of pointer to u8
+``` 
+
+(Because in regular ECMA-335, pointers are not inheriting from `System.ValueType` and so they cannot be boxed)
+
+> You may wonder why it is important to have that support: It can be useful if you are developing low level parts in a kernel OS where you don't have yet a GC running but you still want to use container classes to manipulate kernel objects and structures.
+
+#### Remove of Array co-variance
+
+This is one of the big legacy design decision that is now possible to revisit in Stark.
+
+In C#, Arrays are co-variant, meaning that this is possible:
+
+```c#
+var array_of_string = new string[] { "a", "b" };
+var array_of_object = (object[])array_of_string;
+array_of_object[0] = 1; // will result in a runtime cast error
+```
+
+Not only it can be error prone but it has a cost at runtime, as an array write access can lead to perform a type cast check.
+
+In Stark, this will not be possible.
+
+> Note: This is not yet implemented in the front-end compiler but should not be much trouble to bring.
+
+#### The error model
+
+In order to differentiate non-recoverable programming errors from OS/user exceptions (e.g IO), the error model of Stark is following the feedback from [Midori - The Error Model](http://joeduffyblog.com/2016/02/07/the-error-model/)
+
+- Aborts are non-recoverable errors that can be either:
+  - Generated errors by contract at compile time
+  - Runtime errors when it is not possible to detect this at compile time
+  - Explicit aborts via runtime asserts
+- Checked exceptions for OS/user exceptions (e.g IO)
+
+```stark
+namespace core
+import core.runtime
+
+public interface IArray<T> extends ISizeable, MutableIterable<T, int> {
+    /// ref indexer #2, not readable
+    func operator [index: int] -> ref T 
+        requires index >= 0 && index < size { 
+          get 
+    }
+}
+```
+
+> Note that while the parser is currently accepting this syntax, the work to fully support this has not been done yet
+>
+> It will require to store the IL instructions for the `requires` clause, as well as having a simplified interpreter at compile time and fallback to a runtime error if not possible.
+
+And for checked exceptions, the syntax is following the Java syntax:
+
+```stark
+    // Valid (throws declared)
+  public static func throw_my_exception() throws MyException {
+      throw new MyException()
+  }
+
+  // Calling a method that throws without `try method()` is invalid
+  public static func call_a_method_which_throws_invalid() {
+      throw_my_exception() // generates a compiler error
+  }
+
+  // Valid (try with method throwing an exception)
+  public static func try_a_method_which_throws() throws Exception {
+      try throw_my_exception()
+  }
+
+  // Catching an exception does not require throws on method
+  public static func try_a_method_which_throws_but_is_caught() {
+      try {
+          try throw_my_exception()
+      } catch (MyException ex) {          
+          // We don't rethrow  
+      }
+  }
+```
+
+Exceptions need to be caught or declared on the method. Later Stark will also support `try` expression with `Result<T>` which will allow to perform pattern matching on it, to extract the exception or the result value of a method call.
+
+#### Unsafe IL
+
+Even if a language provides high-level constructs and safety, it requires often unrestricted access in order to provide safety (!) or more efficient code. These unsafe usages can still be abstracted and wrapped.
+
+In C#, there is no easy support for that, so these days, you need to either:
+
+- Use `System.Runtime.CompilerServices.Unsafe` though you can't do everything and it is bound to what is exposed
+- Use a solution like [Fody](https://github.com/Fody/Fody) coupled with [InlineIL.Fody](https://github.com/ltrzesniewski/InlineIL.Fody)
+
+In the F# code library, the F# compiler is allowing to inline IL with the syntax `(# ... #)` and it is [used internally](https://github.com/fsharp/fsharp/blob/6819e1c769269edefcea2263c98f993e90b623e2/src/fsharp/FSharp.Core/prim-types.fs#L400-L467) to unlock some low level parts that cannot be expressed in F#. In the past it was even allowed for user library, but I have read somewhere that it is no longer possible (which is fine).
+
+In the CoreRT compiler, they had to develop IL post processing (similar to Fody) to [patch some methods like Unsafe utility methods](https://github.com/dotnet/corert/blob/3c58e6d6a41a64d8742535c653088a7629ce879c/src/Common/src/TypeSystem/IL/Stubs/UnsafeIntrinsics.cs#L13-L90).
+
+In Stark, I have decided to bring back to life the old prototype [Inline IL ASM in C# with Roslyn](https://xoofx.com/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn/) and improved its integration by allowing a new `unsafe il` syntax:
+
+```stark
+public func operator [index: int] -> ref T
+    requires index as uint < tSize as uint
+  { 
+    get {
+        unsafe il {
+            ldarg.0
+            ldarg.1
+            sizeof T
+            conv.i
+            mul
+            add
+            ret
+        }
+    } 
+}
+```
+
+#### UTF8 String by default
+
+A [String in Stark](https://github.com/stark-lang/stark/blob/master/src/runtime/core/String.sk) is UTF8 by default. It is even just a sequence of byte and the string type is actually a small struct wrapping this byte buffer:
+
+```stark
+namespace core
+
+/// A string is a struct wrapping an array of u8
+/// Can be mutable or immutable/readable and sharing
+/// the same interface as arrays
+public struct String implements IArray<u8> {
+    private let _buffer : []u8
+
+    public constructor(size: int)
+        requires size >= 0 {
+        _buffer = new [size]u8
+    }
+
+    public constructor(buffer: []u8) {
+        _buffer = buffer
+    }
+
+    // ...
+}
+``` 
+
+This is very similar to what has been adopted for [strings in GoLang](https://blog.golang.org/strings).
+
+#### Generic Literals
+
+In C#, generic parameters are only meant to be Type definitions. You can't easily design something like `SmallList<T, 5>` where the implementation would store 5 consecutive T elements or overflow to a managed array if there is not enough room.
+
+Generic literals are very important to introduce more efficient algorithms usually for performance reasons (e.g specialized codegen) and to improve locality (e.g fixed amount of co-located data).
+
+In Stark, I have introduced the possibility to declare that a generic parameter is expecting a const literal primitive (e.g `const int`). For example, a fixed array in Stark is declared like this:
+
+```stark
+namespace core
+import core.runtime
+
+public struct FixedArray<T, tSize> implements IArray<T> where tSize: is const int
+{
+    // The array cannot be initialized by using directly this class
+    private constructor() {}
+
+    // size is readable
+    public func size -> int => tSize
+
+    // ...
+}
+```
+
+It is then possible to use fixed array with the following syntax:
+
+```stark
+public class PlayFixedArray {
+    // Declare a field with a fixed size array
+    public var field_table: [4]int
+
+    // Fixed size array of objects
+    public var field_table_of_objects: [3]object
+}
+
+public module fixedarray_playground {
+    public static func play_with_fixed(cls: PlayFixedArray, 
+                                       fixed_array_by_ref: ref [2]int) -> int {
+        // Fixed size array access
+        return cls.field_table[0] + fixed_array_by_ref[1]
+    }
+}    
+```
+
+This type can then be reused in higher level containers (e.g `SmallList<T, tSize>`)
+
+The `FixedArray` type is also a special case for the native compiler. As you can see above, the struct doesn't contain any field declarations, but the native compiler will generate them when the struct is being used.
+
+There are still challenges ahead related to how far we will allow to create const literals from const expressions:
+
+```stark
+public struct HalfFixedArray<T, tSize>  where tSize: is const int {
+    // Some challenge ahead to store this computation at IL level
+    public var field_table: [tSize / 2 + 1]T
+}
+
+```
+
+#### Iterators
+
+#### Ranges
+
+#### Slices
+
+#### Others
+
+- RuntimeExport/RuntimeImport symbol binding
+- Parameter less constructor for structs
+- CallerArgumentExpression
+
+#### Departure from ECMA-335
+
+A change like "remove boxing of value type" required a departure from [ECMA-335](https://www.ecma-international.org/publications/standards/Ecma-335.htm) as a struct is identified at the IL level when it inherits `System.ValueType` which is a reference type. The following changes were applied to the standard:
+
+In **II.23.1.15 Flags for types [TypeAttributes]** in the table, at the section _Class semantics attributes_:
+
+| Flag |  Value | Description |
+|-|-|-|
+|`ClassSemanticsMask` | `0x00000060` (changed) | Use this mask to retrieve class semantics information.
+|`Class` | `0x00000000` | Type is a class
+|`Interface` | `0x00000020` | Type is an interface
+|`Struct` | `0x00000040` (new) | Type is a struct
+{: .table }
+
+It's not the sole change that I had to make. For example:
+
+- I have also added an `Alignment` field to `ClassLayout` in order to specify custom alignment of types (e.g SIMD vector types can require 16 bytes or more)
+- And modified a couple of flags to (e.g `Intrinsics` attribute would translate to a flag on `[MethodImplAttributes]`)
+
+I'm trying to keep these changes documented in [changes-to-ecma-335.md](https://github.com/stark-lang/stark/blob/master/doc/changes-to-ecma-335.md).
+
+More changes will have to come for other language features:
+
+- `requires` contract on methods
+- Checked exceptions
+- Immutability/Readable/Isolated concepts
+
+#### Fork of dnSpy
+
+In order to check if the compiler was generating valid IL, I wanted to verify this with a tool like ILSpy or dnSpy. Because I had to make changes to ECMA-335/IL Format, I had also to make similar changes to an IL inspector.
+
+I have been maintaining a [fork of dnSpy](https://github.com/stark-lang/stark-dnSpy) for Stark:
+
+<img src="/images/stark-dnSpy.png" class="mx-auto" style="display: block"/>
+
+I made the choice of dnSpy mostly because it was possible to inspect raw metadata as well.
+
+#### Fork of System.Reflection.Metadata
+
+Another consequence of the change to ECMA-335 is that I had to fork `System.Reflection.Metadata` which has been renamed to `StarkPlatform.Reflection.Metadata`.
+
+This library is used by the Stark front-end compiler (e.g Roslyn for C#) to read and write assemblies but also by the native code compiler.
+
+
 
 Details:
 
-- Implementation of for instead of foreach
-- Remove inheritance of ValueType from object
 - Implementation of checked exceptions
 - Implementation of unsafe IL
 - Implementation of literal generic context
 - Implementation of ranges
 - Implementation of new iterator pattern
 - Implementation of slices
+- String are UTF8
 - Pointers in generics
 - 
 - RuntimeExport/RuntimeImport symbol binding
-- Native integer support
 - Parameter less constructor for structs
 - CallerArgumentExpression
 - Casts between types (e.g int to float not implicit)

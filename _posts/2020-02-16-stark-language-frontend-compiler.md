@@ -441,9 +441,9 @@ This type can then be reused in higher level containers (e.g `SmallList<T, tSize
 
 The `FixedArray` type is also a special case for the native compiler. As you can see above, the struct doesn't contain any field declarations, but the native compiler will generate them when the struct is being used.
 
-At the IL level, I had to modify ECMA-335 to introduce a new generic type refernce and also a new IL opcode. For instance the property `public func size -> int => tSize` which is returning the `tSize` generic argument is translated at the IL level to a new opcode `ldtarg    !tSize`:
+At the IL level, I had to modify ECMA-335 to introduce a new generic type literal reference and also a new IL opcode to load its value. For instance the property `public func size -> int => tSize` which is returning the `tSize` generic argument is translated at the IL level to a new opcode `ldtarg    !tSize`:
 
-``` 
+```c#
 	// Token: 0x06000035 RID: 53 RVA: 0x0000240B File Offset: 0x0000060B
 	.method public final hidebysig specialname newslot virtual 
 		instance native int get_size () cil managed 
@@ -457,7 +457,7 @@ At the IL level, I had to modify ECMA-335 to introduce a new generic type refern
 	} // end of method FixedArray`2::get_size
 ```
 
-There are still challenges ahead related to how far we will allow to create const literals from const expressions:
+Though, there are still challenges ahead related to how far we will allow to create const literals from const expressions:
 
 ```stark
 public struct HalfFixedArray<T, tSize>  where tSize: is const int {
@@ -468,7 +468,7 @@ public struct HalfFixedArray<T, tSize>  where tSize: is const int {
 
 ## Iterators
 
-In .NET, the `IEnumerable<T>` provides a pattern to iterate on a sequence of elements and mostly relevant when used in conjunction with the `foreach` syntax. In [Rethinking Enumerable](https://blog.paranoidcoding.com/2014/08/19/rethinking-enumerable.html) Jared Par explained what is not working well with `IEnumerable<T>` and explored a different way of iterating on elements.
+In .NET, the `IEnumerable<T>` provides a pattern to iterate on a sequence of elements and mostly relevant when used in conjunction with the `foreach` syntax. In [Rethinking Enumerable](https://blog.paranoidcoding.com/2014/08/19/rethinking-enumerable.html) Jared Parsons explained what is not working well with `IEnumerable<T>` and explored a different way of iterating on elements.
 
 For the same reasons, Stark is departing from .NET `IEnumerable<T>` by introducing `Iterable<T, TIterator>`, where `TIterator` contains the state of the iteration:
 

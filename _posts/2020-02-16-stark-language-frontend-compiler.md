@@ -542,10 +542,11 @@ The implementation for `List<T>` would inherit from `Iterable<T, int>` with the 
 
 The major benefits of using such a pattern:
 
-- The iterator state is separated and can be a value-type
-- The generated code doesn't box (in C# you would have to create duck typing GetEnumerator() method to workaround it)
-- The implementation is simple and straightforward, no need for an extra-type (e.g the Enumerator). Many iterators on indexed containers can use the iterator state `int`
+- The iterator state is separated and can be a value-type.
+- The generated code doesn't box (in C# you would have to create duck typing GetEnumerator() method to workaround it).
+- The implementation is simple and straightforward, no need for an extra-type (e.g the Enumerator). Many iterators on indexed containers can use the iterator state `int`.
 - Implementing `Linq` over this iterator should allow to generate efficient inlined code.
+- The `try`/`finally` would be triggered only if the iterator inherits from `IDisposable` (not implemented in the current prototype).
 
 ## Ranges
 

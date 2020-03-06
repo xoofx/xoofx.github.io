@@ -341,14 +341,14 @@ The steps to achieve this goal would involve:
 
 After hacking C# with CoreRT on a bare metal OS on the Raspberry Pi, I realized that the .NET ecosystem could help my experiment a lot more than I had planned when starting to work on Stark. Instead of trying to rebuild everything, **let's try to find and reuse components that could significantly boost this enterprise**:
 
-<a class="btn btn-outline-info" style="text-align: left; display:block" href="/blog/2020/02/16/stark-language-frontend-compiler/" role="button">Part 1: Stark - Language And Frontend Compiler - Prototype 2019</a>
+<a class="btn btn-outline-info" style="text-align: left; display:block" href="/blog/2020/03/06/stark-language-frontend-compiler/" role="button">Part 1: Stark - Language And Frontend Compiler - Prototype 2019</a>
 
 For the front-end compiler, instead of fully building bottom-up a [tokenizer](https://xoofx.com/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer/)/parser/syntax analyzer/type inference/transform to IL, why not **starting from the Roslyn C# compiler instead**?
 
-<a class="btn btn-outline-info" style="text-align: left; display:block" href="#" role="button">Part 2: Stark - Native Compiler - Prototype 2019</a>
+<a class="btn btn-outline-info" style="text-align: left; display:block" href="#" role="button">Part 2: Stark - Native Compiler - Prototype 2019 (Blog post coming soon)</a>
 
 For the back-end compiler responsible to generate native code, I originally thought that I could rely on CoreRT, but realized that the design of the compiler and runtime would be so different that I should proceed differently... and came to the conclusion that the most critical component I could reuse was the **RyuJIT compiler for the IL to native codegen part**. And I will explain more in details why.
 
-<a class="btn btn-outline-info" style="text-align: left; display:block" href="#" role="button">Part 3: Melody - HelloWorld OS - Prototype 2019</a>
+<a class="btn btn-outline-info" style="text-align: left; display:block" href="#" role="button">Part 3: Melody - HelloWorld OS - Prototype 2019 (Blog post coming soon)</a>
 
 For the OS kernel part, I was initially expecting to write the kernel in Stark itself, but while searching about what it would take, **I discovered that the [seL4 micro-kernel](http://sel4.systems/) was exactly what I was looking for for a micro-kernel**, and I would have already plenty of work to do to build a proper OS on top of it. We will see why I'm very enthusiastic about it.

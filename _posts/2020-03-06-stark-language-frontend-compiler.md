@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Stark - Language And Frontend Compiler - Prototype 2019
-subtitle: Syntax of the language along the development of the front-end compiler
+subtitle: Syntax of the language and the development of the front-end compiler
 tags:
  - Stark
  - Melody
@@ -13,7 +13,7 @@ tags:
 comments: true
 ---
 
-This is the first part of the blog post series about [The Odyssey of Stark and Melody](/blog/2020/02/15/stark-melody-dotnet-sel4/) and more specifically, about the development of the syntax of the [Stark](https://github.com/stark-lang/stark) language and its front-end compiler, based on a fork of the [C# Roslyn compiler](https://github.com/dotnet/roslyn), during its first year prototype last year.
+This is the first part of the blog post series about [The Odyssey of Stark and Melody](/blog/2020/03/05/stark-melody-dotnet-sel4/) and more specifically, about the development of the syntax of the [Stark](https://github.com/stark-lang/stark) language and its front-end compiler, based on a fork of the [C# Roslyn compiler](https://github.com/dotnet/roslyn), during its first year prototype last year.
 
 ## Overview
 
@@ -253,9 +253,9 @@ var list = new List<*u8>() // declare a list of pointer to u8
 
 > You may wonder why it is important to have that support: It can be useful if you are developing low level parts in a kernel OS where you don't have yet a GC running but you still want to use container classes to manipulate kernel objects and structures.
 
-## Remove Array co-variance
+## Arrays
 
-This is one of the big legacy design decision that is now possible to revisit in Stark.
+First, array co-variance is one of the big legacy design decision that is now possible to revisit in Stark.
 
 In C#, Arrays are co-variant, meaning that this is possible:
 
@@ -267,9 +267,263 @@ array_of_object[0] = 1; // will result in a runtime cast error
 
 Not only it can be error prone but it has a cost at runtime, as an array write access can lead to perform a type cast check.
 
-In Stark, this will not be possible.
+In Stark, arrays are no longer co-variant.
 
 > Note: This is not yet implemented in the front-end compiler but should not be much trouble to bring.
+
+Also, any array like data are sharing the same base interface `IArray<T>`, that defines the minimal contract for an array: the size property, ref indexer and the assumption that the data are sequential in memory. The following types are all inheriting from `IArray<T>`
+- Managed arrays (e.g `[]u8`)
+- String
+- Fixed arrays (e.g `fixed [4]u8`)
+- Slices (e,g `~[]u8`)
+
+## Strings
+
+A [String in Stark](https://github.com/stark-lang/stark/blob/master/src/runtime/core/String.sk) is UTF8 by default. It is even just a sequence of byte and the string type is actually a small struct wrapping this byte buffer:
+
+```stark
+namespace core
+
+/// A string is a struct wrapping an array of u8
+/// Can be mutable or immutable/readable and sharing
+/// the same interface as arrays
+public struct String implements IArray<u8> {
+    private let _buffer : []u8
+
+    public constructor(size: int)
+        requires size >= 0 {
+        _buffer = new [size]u8
+    }
+
+    public constructor(buffer: []u8) {
+        _buffer = buffer
+    }
+
+    // ...
+}
+``` 
+
+This is very similar to what has been adopted for [strings in GoLang](https://blog.golang.org/strings).
+
+The type `char` has been also replaced by the type `rune` which has the size of an `i32` (unicode codepoint).
+
+## Fixed Arrays and generic literals
+
+In C#, generic parameters are only meant to be Type definitions. You can't design something like `SmallList<T, 5>` where the implementation would store 5 consecutive T elements or overflow to a managed array if there is not enough room.
+
+> Generic literals are critical to introduce more efficient algorithms usually for performance reasons (e.g specialized codegen) and to improve locality (e.g fixed amount of co-located data).
+
+In Stark, It is possible to add a generic parameter constraint to expect a const literal primitive (e.g `const int`). For example, a fixed array in Stark is declared like this:
+
+```stark
+namespace core
+import core.runtime
+
+public struct FixedArray<T, tSize> implements IArray<T> where tSize: is const int
+{
+    // The array cannot be initialized by using directly this class
+    private constructor() {}
+
+    // size is readable
+    public func size -> int => tSize
+
+    // ...
+}
+```
+
+It is then possible to use fixed array with the following syntax:
+
+```stark
+public class PlayFixedArray {
+    // Declare a field with a fixed size array
+    public var field_table: [4]int
+
+    // Fixed size array of objects
+    public var field_table_of_objects: [3]object
+}
+
+public module fixedarray_playground {
+    public static func play_with_fixed(cls: PlayFixedArray, 
+                                       fixed_array_by_ref: ref [2]int) -> int {
+        // Fixed size array access
+        return cls.field_table[0] + fixed_array_by_ref[1]
+    }
+}    
+```
+
+> Note: The syntax is not definitive, as it could conflict with normal array (e.g in case we want to allocate a managed array on the stack), it is more likely that fixed array will require a prefix e.g `fixed []u8` or different syntax (but then more cryptic).
+
+This type can then be reused in higher level containers (e.g `SmallList<T, tSize>`)
+
+The `FixedArray` type is also a special case for the native compiler. As you can see above, the struct doesn't contain any field declarations, but the native compiler will generate them when the struct is being used.
+
+At the IL level, I had to modify ECMA-335 to introduce a new generic type literal reference and also a new IL opcode to load its value. For instance the property `public func size -> int => tSize` which is returning the `tSize` generic argument is translated at the IL level to a new opcode `ldtarg    !tSize`:
+
+```c#
+	// Token: 0x06000035 RID: 53 RVA: 0x0000240B File Offset: 0x0000060B
+	.method public final hidebysig specialname newslot virtual 
+		instance native int get_size () cil managed 
+	{
+		// Header Size: 1 byte
+		// Code Size: 6 (0x6) bytes
+		.maxstack 8
+
+		/* 0x0000060C E11200001B   */ IL_0000: ldtarg    !tSize
+		/* 0x00000611 2A           */ IL_0005: ret
+	} // end of method FixedArray`2::get_size
+```
+
+Though, there are still challenges ahead related to how far we will allow to create const literals from const expressions:
+
+```stark
+public struct HalfFixedArray<T, tSize>  where tSize: is const int {
+    // Some challenge ahead to store this computation at IL level
+    public var field_table: [tSize / 2 + 1]T
+}
+```
+
+## Iterator
+
+In .NET, the `IEnumerable<T>` provides a pattern to iterate on a sequence of elements and mostly relevant when used in conjunction with the `foreach` syntax. In [Rethinking Enumerable](https://blog.paranoidcoding.com/2014/08/19/rethinking-enumerable.html) Jared Parsons explained what is not working well with `IEnumerable<T>` and explored a different way of iterating on elements.
+
+For the same reasons, Stark is departing from .NET `IEnumerable<T>` by introducing `Iterable<T, TIterator>`, where `TIterator` contains the state of the iteration:
+
+```stark
+namespace core
+
+/// Base interface for iterable items
+public interface Iterable<out T, TIterator>
+{
+    /// Starts the iterator
+    readable func iterate_begin() -> TIterator
+
+    /// Returns true if the iterable has a current element
+    readable func iterate_has_current(iterator: ref TIterator) -> bool 
+
+    /// Returns the current element
+    readable func iterate_current(iterator: ref TIterator) -> T
+
+    /// Moves the iterator to the next element
+    readable func iterate_next(iterator: ref TIterator)
+
+    /// Ends the iterator
+    readable func iterate_end(iterator: ref TIterator)
+}
+```
+
+And it's usage in Stark is no different than in C# with `foreach`:
+
+```stark
+public static func sum(indices: List<int>) -> int {
+    var result : int = 0
+    for x in indices {
+        result += x
+    }
+    return result
+}
+```
+
+In the case of `List<int>` the iterator state is simply an integer, the index of the element.
+
+The generated code under the wood is doing something like this:
+
+```stark
+public static func sum(indices: List<int>) -> int {
+    var result : int = 0
+    var iterator = indices.iterate_begin()
+    while indices.iterate_has_current(ref iterator) {
+        var x = indices.iterate_current(ref iterator)
+        result += x
+        indices.iterate_next(ref iterator)
+    }
+    indices.iterate_end(ref iterator)
+
+    return result
+}
+```
+
+The implementation for `List<T>` would inherit from `Iterable<T, int>` with the methods:
+
+```stark
+    readable func Iterable<T, int>.iterate_begin() -> int => 0
+
+    readable func Iterable<T, int>.iterate_has_current(index: ref int) -> bool => index < size
+
+    readable func Iterable<T, int>.iterate_current(index: ref int) -> T => this[index]
+
+    readable func Iterable<T, int>.iterate_next(index: ref int) => index++
+
+    readable func Iterable<T, int>.iterate_end(state: ref int) {}
+```
+
+The major benefits of using such a pattern:
+
+- The iterator state is separated and can be a value-type.
+- The generated code doesn't box (in C# you would have to create duck typing GetEnumerator() method to workaround it).
+- The implementation is simple and straightforward, no need for an extra-type (e.g the Enumerator). Many iterators on indexed containers can use the iterator state `int`.
+- Implementing `Linq` over this iterator should allow to generate efficient inlined code.
+- The `try`/`finally` would be triggered only if the iterator inherits from `IDisposable` (not implemented in the current prototype).
+- It could also support mutable iterator (an mutable_iterate_current that return a ref)
+
+> Note that it is a first try at implementing differently an iterator. An objection to this design is the need to have 3 methods (`has_current`, `current`, `next`) to implement something that could be implemented in a single method call:
+>
+> ```stark
+> func iterable_next(iterator: ref TIterator) -> ?T
+> ```
+>
+> This single method approach makes it easier to decide in one go if it can continue and fetch the value at the same time.
+> But it also complicates the iterator state implementation: For an array index, it would have to start at -1, and in next, would have to check `index + 1` against `size`. The return value would also have to be returned for the end-of-iterator, a big struct `T` even if wrapped through an optional `?T` could still take precious CPU cycles for an empty iterator.
+>
+> So the design is still open to debate.
+
+## Range and Slice
+
+Unlike in C#, Ranges in Stark are iterate-able and are supported by `for` loop iteration (`foreach` in C#). This helps also to remove the C `for` legacy loop construction.
+
+A `Range` in stark is inclusive, so `0..1` would contain 0 and 1.
+
+```stark
+public static func sun_range() -> int {
+    var result : int = 0
+    // iterates from -1 to 1 inclusive
+    for x in -1..1 {
+        result += x
+    }
+    return result // returns 0
+}
+```
+
+In order to iterate on an array by using its length, you can use the syntax `0..<array.size` and it would create a range that is `0..(array.size-1)`:
+
+```stark
+public static func sun_range(array: []u8) -> int {
+    var result : int = 0
+    for i in 0..<array.size {
+        result += array[i]
+    }
+    return result
+}
+```
+
+> Note that there is a design flaw between Iterable and Range that makes it not possible to iterate from `int.min_value..int.max_value`
+
+Ranges are more useful for creating slices from existing data. In C#, when a range is used with an indexer on a string or an array, it will create a copy of the original data, with a hidden heap allocation.
+
+Stark is introducing the struct `Slice<TArray, T>` where `TArray` is an `IArray<T>` that provides a view (and not a copy) around an existing struct/class implementing the `IArray<T>` interface. The syntax is using the prefix tilde `~`. A slice of an array of `u8` can be expressed as `~[]u8` that translates to `Slice<[]u8, u8>`:
+
+```stark
+/// return the slice "abcd"
+public static func get_slice_with_string() -> ~string => "abcd"
+
+/// return the slice "ab"
+public static func get_slice_with_string_range() -> ~string => "abcd"[0..1]
+
+/// return a slice of a slice from a slice
+public static func get_slice_of_slice(slice: ~string) -> ~string => slice[0..2][0..1]
+
+/// return a slice from an array
+public static func get_slice_with_array(array: []int) -> ~[]int =>  array[0..1]
+```
 
 ## The error model
 
@@ -361,202 +615,56 @@ public func operator [index: int] -> ref T
 }
 ```
 
-## UTF8 String by default
-
-A [String in Stark](https://github.com/stark-lang/stark/blob/master/src/runtime/core/String.sk) is UTF8 by default. It is even just a sequence of byte and the string type is actually a small struct wrapping this byte buffer:
-
-```stark
-namespace core
-
-/// A string is a struct wrapping an array of u8
-/// Can be mutable or immutable/readable and sharing
-/// the same interface as arrays
-public struct String implements IArray<u8> {
-    private let _buffer : []u8
-
-    public constructor(size: int)
-        requires size >= 0 {
-        _buffer = new [size]u8
-    }
-
-    public constructor(buffer: []u8) {
-        _buffer = buffer
-    }
-
-    // ...
-}
-``` 
-
-This is very similar to what has been adopted for [strings in GoLang](https://blog.golang.org/strings).
-
-The type `char` has been also replaced by the type `rune` which has the size of an `i32` (unicode codepoint).
-
-## Generic Literals
-
-In C#, generic parameters are only meant to be Type definitions. You can't design something like `SmallList<T, 5>` where the implementation would store 5 consecutive T elements or overflow to a managed array if there is not enough room.
-
-> Generic literals are critical to introduce more efficient algorithms usually for performance reasons (e.g specialized codegen) and to improve locality (e.g fixed amount of co-located data).
-
-In Stark, It is possible to add a generic parameter constraint to expect a const literal primitive (e.g `const int`). For example, a fixed array in Stark is declared like this:
-
-```stark
-namespace core
-import core.runtime
-
-public struct FixedArray<T, tSize> implements IArray<T> where tSize: is const int
-{
-    // The array cannot be initialized by using directly this class
-    private constructor() {}
-
-    // size is readable
-    public func size -> int => tSize
-
-    // ...
-}
-```
-
-It is then possible to use fixed array with the following syntax:
-
-```stark
-public class PlayFixedArray {
-    // Declare a field with a fixed size array
-    public var field_table: [4]int
-
-    // Fixed size array of objects
-    public var field_table_of_objects: [3]object
-}
-
-public module fixedarray_playground {
-    public static func play_with_fixed(cls: PlayFixedArray, 
-                                       fixed_array_by_ref: ref [2]int) -> int {
-        // Fixed size array access
-        return cls.field_table[0] + fixed_array_by_ref[1]
-    }
-}    
-```
-
-> Note: The syntax is not definitive, as it could conflict with normal array (e.g in case we want to allocate a managed array on the stack), it is more likely that fixed array will require a prefix e.g `fixed []u8` or different syntax (but then more cryptic).
-
-This type can then be reused in higher level containers (e.g `SmallList<T, tSize>`)
-
-The `FixedArray` type is also a special case for the native compiler. As you can see above, the struct doesn't contain any field declarations, but the native compiler will generate them when the struct is being used.
-
-At the IL level, I had to modify ECMA-335 to introduce a new generic type literal reference and also a new IL opcode to load its value. For instance the property `public func size -> int => tSize` which is returning the `tSize` generic argument is translated at the IL level to a new opcode `ldtarg    !tSize`:
-
-```c#
-	// Token: 0x06000035 RID: 53 RVA: 0x0000240B File Offset: 0x0000060B
-	.method public final hidebysig specialname newslot virtual 
-		instance native int get_size () cil managed 
-	{
-		// Header Size: 1 byte
-		// Code Size: 6 (0x6) bytes
-		.maxstack 8
-
-		/* 0x0000060C E11200001B   */ IL_0000: ldtarg    !tSize
-		/* 0x00000611 2A           */ IL_0005: ret
-	} // end of method FixedArray`2::get_size
-```
-
-Though, there are still challenges ahead related to how far we will allow to create const literals from const expressions:
-
-```stark
-public struct HalfFixedArray<T, tSize>  where tSize: is const int {
-    // Some challenge ahead to store this computation at IL level
-    public var field_table: [tSize / 2 + 1]T
-}
-```
-
-## Iterators
-
-In .NET, the `IEnumerable<T>` provides a pattern to iterate on a sequence of elements and mostly relevant when used in conjunction with the `foreach` syntax. In [Rethinking Enumerable](https://blog.paranoidcoding.com/2014/08/19/rethinking-enumerable.html) Jared Parsons explained what is not working well with `IEnumerable<T>` and explored a different way of iterating on elements.
-
-For the same reasons, Stark is departing from .NET `IEnumerable<T>` by introducing `Iterable<T, TIterator>`, where `TIterator` contains the state of the iteration:
-
-```stark
-namespace core
-
-/// Base interface for iterable items
-public interface Iterable<out T, TIterator>
-{
-    /// Starts the iterator
-    readable func iterate_begin() -> TIterator
-
-    /// Returns true if the iterable has a current element
-    readable func iterate_has_current(iterator: ref TIterator) -> bool 
-
-    /// Returns the current element
-    readable func iterate_current(iterator: ref TIterator) -> T
-
-    /// Moves the iterator to the next element
-    readable func iterate_next(iterator: ref TIterator)
-
-    /// Ends the iterator
-    readable func iterate_end(iterator: ref TIterator)
-}
-```
-
-And it's usage in Stark is no different than in C# with `foreach`:
-
-```stark
-public static func sum(indices: List<int>) -> int {
-    var result : int = 0
-    for x in indices {
-        result += x
-    }
-    return result
-}
-```
-
-In the case of `List<int>` the iterator state is simply an integer, the index of the element.
-
-The generated code under the wood is doing something like this:
-
-```stark
-public static func sum(indices: List<int>) -> int {
-    var result : int = 0
-    var iterator = indices.iterate_begin()
-    while indices.iterate_has_current(ref iterator) {
-        var x = indices.iterate_current(ref iterator)
-        result += x
-        indices.iterate_next(ref iterator)
-    }
-    indices.iterate_end(ref iterator)
-
-    return result
-}
-```
-
-The implementation for `List<T>` would inherit from `Iterable<T, int>` with the methods:
-
-```stark
-    readable func Iterable<T, int>.iterate_begin() -> int => 0
-
-    readable func Iterable<T, int>.iterate_has_current(index: ref int) -> bool => index < size
-
-    readable func Iterable<T, int>.iterate_current(index: ref int) -> T => this[index]
-
-    readable func Iterable<T, int>.iterate_next(index: ref int) => index++
-
-    readable func Iterable<T, int>.iterate_end(state: ref int) {}
-```
-
-The major benefits of using such a pattern:
-
-- The iterator state is separated and can be a value-type.
-- The generated code doesn't box (in C# you would have to create duck typing GetEnumerator() method to workaround it).
-- The implementation is simple and straightforward, no need for an extra-type (e.g the Enumerator). Many iterators on indexed containers can use the iterator state `int`.
-- Implementing `Linq` over this iterator should allow to generate efficient inlined code.
-- The `try`/`finally` would be triggered only if the iterator inherits from `IDisposable` (not implemented in the current prototype).
-
-## Ranges
-
-## Slices
-
 ## Others
 
-- RuntimeExport/RuntimeImport symbol binding
-- Parameter less constructor for structs
-- CallerArgumentExpression
+During this first year, a few other areas were experimented or partially prototyped:
+
+- `RuntimeExport`/`RuntimeImport` symbol binding: these are attributes that you can put on static methods providing dynamic weak static linking between low level parts in the language and their runtime projections:
+
+  ```stark
+  // In a first library A
+  @RuntimeImport
+  public extern static func allocate_object_heap(type: Type) -> object;
+
+  // In a second library B that provides the implementation of allocate_object_heap
+  @RuntimeExport("allocate_object_heap")
+  public extern static func allocate_object_heap_x86(type: Type) -> object;
+  ```
+- Parameter less constructor for structs. In Stark, structs can declare a default constructor. This is especially important to support such a feature for correct support of safe object reference (no null)
+
+  ```stark
+  public struct MyStruct { public constructor() { ... } }
+  ```  
+- In addition to the existing attributes `CallerFilePath`, `CallerMemberName`, `CallerLineNumber`, Stark provides a new compile time attribute `CallerArgumentExpression` that can extract a string representation of another argument for a method:
+
+  ```stark
+  // Declare the argument conditionAsText as a string representation of the argument condition
+  public static func assert(condition: bool, @CallerArgumentExpression(nameof(condition)) conditionAsText: ?string =   null )
+  {
+      // ...
+  }
+  
+  // implicitly conditionAsText = "this_is_an_expression && another_expression"
+  assert(this_is_an_expression && another_expression)
+  ``` 
+- No `#ifdef` but config instead, similar to [Rust `[cfg]` attribute `!cfg`](https://doc.rust-lang.org/rust-by-example/attribute/cfg.html). In Stark, I would like all the code variations shipped in the library that can be platform dependent or context dependent (tests, benchmarks) to be compiled into the same library.
+
+  ```stark
+  // Only valid when the "tests" config is passed to the native compiler
+  @Config("tests")
+  public module all_tests {
+      @Test
+      public static func my_test() { ... }
+  }
+  ```
+
+But several areas have also not been yet prototyped during this first year:
+
+- The introduction of isolated/readability/immutability concepts.
+- Discriminated (struct and managed) unions (also for `?T` aka `Option<T>`) and associated pattern matching
+- Syntax for lifetime for heap allocation (e.g `new @PerRequest MyObject()` or `new MyObject() in @PerRequest).
+- Yield method iterators as value types.
+- Stark driver using simple TOML config to build a library.
 
 ## Departure from ECMA-335
 
@@ -601,10 +709,16 @@ Another consequence of the change to ECMA-335 is that I had to fork `System.Refl
 
 This library is used by the Stark front-end compiler (e.g Roslyn for C#) to read and write assemblies but also by the native code compiler.
 
-TODO: Talk about string
+A few changes were made to the original library, like the support for UTF8 string storage and to allow to retrieve a UTF8 without having to allocate a manage object.
 
-## Working with Roslyn
+## Next Steps
 
+This first year prototype helped to validate that it was possible to fork Roslyn to build an entire new language and start to build a new core library with it. While it is going to require *lots of work*  to get it working entirely and correctly, it is very encouraging and promising!
 
-- Working with Roslyn
-- Tomlyn
+The most challenging part of that work was to make changes to Roslyn, a huge and large codebase, without being able to get PR reviews from more knowledgeable folks of this codebase. I had sometimes to revert some changes realizing that it would not work. I know also that I will have some difficult changes to bring in the future and I fear them in advance.
+
+Because I had to work on the native compiler part, I had also to stop working on the frontend for several months and getting back into the details after such a long period was quite difficult.
+
+But this work on the frontend compiler was fundamental to allow the following work on the native compiler and it will be part of the next blog post of this blog post series!
+
+Stay tuned and Happy coding!

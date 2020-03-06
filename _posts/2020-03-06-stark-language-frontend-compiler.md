@@ -209,6 +209,13 @@ Then I started to bring some more important syntax changes:
   var a_float = 123 as f32
   var an_int = 1.5 as int
   ```
+- Variable/field assignment: `var` for multiple assignments, `let` for single assignment.
+  ```stark
+  var this_is_a_var = 123
+  let this_is_a_let = 124
+  this_is_a_var = 5
+  // this_is_a_let = 6 // Can't assign again for let
+  ```
 - Add if/then/else expression instead of C# ternary `cond ? value_true : value_false`:
   ```stark
   // if in an expression

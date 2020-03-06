@@ -179,7 +179,7 @@ Then I started to bring some more important syntax changes:
       return result
   }
   ```
-  For iterating other an integer range (e.g `for(int i = 0; i < array.size; i++)`) the equivalent in Stark is to use the Range syntax as a Range in Stark is iterable:
+  For iterating over an integer range (e.g `for(int i = 0; i < array.size; i++)`) the equivalent in Stark is to use the Range syntax as a Range in Stark is iterable:
 
   ```stark
   public static func sun_range(array: []u8) -> int {

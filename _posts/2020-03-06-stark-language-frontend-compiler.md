@@ -661,7 +661,7 @@ During this first year, a few other areas were experimented or partially prototy
 
 But several areas have also not been yet prototyped during this first year:
 
-- The introduction of isolated/readability/immutability concepts.
+- The introduction of isolated/readability/immutability concepts and compile time const data.
 - Discriminated (struct and managed) unions (also for `?T` aka `Option<T>`) and associated pattern matching
 - Syntax for lifetime for heap allocation (e.g `new @PerRequest MyObject()` or `new MyObject() in @PerRequest).
 - Yield method iterators as value types.

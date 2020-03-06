@@ -13,7 +13,6 @@ $navbar-padding-horizontal: 0px;
 $navbar-padding-horizontal: 0px;
 
 $link-color:      #920000;
-$blockquote-border-color: #4060c0;
 $link-hover-color: #400000;
 $code-color: #256cc7;
 
@@ -29,6 +28,10 @@ $code-color: #256cc7;
 body {
   font-family: "Menlo", "Meslo LG", monospace;
   font-weight: 100;
+}
+
+.toc {
+  width: 500px;
 }
 
 p {
@@ -70,7 +73,6 @@ h6, .h6
 {
   font-weight: normal;
   color: #333;
-  border-bottom-style: solid;
   margin-top: 30px;
   margin-bottom: 20px;
   padding-bottom: 5px;
@@ -79,6 +81,30 @@ h6, .h6
     border-bottom-style: solid;
     padding-bottom: 5px;
   }
+}
+
+h1, .h1,
+h2, .h2,
+h3, .h3
+{
+  border-bottom-style: solid;
+}
+
+h1:active, h1:focus,
+h2:active, h2:focus,
+h3:active, h3:focus,
+h4:active, h4:focus,
+h5:active, h5:focus,
+h6:active, h6:focus {
+  outline: 0;
+}
+
+span.subtitle {
+  display: table;
+  font-size: 1.0rem;
+  color: #777;
+  font-style: italic;
+  margin-bottom: 8px;
 }
 
 /*
@@ -91,6 +117,10 @@ h6, .h6
   }
 }
 
+/* override boostrap */
+b, strong {
+  font-weight: $font-weight-bold !important;
+}
 
 /*
  * Masthead for nav
@@ -150,9 +180,18 @@ a.more-link
 }
 
 article  h1.title  {
+  font-size: 40px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  border-bottom-style: none;  
+}
+
+article  span.title  {
   margin-top: 20px;
   margin-bottom: 20px;
-  font-size: 40px;
+  border-bottom-style: solid;  
+  width: 100%;
+  display: table;
 }
 
 .blog-description {
@@ -160,13 +199,12 @@ article  h1.title  {
   color: #999;
 }
 
-
 /*
  * Main column and sidebar layout
  */
 
 .blog-main {
-  font-size: 18px;
+  font-size: 1.0rem;
   line-height: 1.5;
   background-color: #fff;
 }
@@ -227,8 +265,10 @@ article .post {
   font-size: 60px;
 }
 .blog-post-meta {
-  margin-bottom: 20px;
   color: #bbb;
+}
+article div.blog-post-meta {
+  margin-bottom: 20px;
 }
 
 /*
@@ -258,8 +298,12 @@ article .post {
 }
 
 blockquote {
-	color: #777;
-	background-color: #fcfcfc;
+  color: #777;
+  background-color: #fcfcfc;
+  border-left-color: #35cb8c;
+  border-left-style: solid;
+  border-left-width: 5px;
+  padding-left: 10px;
 }
 
 .blog-post-meta  a {

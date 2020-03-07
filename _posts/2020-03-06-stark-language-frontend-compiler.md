@@ -720,6 +720,24 @@ This library is used by the Stark front-end compiler (e.g Roslyn for C#) to read
 
 A few changes were made to the original library, like the support for UTF8 string storage and to allow to retrieve a UTF8 without having to allocate a manage object.
 
+## IDE Integration
+
+I thought that I could re-use the integration of Roslyn with Visual Studio to provide an IDE integration but I couldn't get it working correctly. Roslyn is not a regular VS extension but is shipped within VS, and while I have done a few VS extensions in the past, it was way beyond my time and knowledge to be able to make it working.
+
+So instead, I started to look at Visual Studio Code for at least a basic syntax highlighting experience and it turns out that VS Code is very easy to work with for that.
+
+<img src="/images/stark-vscode.png" class="mx-auto" style="display: block"/>
+
+I developed a VS Code package with syntax highlighting for Stark by defining a simple TextMate definition file [stark.YAML-tmLanguage](https://github.com/stark-lang/stark/blob/master/src/editors/vscode/stark/syntaxes/stark.YAML-tmLanguage). Because the syntax is in flux and it is very laborious to define the parsing through regex, I wrote syntax highlighting only for keywords (while for a language like C# they are defining the parsing of almost the entire grammar!).
+
+I have also prototyped using [Language Server Protocol](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide) just to see how complicated it would be to integrate with the more advanced user experience and it turns out that it is relatively easy to get notification on every single document change (see for example [TextDocumentHandler](https://github.com/stark-lang/stark/blob/master/src/compiler/StarkCompilerServer/TextDocumentHandler.cs))
+
+Compiling the core library is done for now on the command line with a simple [build.cmd](https://github.com/stark-lang/stark/blob/cd7edc76200142a25636d6c04b53308ad40aaafc/src/runtime/core/build.cmd) but you can run also this command directly from VS Code and it will display clickable error messages.
+
+So the current experience is very limited and rough, but it is enough to enjoy prototyping with it.
+
+Not sure if I will be able to work on that any time soon, but enthusiastic contributors could help me developing that part! More on how to contribute in a following blog post.
+
 ## Next Steps
 
 This first year prototype helped to validate that it was possible to fork Roslyn to build an entire new language and start to build a new core library with it. While it is going to require *lots of work*  to get it working entirely and correctly, it is very encouraging and promising!

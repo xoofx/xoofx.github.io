@@ -433,7 +433,7 @@ public static func sum(indices: List<int>) -> int {
 
 In the case of `List<int>` the iterator state is simply an integer, the index of the element.
 
-The generated code under the wood is doing something like this:
+The generated code under the hood is doing something like this:
 
 ```stark
 public static func sum(indices: List<int>) -> int {

@@ -46,21 +46,21 @@ function DoGithubComments(comment_id, page_id)
 
                 // Add post button to first page
                 if (page_id == 1)
-                    $("#gh-comments-list").append("<div id='gh-comment-link'><a href='" + url + "#new_comment_field' rel='nofollow' class='gh-comment-link-add'>Post a comment on Github</a> <span style='font-size: x-small;'>(it will appear below automatically)</span></div>");
+                    $("#gh-comments-list").append("<div class='gh-comment-link'><a href='" + url + "#new_comment_field' rel='nofollow' class='gh-comment-link-add'>Post a comment on Github</a> <span style='font-size: x-small;'>(it will appear below automatically)</span></div>");
 
                 // Individual comments
                 $.each(comments, function(i, comment) {
 
                     var date = new Date(comment.created_at);
 
-                    var t = "<div id='gh-comment'>";
+                    var t = "<div class='gh-comment'><div class='gh-comment-head'>";
                     t += "<img src='" + comment.user.avatar_url + "' class='github-comment-img-avatar' >";
                     t += "<b><a href='" + comment.user.html_url + "'>" + comment.user.login + "</a></b>";
                     t += " posted at ";
-                    t += "<em>" + date.toUTCString() + "</em>";
-                    t += "<div id='gh-comment-hr'></div>";
+                    t += "<em>" + date.toUTCString() + "</em></div>";
+                    t += "<div class='gh-comment-body'>";
                     t += comment.body_html;
-                    t += "</div>";
+                    t += "</div></div>";
                     $("#gh-comments-list").append(t);
                 });
 

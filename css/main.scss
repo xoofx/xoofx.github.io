@@ -70,7 +70,7 @@ hr {
   width: 40px;
 }
 
-#gh-comment-link {
+.gh-comment-link {
   margin-bottom: 1em;
 }
 
@@ -79,8 +79,16 @@ hr {
   @extend .btn-secondary;
 }
 
-#gh-comment-hr {
-  height: 0.6em;
+.gh-comment {
+  border-style: dotted;
+  padding: 1em;
+  border-width: 1px;
+  border-color: #CCC;
+  margin-bottom: 1em;
+}
+
+.gh-comment-head {
+  margin-bottom: 0.6em;
 }
 
 h1, .h1,

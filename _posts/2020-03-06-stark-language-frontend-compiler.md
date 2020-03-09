@@ -668,11 +668,15 @@ During this first year, a few other areas were experimented or partially prototy
 
 But several areas have also not been yet prototyped during this first year:
 
-- The introduction of isolated/readability/immutability concepts and compile time const data.
-- Discriminated (struct and managed) unions (also for `?T` aka `Option<T>`) and associated pattern matching
-- Syntax for lifetime for heap allocation (e.g `new @PerRequest MyObject()` or `new MyObject() in @PerRequest).
-- Lightweight async/await
-- Yield method iterators as value types.
+- The introduction of **isolated/readability/immutability** concepts and **compile time const data**.
+- **Discriminated unions** (struct and managed, also for `?T` aka `Option<T>`) and associated pattern matching
+- Syntax for **lifetime** for heap allocation (e.g `new @PerRequest MyObject()` or `new MyObject() in @PerRequest).
+- **Extensions** to add interfaces/methods/properties to an existing class/struct (e.g `public extension MyListExtension<T> with List<T> { ... }`)
+- **Lightweight function pointers**: Unlike delegates in .NET, a function pointer in Stark would be struct, either static (one function pointer) or closure (one object reference + function pointer). The declaration would follow the declaration of a regular function 
+  - `var action: static func(arg: int)` is a static function pointer taking an `int` argument.
+  - `var closure: func() -> int` is a closure function taking no arguments but returning an `int`.
+- **Lightweight async/await**
+- **Yield method iterators** as value types.
 - Stark driver using simple TOML config to build a library.
 
 ## Departure from ECMA-335

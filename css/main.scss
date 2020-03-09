@@ -70,6 +70,15 @@ hr {
   width: 40px;
 }
 
+#gh-comment-link {
+  margin-bottom: 1em;
+}
+
+.gh-comment-link-add {
+  @extend .btn;
+  @extend .btn-secondary;
+}
+
 #gh-comment-hr {
   height: 0.6em;
 }

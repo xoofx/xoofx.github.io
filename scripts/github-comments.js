@@ -54,7 +54,7 @@ function DoGithubComments(comment_id, page_id)
                     var date = new Date(comment.created_at);
 
                     var t = "<div id='gh-comment'>";
-                    t += "<img src='" + comment.user.avatar_url + "' width='24px'>";
+                    t += "<img src='" + comment.user.avatar_url + "' class='github-comment-img-avatar' >";
                     t += "<b><a href='" + comment.user.html_url + "'>" + comment.user.login + "</a></b>";
                     t += " posted at ";
                     t += "<em>" + date.toUTCString() + "</em>";

@@ -144,7 +144,7 @@ struct IRFieldDesc
 };
 ```
 
-Using a pointer for `IRTypeHandle` would increase the size of this struct by 25%, from 32 bytes to 40 bytes. It could be seen as acceptable, but it is one of the best-case struct in the IR model, while their are other cases that are much worse (1.5x to 2x bigger).
+Using a pointer for `IRTypeHandle` would increase the size of this struct by 25%, from 32 bytes to 40 bytes. It could be seen as acceptable, but it is one of the best-case struct in the IR model, while there are other cases that are much worse (1.5x to 2x bigger).
 
 Instead, we are using 32-bit indices to address and connect data. This should give plenty enough room to index our data (4 billions of entries per kind).
 

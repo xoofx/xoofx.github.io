@@ -187,7 +187,7 @@ Would be translated to the following (simplified) IR:
   Next: 3
   Type: 1 (int)
   Users: [3(1)] // Used by instruction 3 argument 1
-3 = add(0, 1)
+3 = add(1, 2) // reference instruction 1 & 2
   Previous: 2
   Type: 1 (int)
   Next: 0

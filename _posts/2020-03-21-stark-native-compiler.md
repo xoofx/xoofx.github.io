@@ -101,7 +101,7 @@ Because we are collecting methods on our way, we don't know exactly how much dat
 
 If we were using a naive approach, we would use something like this:
 
-```c#
+```csharp
 // Assuming that IRMethod is a struct
 var methods = new List<IRMethod>();
 ...
@@ -166,7 +166,7 @@ The reason is that we need to manipulate efficiently these IR instructions at co
 
 For example, the following IL:
 
-```c#
+```csharp
 // IL
 ldarg.0
 ldarg.1
@@ -175,7 +175,7 @@ add
 
 Would be translated to the following (simplified) IR:
 
-```c#
+```csharp
 // IR
 1 = ldarg.0
   Previous: 0
@@ -209,7 +209,7 @@ Whenever we need to concatenate strings (e.g to build a full type name for examp
 
 RyuJIT is the JIT compiler used by .NET Runtime to compile methods on the fly. Its [`ICorJitCompiler` interface](https://github.com/dotnet/runtime/blob/d2f7b6b0d46a45be29ebafca0584142219ffe495/src/coreclr/src/inc/corjit.h#L88-L139) is lightweight as it is completely decoupled from the [`IICorJitInfo` interface](https://github.com/dotnet/runtime/blob/d2f7b6b0d46a45be29ebafca0584142219ffe495/src/coreclr/src/inc/corjit.h#L141-L306) providing actual metadata required for JIT to compile a method:
 
-```c#
+```csharp
 // Initialize the JIT with a Host callback providing global information to the JIT
 extern "C" void __stdcall jitStartup(ICorJitHost* host);
 
@@ -398,7 +398,7 @@ private static extern func debug_output_char(c: u32)
 
 Can be redirected at compile time to an implementation that requires access to a special CPU instruction `syscall` which is unavailable via RyuJIT. Here is an example by redirecting this method to a Linux kernel method:
 
-```c#
+```csharp
 // Implementation of extern import "kernel_debug_output_char"
 private void PatchLinuxKernelWriteMethod(ref IRMethodDesc methodDesc)
 {
@@ -492,13 +492,13 @@ Another challenge when linking code is that you need to relocate all the code an
 
 For code, whenever RyuJIT is emitting a relocatable code - accessing for example a data - it will emit a relocation entry which will perform a callback to our compiler (tip: one case where RyuJIT is calling back our compiler here). For most assembler code, relocation entries are relative 32 bit offsets to the end of the instruction using this data:
 
-```c#
+```csharp
 mov rcx, [rip + offset _my_string_field]  // load []u8 data
 ```
 
 Translates to the following instruction, where we can see the relocation entry of `_my_string_field`:
 
-```c#
+```csharp
 // mov rcx, [rip + offset _my_string_field]  // load []u8 data
 0x48 0x8b 0x0d 0x00 0x00 0x00 0x00
                ^^^^^^^^^^^^^^^^^^^

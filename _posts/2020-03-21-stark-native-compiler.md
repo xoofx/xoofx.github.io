@@ -301,7 +301,7 @@ Matt Warren wrote a great article about ["How generics were added to .NET"](http
 
 It has proven over the years to be a sensible rule overall:
 
-- For value types, you often don't have much choice. If you don't specialize, you would have to go through quite some indirections to make the code shared (e.g query the size of an element type in an array everytime you want to access an element and index dynamically based on thi sizeof). 
+- For value types, you often don't have much choice. If you don't specialize, you would have to go through quite some indirections to make the code shared (e.g query the size of an element type in an array everytime you want to access an element and index dynamically based on this sizeof). 
 - For reference types, it also makes sense, as a reference type is occupying the same space (a pointer size) and access to them can be gated through interface calls which can be shared.
 
 I didn't change drastically these rules for Stark, but the implementation details are still different. Because we can have generic const literals (e.g `FixedArray<int, 5>`) it would require to change RyuJIT in order to support this new scenario. I would like to avoid as much as possible modifications to RyuJIT as it would complicate merging and future maintenance. So instead, **generics are expanded at IR build time**. This should also give more opportunities in the future to decide which generics should be shared or specialized. Typically, I would like to share structs which have the same layout of fields, it was mentioned in the original paper (Section `4.1 Specializing and Sharing`: "_That leaves user-defined struct types, which are compatible if their layout is the same with respect to garbage collection i.e. they share the same pattern of traced pointers_") but I don't think that this is something currently implemented in RyuJIT (thought It might have changed recently!).
@@ -382,6 +382,8 @@ Then the string is actually layout in the data section like this:
   - **Offset 24 and followings**: The string `u8` elements data coming from `Array<T>`.
 
 The metadata for `Type` are stored in a different location, and are all grouped together in a continuous block of memory.
+
+Having data streamed along the way of discovering code allow to colocate data where they are used. It doesn't give a strict optimal solution (again requiring PGO to make it effective) but it should be on average much better, specially when a method access a few constant objects that it is only using, the compiler will make a guarantee that these data are layout in memory in consecutive cache lines, which can be very effective!
 
 A careful reader could see that our object doesn't contain a GC Header. This is yet to be confirmed with the design of the memory manager, but I don't plan to have a GC header for managed objects. In .NET this is called ObjHeader (see [syncblk.h](https://github.com/dotnet/runtime/blob/master/src/coreclr/src/vm/syncblk.h)) which contains bits required by the GC as well as a potential pointer to a shadow object runtime called the `SyncBlock`. When you do a `lock(object)` it will create and access this shadow object at runtime or same if you start to call the default `Object.GetHashCode()`. This GC header is unfortunately an - awful - story/legacy coming from Java which is bringing lots of unnecessary runtime burden to our object (a pointer size + a potential shadow runtime object). As a breaking change and to improve runtime efficiency, we can completely remove that implementation details in Stark!
 

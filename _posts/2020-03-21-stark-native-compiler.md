@@ -3,8 +3,8 @@ layout: post
 title: Stark - Native Compiler - Prototype 2019
 subtitle: Development of an AOT native compiler using RyuJIT
 ghcommentid: 10
-twitter-card: summary_large_image
-twitter-image: /images/stark-ncl.png
+twitter_card: summary_large_image
+twitter_image: /images/stark-ncl.png
 tags:
  - Stark
  - Melody

@@ -16,8 +16,8 @@
   {% else %}
   <meta name="twitter:description" content="{{ site.description }}">
   {% endif %}
-  <meta name="twitter:card"  content="summary">
-  <meta name="twitter:image" content="{{ "/images/blog_logo_large.png" | prepend: site.url }}">
+  <meta name="twitter:card"  content="{% if page.twitter_card == nil %}summary{% else %}{{ page.twitter_card }}{% endif %}">
+  <meta name="twitter:image" content="{% if page.twitter_image == nil %}{{ "/images/blog_logo_large.png" | prepend: site.url }}{% else %}{{ page.twitter_image | prepend: site.url }}{% endif %}">
   <!-- end of Twitter cards -->
 
   <link rel="stylesheet" href="{{ "/css/main.css" | prepend: site.baseurl }}">

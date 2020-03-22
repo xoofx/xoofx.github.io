@@ -3,6 +3,8 @@ layout: post
 title: Stark - Language And Frontend Compiler - Prototype 2019
 subtitle: Syntax of the language and the development of the front-end compiler
 ghcommentid: 9
+twitter_card: summary_large_image
+twitter_image: /images/stark-driver.png
 tags:
  - Stark
  - Melody

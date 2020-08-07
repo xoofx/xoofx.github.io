@@ -3,7 +3,7 @@ layout: page
 title: Resume
 permalink: /resume/
 ---
-<img width="256px" src="/images/xoofx-2018.jpg" style="float: right;border-radius: 50%" alt="Avatar"/>
+<img width="256px" src="/images/xoofx-2020.jpg" style="float: right;border-radius: 50%" alt="Avatar"/>
 
 Name: *Alexandre MUTEL*  
 Age: *Born in 1973*  

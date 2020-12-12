@@ -1,0 +1,5 @@
+---
+layout: generic
+layout_type: list
+---
+<h1 class="title">{{ page.title_html ?? page.title }}</h1>

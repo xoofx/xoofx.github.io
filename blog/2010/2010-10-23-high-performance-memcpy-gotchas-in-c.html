@@ -1,0 +1,489 @@
+---
+title: High performance memcpy gotchas in C#
+date: '2010-10-23T21:47:00.008+11:00'
+tags:
+- "C#"
+- .Net
+modified_time: '2012-10-11T12:26:39.984+11:00'
+thumbnail: http://2.bp.blogspot.com/_dv_YkYWn3HA/TMK5xJiAiWI/AAAAAAAADOI/V0ArFKeR5yI/s72-c/MemcpyPerf.png
+comments: true
+blogger_id: tag:blogger.com,1999:blog-1076643699683521890.post-8228539292808064950
+blogger_orig_url: http://code4k.blogspot.com/2010/10/high-performance-memcpy-gotchas-in-c.html
+---
+
+
+
+<span style="font-size: x-small;">(Edit 8 Jan 2011: Update protocol test with Buffer.BlockCopy)</span><br /><span style="font-size: x-small;">(Edit 11 Oct 2012: Please vote for <a href="https://connect.microsoft.com/VisualStudio/feedback/details/766977/il-bytecode-method-cpblk-badly-implemented-by-x86-clr" target="_blank">the x86 cpblk deficiency on Microsoft Connect</a>)</span><br />Following my last post about an interesting use of the "cpblk" IL instruction as an unmanaged memcpy replacement, I have to admit that I didn't take the time to carefully verify that performance is actually better. Well, I was probably too optimistic... so I have made some tests and the results are very surprising and not expected to be like these...<br /><br />
+<h3>The memcpy protocol test in C#</h3>
+<br />When dealing with 3D calculations, large buffers of textures, audio synthesizing or whatever requires a memcpy and interaction with unmanaged world, you will most notably end up with a call to an unmanaged functions like this one:<br /><br />
+<pre class="language-csharp"><code>[DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false), SuppressUnmanagedCodeSecurity]
+public static unsafe extern void* CopyMemory(void* dest, void* src, ulong count);
+</code></pre>
+<br />In this test, I'm going to compare this implementation with 4 challengers :<br />
+<ul>
+   <li>The cpblk IL instruction</li>
+   <li>A handmade memcpy function</li>
+   <li>Array.Copy, although It's not relevant because they don't have the same scope. Array.Copy is managed only for arrays only while memcpy is used to copy portion of datas between managed-unmanaged as well as unmanaged-unmanaged memory.</li>
+   <li>Marshal.Copy, same as Array.Copy</li>
+   <li>Buffer.BlockCopy, which is working on managed array but is working with a byte size block copy. </li>
+</ul>
+The test is performing a series of memcpy with different size of block : from 4 bytes to 2Mo. The interesting part is to run this test on a x86 and x64 mode. Both tests are running on the same Windows 7 OS x64, same machine Intel Core I5 750 (2.66Ghz). The CLR used for this is the Runtime v4.0.30319.<br /><br />The naive handmade memcpy is nothing more than this code (not to be the best implem ever but at least safe for any kind of buffer size):<br /><br />
+<pre class="language-csharp"><code>static unsafe void CustomCopy(void * dest, void* src, int count)
+{
+    int block;
+
+    block = count &gt;&gt; 3;
+
+    long* pDest = (long*)dest;
+    long* pSrc = (long*)src;
+
+    for (int i = 0; i &lt; block; i++)
+    {
+        *pDest = *pSrc; pDest++; pSrc++;
+    }
+    dest = pDest;
+    src = pSrc;
+    count = count - (block &lt;&lt; 3);
+
+    if (count &gt; 0)
+    {
+        byte* pDestB = (byte*) dest;
+        byte* pSrcB = (byte*) src;
+        for (int i = 0; i &lt; count; i++)
+        {
+            *pDestB = *pSrcB; pDestB++; pSrcB++;
+        }
+    }
+}
+</code></pre>
+<br />
+<h3>Results</h3>
+For the x86 architecture, results are expressed as a throughput in Mo/s - higher is better, blocksize is in bytes :<br /><br />
+<table border="0" cellpadding="0" cellspacing="0" style="width: 631px;">
+   <colgroup>
+      <col style="width: 49pt;" width="65">
+        
+      <col style="width: 50pt;" width="66">
+        
+      <col style="width: 65pt;" width="86">
+        
+      <col style="width: 84pt;" width="112">
+        
+      <col span="2" style="width: 77pt;" width="102">
+        
+      <col style="width: 74pt;" width="98">
+        
+   </colgroup>
+   <tbody>
+      <tr height="21" style="height: 15.75pt;">
+         <td class="xl70" height="21" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: windowtext windowtext white; border-style: solid; border-width: 1pt 1pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; height: 15.75pt; text-decoration: none; width: 49pt;" width="65">BlockSize</td>
+         <td class="xl75" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color white white windowtext; border-style: none solid solid; border-width: medium 0.5pt 1.5pt 1pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 50pt;" width="66">x86-cpblk</td>
+         <td class="xl73" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color white white; border-style: none solid solid; border-width: medium 0.5pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 65pt;" width="86">x86-memcpy</td>
+         <td class="xl73" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color white white; border-style: none solid solid; border-width: medium 0.5pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 84pt;" width="112">x86-CustomCopy</td>
+         <td class="xl73" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color white white; border-style: none solid solid; border-width: medium 0.5pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 77pt;" width="102">x86-Array.Copy</td>
+         <td class="xl74" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color windowtext white white; border-style: none solid solid; border-width: medium 1pt 1.5pt 0.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 77pt;" width="102">x86-Marshal.Copy</td>
+         <td class="xl73" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color white white; border-style: none solid solid; border-width: medium 0.5pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 74pt;" width="98">x86-BlockCopy</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">4</td>
+         <td align="right" class="xl76" style="background: none repeat scroll 0% 0% rgb(248, 106, 107); border-color: windowtext white white windowtext; border-style: solid; border-width: 1pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">146</td>
+         <td align="right" class="xl77" style="background: none repeat scroll 0% 0% rgb(248, 112, 108); border-color: windowtext white white; border-style: solid; border-width: 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">458</td>
+         <td align="right" class="xl77" style="background: none repeat scroll 0% 0% rgb(248, 112, 108); border-color: windowtext white white; border-style: solid; border-width: 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">470</td>
+         <td align="right" class="xl77" style="background: none repeat scroll 0% 0% rgb(248, 105, 107); border-color: windowtext white white; border-style: solid; border-width: 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">85</td>
+         <td align="right" class="xl77" style="background: none repeat scroll 0% 0% rgb(248, 105, 107); border-color: windowtext white white; border-style: solid; border-width: 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">81</td>
+         <td align="right" class="xl78" style="background: none repeat scroll 0% 0% rgb(248, 106, 107); border-color: windowtext windowtext white white; border-style: solid; border-width: 1pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">150</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">8</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(248, 108, 107); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">294</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 119, 109); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">843</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 124, 110); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1122</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 106, 107); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">168</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 106, 107); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">167</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(248, 109, 107); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">298</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">16</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(248, 114, 108); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">587</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 133, 112); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1628</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 139, 113); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1904</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 109, 107); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">306</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 109, 107); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">327</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(248, 114, 108); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">577</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">32</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(248, 121, 110); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">950</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 138, 113); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1876</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(251, 163, 118); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">3184</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 115, 108); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">631</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 113, 108); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">558</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(249, 123, 110); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1079</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">64</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(249, 130, 111); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1451</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(251, 165, 118); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">3316</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 183, 122); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">4295</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 126, 111); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1205</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 123, 110); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1059</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(249, 140, 113); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1981</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">128</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 145, 114); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2245</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 200, 125); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5161</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 194, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">4848</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(250, 144, 114); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2176</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 139, 113); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1933</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(251, 166, 118); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">3386</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">256</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(252, 184, 122); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">4353</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7032</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 203, 125); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5333</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(251, 172, 120); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">3699</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(251, 166, 118); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">3386</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(253, 203, 125); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5333</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">512</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(245, 232, 132); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8205</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(197, 219, 129); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13617</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 206, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5517</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 209, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5663</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(254, 228, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">6666</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(252, 234, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7441</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">1024</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(197, 219, 129); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13617</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(140, 202, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">20000</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(254, 228, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">6666</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7710</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(211, 223, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">12075</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(236, 230, 131); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">9275</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">2048</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(151, 205, 126); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">18823</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(99, 190, 123); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">24615</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(254, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7191</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(237, 230, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">9142</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(168, 210, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">16842</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(233, 229, 131); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">9552</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">4096</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 158, 117); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2922</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(251, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7529</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 209, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5663</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(225, 227, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">10491</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7032</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(220, 225, 130); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11034</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">8192</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 159, 117); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2990</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7804</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 210, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5714</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(218, 225, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11228</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7441</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(215, 224, 130); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11636</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">16384</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 156, 116); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2857</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 233, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7901</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 208, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5614</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(237, 230, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">9142</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(250, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7619</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(226, 227, 131); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">10322</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">32768</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 147, 115); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2379</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(254, 229, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">6736</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 203, 125); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5333</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(246, 233, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8101</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(254, 228, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">6666</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(245, 232, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8205</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">65536</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 147, 115); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2379</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(254, 230, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">6808</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 205, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5470</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(245, 232, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8205</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(254, 230, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">6808</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(245, 232, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8205</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">131072</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 150, 115); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2509</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(160, 208, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">17777</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 212, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5818</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(246, 233, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8101</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(160, 208, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">17777</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(246, 233, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8101</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">262144</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 150, 115); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2500</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(215, 224, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11636</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 204, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5423</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7032</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(216, 224, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11428</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7111</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">524288</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 150, 115); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2539</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(216, 224, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11428</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 204, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5423</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7111</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(216, 224, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11428</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7111</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">1048576</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 150, 115); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2539</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(216, 224, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11428</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 205, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5470</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7032</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(216, 224, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11428</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7111</td>
+      </tr>
+      <tr height="21" style="height: 15.75pt;">
+         <td align="right" class="xl72" height="21" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext windowtext; border-style: solid; border-width: 0.5pt 1pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15.75pt; text-decoration: none;">2097152</td>
+         <td align="right" class="xl67" style="background: none repeat scroll 0% 0% rgb(250, 150, 115); border-color: white white windowtext windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2529</td>
+         <td align="right" class="xl68" style="background: none repeat scroll 0% 0% rgb(216, 224, 130); border-color: white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11428</td>
+         <td align="right" class="xl68" style="background: none repeat scroll 0% 0% rgb(253, 203, 125); border-color: white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5333</td>
+         <td align="right" class="xl68" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border-color: white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7032</td>
+         <td align="right" class="xl68" style="background: none repeat scroll 0% 0% rgb(220, 225, 130); border-color: white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11034</td>
+         <td align="right" class="xl69" style="background: none repeat scroll 0% 0% rgb(254, 232, 131); border-color: white windowtext windowtext white; border-style: solid; border-width: 0.5pt 1pt 1pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">6881</td>
+      </tr>
+   </tbody>
+</table>
+<br /><br /><br /><br />For the x64 architecture:<br /><br /><br />
+<table border="0" cellpadding="0" cellspacing="0" style="width: 654px;">
+   <colgroup>
+      <col style="width: 54pt;" width="72">
+        
+      <col style="width: 50pt;" width="66">
+        
+      <col style="width: 65pt;" width="86">
+        
+      <col style="width: 84pt;" width="112">
+        
+      <col style="width: 77pt;" width="102">
+        
+      <col style="width: 89pt;" width="118">
+        
+      <col style="width: 74pt;" width="98">
+        
+   </colgroup>
+   <tbody>
+      <tr height="21" style="height: 15.75pt;">
+         <td class="xl70" height="21" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: windowtext windowtext white; border-style: solid; border-width: 1pt 1pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; height: 15.75pt; text-decoration: none; width: 54pt;" width="72">BlockSize2</td>
+         <td class="xl75" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color white white windowtext; border-style: none solid solid; border-width: medium 0.5pt 1.5pt 1pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 50pt;" width="66">x64-cpblk</td>
+         <td class="xl73" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color white white; border-style: none solid solid; border-width: medium 0.5pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 65pt;" width="86">x64-memcpy</td>
+         <td class="xl73" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color white white; border-style: none solid solid; border-width: medium 0.5pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 84pt;" width="112">x64-CustomCopy</td>
+         <td class="xl73" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color white white; border-style: none solid solid; border-width: medium 0.5pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 77pt;" width="102">x64-Array.Copy</td>
+         <td class="xl74" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color windowtext white white; border-style: none solid solid; border-width: medium 1pt 1.5pt 0.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 89pt;" width="118">x64-Marshal.Copy</td>
+         <td class="xl73" style="background: none repeat scroll 0% 0% rgb(79, 129, 189); border-color: -moz-use-text-color -moz-use-text-color white white; border-style: none none solid solid; border-width: medium medium 1.5pt 0.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-decoration: none; width: 74pt;" width="98">x64-BlockCopy</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">4</td>
+         <td align="right" class="xl76" style="background: none repeat scroll 0% 0% rgb(248, 114, 108); border-color: windowtext white white windowtext; border-style: solid; border-width: 1pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">583</td>
+         <td align="right" class="xl77" style="background: none repeat scroll 0% 0% rgb(248, 109, 107); border-color: windowtext white white; border-style: solid; border-width: 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">346</td>
+         <td align="right" class="xl77" style="background: none repeat scroll 0% 0% rgb(248, 114, 108); border-color: windowtext white white; border-style: solid; border-width: 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">599</td>
+         <td align="right" class="xl77" style="background: none repeat scroll 0% 0% rgb(248, 105, 107); border-color: windowtext white white; border-style: solid; border-width: 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">99</td>
+         <td align="right" class="xl77" style="background: none repeat scroll 0% 0% rgb(248, 105, 107); border-color: windowtext white white; border-style: solid; border-width: 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">111</td>
+         <td align="right" class="xl78" style="background: none repeat scroll 0% 0% rgb(248, 106, 107); border-color: windowtext windowtext white white; border-style: solid; border-width: 1pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">219</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">8</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(249, 131, 112); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1509</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 117, 109); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">770</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 138, 113); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1876</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 107, 107); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">212</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 106, 107); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">224</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(248, 111, 108); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">469</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">16</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(250, 153, 116); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2689</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 130, 111); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1451</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(251, 165, 118); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">3316</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 111, 108); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">417</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 110, 108); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">422</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(248, 118, 109); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">903</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">32</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(252, 191, 123); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">4705</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(250, 153, 116); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">2666</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 196, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5000</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 118, 109); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">802</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 117, 109); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">864</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(249, 132, 112); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1739</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">64</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(245, 232, 132); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8205</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 193, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">4812</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7272</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 132, 112); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1568</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 132, 112); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">1748</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(250, 159, 117); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">3350</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">128</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(200, 219, 129); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13333</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(246, 233, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8101</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(238, 230, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">9014</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(250, 159, 117); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">3004</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(250, 156, 116); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">3184</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(253, 205, 126); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">6037</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">256</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(151, 205, 126); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">18823</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(216, 224, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">11428</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(229, 228, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">10000</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 205, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5470</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 191, 123); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5245</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(247, 233, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8648</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">512</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(122, 197, 125); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">22068</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(176, 213, 128); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">16000</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(225, 227, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">10491</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(238, 230, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">9014</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(237, 230, 131); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">9552</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(192, 217, 129); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13913</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">1024</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(115, 195, 124); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">22857</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(146, 204, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">19393</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7356</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(200, 219, 129); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13333</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(195, 218, 129); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13617</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(162, 208, 127); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">16842</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">2048</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(108, 193, 124); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">23703</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(129, 199, 125); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">21333</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7710</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(164, 209, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">17297</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(152, 206, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">17777</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(122, 197, 125); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">20645</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">4096</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(108, 193, 124); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">23703</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(122, 197, 125); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">22068</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7804</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(146, 204, 126); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">19393</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(129, 199, 125); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">20000</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(115, 195, 124); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">21333</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">8192</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(108, 193, 124); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">23703</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(115, 195, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">22857</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(250, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7619</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(122, 197, 125); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">22068</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(108, 193, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">22068</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(99, 190, 123); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">22857</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">16384</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(108, 193, 124); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">23703</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(115, 195, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">22857</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7804</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(164, 209, 127); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">17297</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(115, 195, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">21333</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(147, 204, 126); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">18285</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">32768</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(172, 211, 128); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">16410</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(172, 211, 128); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">16410</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7710</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(204, 221, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">12800</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(171, 211, 128); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">16000</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(204, 221, 130); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">12800</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">65536</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(202, 220, 129); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13061</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(186, 215, 128); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">14883</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7710</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(202, 220, 129); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13061</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(186, 215, 128); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">14545</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(201, 220, 129); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13061</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">131072</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(192, 217, 129); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">14222</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(194, 218, 129); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13913</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(249, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7710</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(204, 221, 130); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">12800</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(195, 218, 129); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">13617</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(204, 221, 130); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">12800</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">262144</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(252, 196, 124); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5000</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 197, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5039</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7032</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(248, 233, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7901</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 187, 122); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5000</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7804</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">524288</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(253, 198, 124); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5079</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 196, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5000</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7356</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(245, 232, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">8205</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 188, 123); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5079</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(255, 235, 132); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7804</td>
+      </tr>
+      <tr height="20" style="height: 15pt;">
+         <td align="right" class="xl71" height="20" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext; border-style: solid; border-width: 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">1048576</td>
+         <td align="right" class="xl65" style="background: none repeat scroll 0% 0% rgb(252, 194, 124); border-color: white white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">4885</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 194, 124); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">4885</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(253, 235, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7272</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 234, 132); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7441</td>
+         <td align="right" style="background: none repeat scroll 0% 0% rgb(252, 182, 121); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">4671</td>
+         <td align="right" class="xl66" style="background: none repeat scroll 0% 0% rgb(254, 230, 131); border-color: white windowtext white white; border-style: solid; border-width: 0.5pt 1pt 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7529</td>
+      </tr>
+      <tr height="21" style="height: 15.75pt;">
+         <td align="right" class="xl72" height="21" style="background: none repeat scroll 0% 0% rgb(220, 230, 241); border-color: white windowtext windowtext; border-style: solid; border-width: 0.5pt 1pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15.75pt; text-decoration: none;">2097152</td>
+         <td align="right" class="xl67" style="background: none repeat scroll 0% 0% rgb(252, 197, 124); border-color: white white windowtext windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5039</td>
+         <td align="right" class="xl68" style="background: none repeat scroll 0% 0% rgb(253, 198, 124); border-color: white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5079</td>
+         <td align="right" class="xl68" style="background: none repeat scroll 0% 0% rgb(253, 235, 132); border-color: white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7272</td>
+         <td align="right" class="xl68" style="background: none repeat scroll 0% 0% rgb(250, 234, 132); border-color: white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7619</td>
+         <td align="right" class="xl68" style="background: none repeat scroll 0% 0% rgb(252, 187, 122); border-color: white white windowtext; border-style: solid; border-width: 0.5pt 0.5pt 1pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">5000</td>
+         <td align="right" class="xl69" style="background: none repeat scroll 0% 0% rgb(254, 233, 131); border-color: white windowtext windowtext white; border-style: solid; border-width: 0.5pt 1pt 1pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-decoration: none;">7710</td>
+      </tr>
+   </tbody>
+</table>
+<br />Graph comparison only for cpblk, memcpy and CustomCopy:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a href="http://2.bp.blogspot.com/_dv_YkYWn3HA/TMK5xJiAiWI/AAAAAAAADOI/V0ArFKeR5yI/s1600/MemcpyPerf.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" height="276" src="http://2.bp.blogspot.com/_dv_YkYWn3HA/TMK5xJiAiWI/AAAAAAAADOI/V0ArFKeR5yI/s640/MemcpyPerf.png" width="640" /></a></div>
+<br />Don't be afraid about the performance drop for most of the implem... It's mostly due to cache missing&nbsp; and copying around different 4k pages.<br /><br />
+<h3>Conclusion</h3>
+Don't trust your .NET VM, check your code on both x86 and x64. It's interesting to see how much the same task is implemented differently inside the CLR (see Marshal.Copy vs&nbsp; Array.Copy vs Buffer.Copy)<br /><br />The most surprising result here is <b>the poor performance of cpblk IL instruction in x86 mode </b>compare to the best one in x64 which is... cpblk. So to summarize:<br />
+<ul>
+   <li><b>On x86, you should better use a <u>memcpy </u>function</b></li>
+   <li><b>On x64, you should better use a <u>cpblk </u>function</b>, which is performing better from small size (twice faster than memcpy) to large size.</li>
+</ul>
+<b>You may wonder why the x86 version is so unoptimized? </b>This is because the x86 CLR is generating a x86 instruction that is performing a memcpy on a PER BYTE basis (rep movb for x86 folks), even if you are moving a large memory chunk of 1Mo! In comparison, a memcpy as implemented in MSVCRT is able to use SSE instructions that are able to batch copy with large 128 bits&nbsp; registers (with also an optimized case for not poluting CPU cache). This is the case for x64 that seems to use a correct implemented memcpy, but the x86 CLR memcpy is just poorly implemented. Please vote for this <a href="https://connect.microsoft.com/VisualStudio/feedback/details/766977/il-bytecode-method-cpblk-badly-implemented-by-x86-clr" target="_blank">bug described on Microsoft Connect</a>.<br /><br />One important consequence of this is when you are developping a C++/CLI and calling a memcpy from a managed function... It will end up in a cpblk copy functions... which is almost the worst case on x86 platforms... so be careful if you are dealing with this kind of issue. To avoir this, you have to force the compiler to use the function from the MSVCRTxx.dll. <br /><br />Of course, the memcpy is platform dependent, which would not be an option for all...<br /><br />Also, I didn't perform this test on a CLR 2 runtime... we could be surprised as well... There is also one thing that I should try against a pure C++ memcpy using the optimized SSE2 version that is shipped with later msvcrt.<br /><br />You can download the VS2010 project from <a href="http://xoofx.com/upload/BenchmarkCLI.7z">here</a>
+

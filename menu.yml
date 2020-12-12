@@ -1,0 +1,5 @@
+home:
+  - {path: readme.md}
+  - {path: blog/readme.md, folder: true}
+  - {path: projects.md}
+  - {path: about/readme.md, folder: true, list_item_class: ml-auto}

@@ -1,0 +1,14 @@
+---
+layout: _default
+layout_type: single
+---
+<div class="col-sm-12">
+    <h1 class="title">Tags {{ page.title_html ?? page.title }}</h1>
+    <div class="entry-content">
+      <ul>
+        {{~ for term in taxonomy.terms.by_count ~}}  
+        <li><a href="{{ relref term.url}}">{{term.name}}</a> ({{term.pages.count}} articles)</li>
+        {{~ end ~}}
+      </ul>
+    </div>
+</div>

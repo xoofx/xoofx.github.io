@@ -1,0 +1,84 @@
+# Site Settings
+author = "Alexandre Mutel"
+title = "xoofx"
+description = "xoofx website"
+
+html.head.title = do; ret page.title + " | " + site.title; end
+
+basepath = ""
+baseurl = baseurl ?? "https://xoofx.com"
+
+# Github repository
+github_user = "xoofx"
+github_repo_url = "https://github.com/xoofx/xoofx.github.io/"
+
+with cards.twitter
+    enable = true
+    card = "summary_large_image"
+    user = "xoofx"
+    image = "/images/twitter-banner.png"
+end
+
+# Resources bundle
+with bundle
+    fontawesome = resource "npm:font-awesome" "4.7.0"
+    jquery = resource "npm:jquery" "3.5.1"
+    popperjs = resource "npm:popper.js" "1.16.1"
+    bootstrap = resource "npm:bootstrap" "4.5.0"
+    tocbot = resource "npm:tocbot" "4.12.0"
+    anchorjs = resource "npm:anchor-js" "4.2.2"
+    prismjs = resource "npm:prismjs" "1.20.0"
+
+    scss.includes.add bootstrap.path + "/scss"
+    scss.includes.add fontawesome.path + "/scss"
+
+    # css files
+    css tocbot "/dist/tocbot.css"
+    css "/css/prism.css"
+    css "/css/main.scss"
+
+    # js files
+    js jquery "/dist/jquery.min.js"
+    js popperjs "/dist/umd/popper.min.js"
+    js anchorjs "/anchor.min.js"
+    js bootstrap "/dist/js/bootstrap.min.js"
+    js tocbot "/dist/tocbot.min.js"
+    js prismjs "/prism.js"
+    js prismjs "/components/prism-shell-session.min.js"
+    js prismjs "/components/prism-clike.min.js"
+    js prismjs "/components/prism-c.min.js"
+    js prismjs "/components/prism-cpp.min.js"
+    js prismjs "/components/prism-csharp.min.js"
+    js "/js/prism-stark.js"
+    js "/js/github-comments.js"
+    js "/js/xoofx.js"
+    
+    # copy font files
+    content fontawesome "/fonts/fontawesome-webfont.*" "/fonts/"
+
+    # concatenate css/js files
+    concat = true
+    minify = true
+end
+
+with attributes 
+    # match "/blog/**/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.md" {
+    #    url: "/:section/:year/:month/:day/:title:output_ext"
+    #}    
+end
+
+with builtins
+    # render tags from a post
+    func render_tags(post)    
+        if !post.tags; ret null; end;            
+        result = post.tags.size == 1 ? '<i class="fa fa-tag"></i>' : '<i class="fa fa-tags"></i>'
+        for tag in post.tags
+            result = result + (for.first?'':', ') + '<a href="' + site.taxonomies["tags"].terms[tag].url + '">' + tag + '</a>'
+        end
+        ret result
+    end
+end
+
+with taxonomies
+    tags = {singular: 'tag', url: '/blog/tag/', map: { "C#": "csharp" }}
+end

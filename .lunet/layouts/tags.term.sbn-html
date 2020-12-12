@@ -1,0 +1,5 @@
+---
+layout: generic
+layout_type: list
+---
+<h1 class="title">Articles by tag: {{ term.name }}</h1> (<a href="{{ relref taxonomy.url }}">all tags</a>)

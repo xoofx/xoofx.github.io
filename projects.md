@@ -1,7 +1,6 @@
 ---
-layout: page
+layout: simple
 title: Projects
-permalink: /projects/
 ---
 
 In my spare time, I have developed a couple of open-source projects on [github](https://github.com/xoofx) and try to maintain them:

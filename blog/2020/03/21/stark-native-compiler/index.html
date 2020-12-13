@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.4.0.0">
+    <meta name="generator" content="lunet 0.4.1.0">
     <title>Stark - Native Compiler - Prototype 2019 | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
-    <script src="/js/site-defer.js" type="text/javascript" defer></script>
+    <script src="/js/site-defer.js" defer></script>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Stark - Native Compiler - Prototype 2019 | xoofx">
@@ -45,13 +45,13 @@
   <p id="lunet-results"></p>
   <article class="page">
     <span class="title">
-		  <h1 class="title" itemprop="name"><a href="/blog/2020/03/21/stark-native-compiler/" itemprop="url">Stark - Native Compiler - Prototype 2019</a></h1>
+		  <h1 class="title"><a href="/blog/2020/03/21/stark-native-compiler/">Stark - Native Compiler - Prototype 2019</a></h1>
 		<span class="subtitle">Development of an AOT native compiler using RyuJIT</span>
     </span>
     <div class="entry-content">
     <div class="blog-post-meta">
       <span class="fa fa-calendar"></span>
-      <span class="date"><time datetime="21 Mar 2020" itemprop="datePublished">March 21, 2020</time></span>
+      <span class="date"><time datetime="2020-03-21" itemprop="datePublished">March 21, 2020</time></span>
       <i class="fa fa-tags"></i><a href="/blog/tag/stark/">Stark</a>, <a href="/blog/tag/melody/">Melody</a>, <a href="/blog/tag/os/">OS</a>, <a href="/blog/tag/compiler/">Compiler</a>, <a href="/blog/tag/llvm/">LLVM</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.NET</a>
   	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2020-03-21-stark-native-compiler.md">edit</a>
     </div>
@@ -100,7 +100,7 @@
 </ul>
 <p>Let's see how the native compiler of Stark was designed and developed.</p>
 <h2 id="architecture">Architecture</h2>
-<img src="/images/stark-ncl.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl.png" class="mx-auto" style="display: block" alt="Stark Native Compiler architecture"/>
 <p>The key requirements of the native compiler are:</p>
 <ul>
 <li>Design the compiler up-front using data-oriented structures to improve its efficiency.</li>
@@ -190,7 +190,7 @@ while (methodsToVisit.Count &gt; 0) {
 <p>To our principles defined earlier, even if <code>IRMethod</code> is a struct, this approach is not enough data oriented friendly: We are still making lots of copy of data.
 We could decide to pre-allocate <code>List&lt;IRMethod&gt;</code> with an original capacity, but this is not great to allocate and consume potentially lots of memory that in the end would not be used at all.</p>
 <p>Instead for the Stark native compiler, a dedicated virtual memory arena allocator is used for each kind of data to allocate:</p>
-<img src="/images/stark-ncl-data-oriented-arena-allocator.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-arena-allocator.png" class="mx-auto" style="display: block" alt="Native Compiler data oriented arena allocator"/>
 <p>Each kind of data has its own continuous block committed (actually used) and reserved (maybe used later) virtual memory. Whenever we have to add some data to a block, we just need to transform a reserved memory page into a committed memory page while keeping the same initial base pointer for the block.</p>
 <p>Each block of memory is storing a single kind of data so that we can index them (instead of offset-ing).</p>
 <p>Finally, this arena allocator is very easy to collect or reuse, no need for a GC to visit every single reference to realize that it can free large block of memory. Once we are done compiling a graph of methods, the same areana allocator can be reused for subsequent requests. Resetting the allocator just requires to reset the start pointer to zero. That can be massively effective when using this approach in a shared compiler server.</p>
@@ -213,7 +213,7 @@ We could decide to pre-allocate <code>List&lt;IRMethod&gt;</code> with an origin
 <h4 id="il-to-ir">IL to IR</h4>
 <p>The IL in a <code>sklib</code> is stored in a compressed format, well suited for a compact and efficient storage for IO, but absolutely not efficient for manipulating it. For example, some integers/indices in IL metadata can be encoded using a <a href="https://en.wikipedia.org/wiki/LEB128">variable-length encoding scheme</a>. The stream of IL instructions of a method has to be decoded from the start of the method in order to access a certain instruction.</p>
 <p>In Stark, we transform IL instructions along all the associated data (methods, types, fields...) to an IR representation that is more suited for traversing and transforming. The stream of IR instruction is encoded as a continuous linked list of fixed-size instructions as it is important that the underlying container supports addition/insertion/removal of instructions without having to copy or shift a large amount of data.</p>
-<img src="/images/stark-ncl-data-oriented-instructions.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-instructions.png" class="mx-auto" style="display: block" alt="Native Compiler data oriented instructions"/>
 <p>For instance, a single IR instruction in Stark is occupying around 40 bytes, while most instructions in the IL can occupy as little as 1 byte. Why there is such a huge difference with the IR?</p>
 <p>The reason is that we need to manipulate efficiently these IR instructions at compile time, detect what is the final type of the operation, find users of a particular instruction (so that it can be replaced easily)... Also the IL is encoded as a stack of instructions (push and pop) which requires to process the instructions to know where we are, while the IR is register based, so an index of an instruction is its register/reference:</p>
 <p>For example, the following IL:</p>
@@ -283,7 +283,7 @@ public:
 <p>So I started to develop the library <a href="https://github.com/xoofx/CppAst"><code>CppAst</code></a> (released almost one year ago!), a simple wrapper around <code>libclang</code> that provides an easy way to navigate C/C++ headers.
 From that, I developed another library <a href="https://github.com/xoofx/CppAst.CodeGen"><code>CppAst.CodeGen</code></a> to generate a C# PInvoke layer from C/C++ header files. <code>CppAst.CodeGen</code> was heavily inspired by the work I did on SharpDX but was simplified and made more decoupled. It is not as rich as what was done in SharpDX, but it is good enough to handle most C/C++ header files. I even started to develop the wrapper <a href="https://github.com/xoofx/GitLib.NET">GitLib.NET</a> around <a href="https://libgit2.org/">libgit2</a> as a playground for <code>CppAst.CodeGen</code>. You can have a look at the <a href="https://github.com/xoofx/GitLib.NET/tree/master/src/GitLib/generated">generated files</a> for this project. But I didn't continue much further <code>GitLib.NET</code> (I was already off-track for the Stark native compiler!) even If I believe that it could have been a much faster/slim/efficient interface around libgit2 compare to the existing <a href="https://github.com/libgit2/libgit2sharp">LibGit2Sharp</a>.</p>
 <p>Anyway, after this code interlude (and we will see that there are others coming!) when I started much later in September to actually develop the Stark native compiler, I realized that instead of implementing entirely the <code>ICorJitInfo</code> interface in C#, I would implement it in C++ with only a pointer to the generated IR datas:</p>
-<img src="/images/stark-ncl-data-oriented-ryujit.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-ryujit.png" class="mx-auto" style="display: block"  alt="Native Compiler RyuJIT"/>
 <p>So, Was <code>CppAst</code> in the end developed for nothing? Actually not! As I had to make an integration with RyuJIT by implementing the entire interface in C++, I decided to model the IR in C as well. That was much easier to integrate it directly with RyuJIT, but with <code>CppAst.CodeGen</code> I could easily generate all the C# structs from this simple and straightforward API. It means that the interface between the Stark C# native compiler and RyuJIT integration was mostly data-oriented, with a single method to call RyuJIT:</p>
 <pre><code class="language-C++">// Initialize Stark/RyuJIT
 STARK_NCL_EXPORT_API void StarkNclInitialize();
@@ -367,7 +367,7 @@ public class Array&lt;T&gt; extends Array implements IArray&lt;T&gt; {
 }
 </code></pre>
 <p>Then the string is actually layout in the data section like this:</p>
-<img src="/images/stark-ncl-data-oriented-string-layout.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-string-layout.png" class="mx-auto" style="display: block" alt="Native Compiler data oriented string layout"/>
 <ul>
 <li><strong>Offset 0</strong>: is the address where <code>_my_string_field</code> is located which is a struct <code>string</code>.
 <ul>
@@ -475,7 +475,7 @@ public partial module console_apps {
                &quot;Relocation entry&quot;
 </code></pre>
 <p>We are using our same virtual memory allocator also for storing generated code and data, but a block region of code has more reserved memory (e.g 16Mb) than it is actually using (committed). It means that the offsets between code and data at compilation time (in-memory) will be different once translated back to a file layout. This is the process of relocation:</p>
-<img src="/images/stark-ncl-data-oriented-elf-file-layout.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-elf-file-layout.png" class="mx-auto" style="display: block" alt="Native Compiler data oriented ELF file layout"/>
 <p>Recall from the previous section about data layout that we need also to perform these relocations for data when a data is referencing another data (e.g the pointer to <code>[]u8</code> or the <code>*Impl</code> for type) or a pointer to a code (e.g the address of a native function stored in a const data - used by function pointers, vtable...).</p>
 <p>Finally, the sections/segments in the final ELF file need to be also aligned so that the in-memory representation will be at the same offset than the file representation and has to be accounted when performing the final relocations of all symbols.</p>
 <h3 id="challenges">Challenges</h3>
@@ -521,7 +521,7 @@ public partial module console_apps {
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2016 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  
   </body>
 </html>

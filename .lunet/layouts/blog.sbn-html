@@ -5,13 +5,13 @@ layout: _default
   <p id="lunet-results"></p>
   <article class="page">
     <span class="title">
-		  <h1 class="title" itemprop="name"><a href="{{ page.url }}" itemprop="url">{{ page.title_html ?? page.title }}</a></h1>
+		  <h1 class="title"><a href="{{ page.url }}">{{ page.title_html ?? page.title }}</a></h1>
 		{{ if page.subtitle }}<span class="subtitle">{{ page.subtitle }}</span>{{ end }}
     </span>
     <div class="entry-content">
     <div class="blog-post-meta">
       <span class="fa fa-calendar"></span>
-      <span class="date"><time datetime="{{ page.date }}" itemprop="datePublished">{{ page.date | date.to_string "%B %e, %Y" }}</time></span>
+      <span class="date"><time datetime="{{ page.date | date.to_string '%Y-%m-%d' }}" itemprop="datePublished">{{ page.date | date.to_string "%B %e, %Y" }}</time></span>
       {{ render_tags page }}
   	  <span class="fa fa-edit"></span> <a href="{{ site.github_repo_url }}edit/master{{ page.path }}">edit</a>
     </div>

@@ -50,7 +50,7 @@ Let's see how the native compiler of Stark was designed and developed.
 
 ## Architecture
 
-<img src="/images/stark-ncl.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl.png" class="mx-auto" style="display: block" alt="Stark Native Compiler architecture"/>
 
 The key requirements of the native compiler are:
 
@@ -120,7 +120,7 @@ We could decide to pre-allocate `List<IRMethod>` with an original capacity, but 
 
 Instead for the Stark native compiler, a dedicated virtual memory arena allocator is used for each kind of data to allocate:
 
-<img src="/images/stark-ncl-data-oriented-arena-allocator.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-arena-allocator.png" class="mx-auto" style="display: block" alt="Native Compiler data oriented arena allocator"/>
 
 Each kind of data has its own continuous block committed (actually used) and reserved (maybe used later) virtual memory. Whenever we have to add some data to a block, we just need to transform a reserved memory page into a committed memory page while keeping the same initial base pointer for the block.
 
@@ -159,7 +159,7 @@ The IL in a `sklib` is stored in a compressed format, well suited for a compact 
 
 In Stark, we transform IL instructions along all the associated data (methods, types, fields...) to an IR representation that is more suited for traversing and transforming. The stream of IR instruction is encoded as a continuous linked list of fixed-size instructions as it is important that the underlying container supports addition/insertion/removal of instructions without having to copy or shift a large amount of data.
 
-<img src="/images/stark-ncl-data-oriented-instructions.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-instructions.png" class="mx-auto" style="display: block" alt="Native Compiler data oriented instructions"/>
 
 For instance, a single IR instruction in Stark is occupying around 40 bytes, while most instructions in the IL can occupy as little as 1 byte. Why there is such a huge difference with the IR?
 
@@ -251,7 +251,7 @@ From that, I developed another library [`CppAst.CodeGen`](https://github.com/xoo
 
 Anyway, after this code interlude (and we will see that there are others coming!) when I started much later in September to actually develop the Stark native compiler, I realized that instead of implementing entirely the `ICorJitInfo` interface in C#, I would implement it in C++ with only a pointer to the generated IR datas:
 
-<img src="/images/stark-ncl-data-oriented-ryujit.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-ryujit.png" class="mx-auto" style="display: block"  alt="Native Compiler RyuJIT"/>
 
 So, Was `CppAst` in the end developed for nothing? Actually not! As I had to make an integration with RyuJIT by implementing the entire interface in C++, I decided to model the IR in C as well. That was much easier to integrate it directly with RyuJIT, but with `CppAst.CodeGen` I could easily generate all the C# structs from this simple and straightforward API. It means that the interface between the Stark C# native compiler and RyuJIT integration was mostly data-oriented, with a single method to call RyuJIT:
 
@@ -373,7 +373,7 @@ public immutable struct Type {
 
 Then the string is actually layout in the data section like this:
 
-<img src="/images/stark-ncl-data-oriented-string-layout.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-string-layout.png" class="mx-auto" style="display: block" alt="Native Compiler data oriented string layout"/>
 
 - **Offset 0**: is the address where `_my_string_field` is located which is a struct `string`. 
   - This entry contains an address to the internal `_buffer []u8`. 
@@ -508,7 +508,7 @@ Translates to the following instruction, where we can see the relocation entry o
 
 We are using our same virtual memory allocator also for storing generated code and data, but a block region of code has more reserved memory (e.g 16Mb) than it is actually using (committed). It means that the offsets between code and data at compilation time (in-memory) will be different once translated back to a file layout. This is the process of relocation:
 
-<img src="/images/stark-ncl-data-oriented-elf-file-layout.png" class="mx-auto" style="display: block"/>
+<img src="/images/stark-ncl-data-oriented-elf-file-layout.png" class="mx-auto" style="display: block" alt="Native Compiler data oriented ELF file layout"/>
 
 Recall from the previous section about data layout that we need also to perform these relocations for data when a data is referencing another data (e.g the pointer to `[]u8` or the `*Impl` for type) or a pointer to a code (e.g the address of a native function stored in a const data - used by function pointers, vtable...).
 

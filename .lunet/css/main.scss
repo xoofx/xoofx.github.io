@@ -4,7 +4,7 @@
 
 
 $body-bg: #ffffff;
-$body-bg-dark: #0A0A0A;
+$body-bg-dark: #141414;
 $search-bg: lighten($body-bg, 2%);
 
 $body-color: #445258;
@@ -29,9 +29,13 @@ $navbar-padding-horizontal: 0px;
 $navbar-padding-horizontal: 0px;
 
 $link-color:      #920000;
+$link-color-dark:  $primary;
 $link-hover-color: #400000;
+$link-hover-color-dark:  darken($link-color-dark, 20%);;
 $code-color: #256cc7;
 
+$heading-color: #333;
+$heading-color-dark: #888;
 
 @import "bootstrap";
 @import "font-awesome";
@@ -39,6 +43,16 @@ $code-color: #256cc7;
 /*
  * Globals
  */
+
+.bg-dark {
+  background-color: $body-bg-dark !important;
+  color: #bbb;
+}
+
+.bg-black {
+  background-color: $body-bg-dark !important;
+  color: #bbb;
+}
 
 body {
   font-family: "Menlo", "Meslo LG", monospace;
@@ -405,7 +419,7 @@ h1.title a:hover, a:focus
 
 .navbar .navbar-nav .active
 {
-	border-bottom: 3px solid #b00;
+	border-bottom: 3px solid $link-color;
 }
 
 .navbar .active .nav-link {
@@ -476,7 +490,7 @@ article img
 .home .fa
 {
 	font-size: 30px;
-	color: #900;
+	color: $link-color;
 } 
 
 img {
@@ -489,4 +503,110 @@ img {
 	position: relative;
 	display: block;
 	padding: 5px 0 15px;	
+}
+
+@media (prefers-color-scheme: dark) {
+  .text-muted {
+      color: #8c959d!important;
+  }
+  .content-wrapper {
+      color: white!important;
+  }
+  .jumbotron {
+      background-color: rgb(30, 32, 36)!important;
+  }
+  .breadcrumb {
+      background-color: rgb(42, 43, 45)!important
+  }
+  pre {
+      background-color: #222!important;
+      color: #ccc!important;
+  }
+  code {
+      background-color: #222!important;
+      color: #ccc!important;
+  }
+  .form-control {
+      background-color: rgb(35, 36, 37)!important;
+      color: rgb(240, 234, 224)!important;
+      border-color: rgb(71, 79, 87)!important;
+  }
+  .custom-select {
+      color: white!important;
+      background-color: #495057!important;
+  }
+
+  a
+  {
+    color: $link-color-dark;
+  }
+
+  a:hover, a:focus
+  {
+    color: $link-hover-color-dark;
+  }
+
+  h1.title a:hover, a:focus
+  {
+    color: $link-color-dark;
+  }
+  .navbar .navbar-nav .active
+  {
+    border-bottom: 3px solid $link-color-dark;
+  }  
+
+  .home  li:hover .little-voice a
+  {
+  	color: $link-color-dark;
+  }
+
+  .home .fa
+  {
+    color: $link-color-dark;
+  } 
+
+  h1, .h1,
+  h2, .h2,
+  h3, .h3,
+  h4, .h4,
+  h5, .h5,
+  h6, .h6 
+  {
+    color: $heading-color-dark;
+  }
+
+  .navbar .active .nav-link {
+    color: $navbar-color-active-dark;
+  }  
+
+  h1.title a
+  {
+  	color: $heading-color-dark;
+  }
+  
+  .toc .is-active-link {
+    color: $body-color;
+  }
+
+  .xoofx-logo {
+    background: transparent url("../images/blog_logo_dark.png") no-repeat scroll 0px 0px;
+  }
+
+  .home .little-voice
+  {
+  	color: #555;
+  }
+
+  .home .little-voice a
+  {
+    color: #888;
+    font-style: italic;
+    transition: color 0.5s ease-in-out;
+  }
+
+  .home  li:hover .little-voice
+  {
+    color: #888;
+    font-style: italic;
+  }
 }

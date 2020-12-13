@@ -4,10 +4,10 @@ layout: _default
 <div class="col-sm-9 js-toc-content">
   <p id="lunet-results"></p>
   <article class="page">
-    <span class="title">
+    <div class="title">
 		  <h1 class="title"><a href="{{ page.url }}">{{ page.title_html ?? page.title }}</a></h1>
 		{{ if page.subtitle }}<span class="subtitle">{{ page.subtitle }}</span>{{ end }}
-    </span>
+    </div>
     <div class="entry-content">
     <div class="blog-post-meta">
       <span class="fa fa-calendar"></span>

@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.0.0">
+    <title>Stark - Tokens specification and Tokenizer implementation | xoofx</title>
+    <link rel="stylesheet" href="/css/tocbot.css">
+    <link rel="stylesheet" href="/css/prism.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/jquery.min.js" type="text/javascript" defer></script>
+    <script src="/js/popper.min.js" type="text/javascript" defer></script>
+    <script src="/js/anchor.min.js" type="text/javascript" defer></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript" defer></script>
+    <script src="/js/tocbot.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism.js" type="text/javascript" defer></script>
+    <script src="/js/prism-shell-session.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-clike.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-c.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-cpp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-csharp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-stark.js" type="text/javascript" defer></script>
+    <script src="/js/github-comments.js" type="text/javascript" defer></script>
+    <script src="/js/xoofx.js" type="text/javascript" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Stark - Tokens specification and Tokenizer implementation | xoofx">
+    <meta name="twitter:description" content="In my previous post Language Design Part I - The Tokens, I discussed about the kind of tokens, but also how would look primitive types and some thoughts on prefix vs postfix type annotation for the Stark Language Experiment In this post, we are going to go through the implementation of the language tokenizer, which is the first, most basic and simplest part of a compiler pipeline, yet fundamental. I...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Stark - Tokens specification and Tokenizer implementation | xoofx">    
+  </head>
+  <body>
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <span class="title">
+		  <h1 class="title" itemprop="name"><a href="/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer/" itemprop="url">Stark - Tokens specification and Tokenizer implementation</a></h1>
+		
+    </span>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="06 Feb 2017" itemprop="datePublished">February  6, 2017</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/stark/">Stark</a>, <a href="/blog/tag/csharp/">C#</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2017/2017-02-06-stark-tokens-specs-and-the-tokenizer.md">edit</a>
+    </div>
+      <p>In my previous post <a href="/blog/2017/01/20/stark-language-design-part-1-the-tokens">Language Design Part I - The Tokens</a>, I discussed about the kind of tokens, but also how would look primitive types and some thoughts on prefix vs postfix type annotation for the <a href="/blog/2017/01/17/the-stark-programming-language-experiment">Stark Language Experiment</a></p>
+<p>In this post, we are going to go through the implementation of the language tokenizer, which is the first, most basic and simplest part of a compiler pipeline, yet fundamental. I couldn't resist also to include some benchmarks between a handwritten tokenizer and the equivalent ANTLR generated lexer, so that this post will not just look plain theoretical.</p>
+<p>It might sounds like putting the cart before the horse, as in order to specify tokens, we need usually to know somehow the grammar of the language. While I have been already starting to sketch some grammar syntaxes, I would like also to implement as much as I can upfront for this experiment and so, let the tokens and the tokenizer as generic as possible, without any strong semantic reference to the grammar. Instead, we will stick to some basic token concepts that we described previously:</p>
+<ul>
+<li>comments</li>
+<li>identifier</li>
+<li>numbers</li>
+<li>characters</li>
+<li>strings</li>
+<li>symbols</li>
+</ul>
+<p>I will most likely have to tweak the tokenizer once we will get into the details of the syntax, but changing the tokenizer afterwards should not affect its fundamentals.</p>
+<p>Oh, I forgot, why tokens? (if you are not familiar with language parsers): this is a first step in a compiler pipeline to extract basic group of chars. It is a higher level of chars and simplifies later the process of matching higher level grammar syntax. Basically you get this flow:</p>
+<pre><code>Character sequences -&gt; Token sequences -&gt; Abstract Syntax Tree
+</code></pre>
+<p>Though this is only the &quot;climbing&quot; part of a compiler. In the end, we ultimately transform all of this to a sequence of bytes in pure assembler code and data:</p>
+<pre><code>Abstract Syntax Tree -&gt; Intermediate Representation bytecode -&gt; bytes (data and machine assembly instructions)
+</code></pre>
+<p>But that will be for a much later post! Today, let's just start by defining more formally the tokens. We will then dive into how the tokenizer was developed in <code>C#</code>.</p>
+<h1 id="the-tokens-specification">The Tokens Specification</h1>
+<p>This part describes the tokens used for parsing the Stark Programming Language. I have included this document in the repo as <a href="https://github.com/stark-lang/stark/blob/9c89dbbf2e611c53e6b26069192be49ba2424c47/specs/tokens.md">specs/tokens.md</a> though in this post I have added some comments that would not fit well a &quot;pure&quot; spec (note also that this URL is fixed so that if the location of the document change, it won't be lost, but don't take it necessarily as the latest one!)</p>
+<p>The syntax used to define the tokens is <a href="http://www.antlr.org/">ANTLR 4</a>. This is pretty convenient to use ANTLR 4 because we can get a generated lexer from the specs and it provides a solid basis to formalize the syntax. If you are not familiar with ANTLR 4 syntax, a very short introduction:</p>
+<ul>
+<li>a parsing rule XXX is defined like this <code>XXX:  &lt;parsingRule&gt;;</code></li>
+<li>the parsing rule is very similar to a regex matching pattern:
+<ul>
+<li>an element of a parsing rule can be either:
+<ul>
+<li>a string to match <code>'this is a string'</code></li>
+<li>a character range using <code>[</code> <code>...</code> <code>]</code> like <code>[a-zA-Z]</code> (and prefixed by <code>~</code> to invert the match)</li>
+<li>another parsing rule to use <code>YYY</code> or <code>yyy</code> (note that we don't need to be all uppercase. Though, by convention for the token specs, I will use uppercase)</li>
+<li>a group pattern of elements enclosed by parenthesis<code>(</code> <code>...</code>  <code>)</code> to embrace other parsing rules.</li>
+</ul>
+</li>
+<li>quantifiers applied to the previous element with <code>?</code> (optional), <code>*</code> (0 or more), <code>+</code> (1 or more)</li>
+<li>the <code>or</code> pattern <code>|</code> to describe alternatives between elements (group or strings to match)</li>
+</ul>
+</li>
+</ul>
+<p>The ANTLR syntax stored in the <code>tokens.md</code> document is automatically extracted from it to generate an ANTLR <code>g4</code> file. From this ANTLR <code>g4</code> file, we will be able to generate a Lexer <code>C#</code> file that we will use to test against the manual tokenizer developed to parse the language. Its is great because it gives us a way to verify the tokenizer and to check its performance.</p>
+<blockquote>
+<p>Note that the tokens don't describe how the language is going to use or store them (e.g a string token might be stored/used in the context of a <code>UTF-8</code> or <code>UTF-16</code> string, a float literal might be used as a <code>float32</code> or a <code>float64</code>)</p>
+</blockquote>
+<h2 id="whitespace-and-new-line">Whitespace and new line</h2>
+<p>We separate here a new line from whitespace, as a new line has a special meaning in Stark, as it will enable ending a statement/declaration automatically but it will not when for example parsing embracing parenthesis, brackets or braces...</p>
+<p>See <a href="/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer">Appendix: Fragments</a> for the details about the <code>Whitespace</code> fragment.</p>
+<pre><code class="language-antlr">SPACES: Whitespace+;
+
+NEW_LINE
+        : '\r\n' | '\r' | '\n'
+        | '\u0085' // &lt;Next Line CHARACTER (U+0085)&gt;'
+        | '\u2028' //'&lt;Line Separator CHARACTER (U+2028)&gt;'
+        | '\u2029' //'&lt;Paragraph Separator CHARACTER (U+2029)&gt;'
+        ;
+</code></pre>
+<p>You can see that ANTLR specification is able to manage either a single <code>\r</code> (yes, alone, it is a valid newline on some old Mac text files) or a <code>\r\n</code> as well as other non common EOL characters.</p>
+<h2 id="comments">Comments</h2>
+<p>As we talked in the previous post, we will have 3 different kinds of comments:</p>
+<ol>
+<li>We allow single line comment:</li>
+</ol>
+<pre><code class="language-antlr">COMMENT:            '//' ( ~[/\r\n] ~[\r\n]* )?;
+</code></pre>
+<ol start="2">
+<li>Comment used for documenting the following language element:</li>
+</ol>
+<pre><code class="language-antlr">COMMENT_DOC:        '///' ~[\r\n]*;
+</code></pre>
+<ol start="3">
+<li>Multi-line comments with support for nested multi-line comments:</li>
+</ol>
+<pre><code class="language-antlr">COMMENT_MULTI_LINE: '/*' (COMMENT_MULTI_LINE | .)*? '*/';
+</code></pre>
+<blockquote>
+<p>We may introduced another type of comment doc for documenting the parent language element.</p>
+</blockquote>
+<h2 id="identifiers">Identifiers</h2>
+<p>An identifier is defined by using the <a href="http://www.unicode.org/reports/tr31/">&quot;Unicode Identifier and Pattern Syntax&quot; (Unicode® Standard Annex #31)</a></p>
+<p>It is composed of characters <code>XID_Start</code> and <code>XID_Continue</code> that can be extracted from the <a href="http://unicode.org/Public/UNIDATA/DerivedCoreProperties.txt">Unicode DerivedCoreProperties database</a>. I have developed a small program that extract all these identifiers to generate some ANTLR code or <code>C#</code> code.</p>
+<p>The main difference here is that we allow the character underscore <code>_</code> to be used as a <code>XID_Start</code></p>
+<blockquote>
+<p>Note that because of a restriction of ANTLR not supporting correctly <code>UTF-32</code>, the extracted <code>XID_Start</code> and <code>XID_Continue</code> does not contain <code>UTF-32</code> code points above <code>0xFFFF</code> (while the manual parser does)</p>
+</blockquote>
+<pre><code class="language-antlr">IDENTIFIER: ('_'|XID_Start) XID_Continue*;
+</code></pre>
+<p>Note that we are introducing also a special identifier to match an identifier composed only of the character underscore <code>_</code></p>
+<pre><code class="language-antlr">UNDERSCORES: '_'+;
+</code></pre>
+<h2 id="integer-literals">Integer Literals</h2>
+<p>Integer digits <code>[0-9]</code> can be separated by an underscore <code>_</code> but they must contain at least one digit.</p>
+<pre><code class="language-antlr">INTEGER:        [0-9] [0-9_]*;
+</code></pre>
+<p>There are also dedicated tokens for other integer declarations:</p>
+<ul>
+<li>hexadecimal (e.g <code>0x1234FF00</code>)</li>
+<li>octal  (e.g <code>0o117</code>)</li>
+<li>binary (e.g <code>0b11110101</code>)</li>
+</ul>
+<pre><code class="language-antlr">INTEGER_HEXA:   '0' [xX] '_'* [0-9a-fA-F] [0-9a-fA-F_]*;
+INTEGER_OCTAL:  '0' [oO] '_'* [0-7] [0-7_]*;
+INTEGER_BINARY: '0' [bB] '_'* [0-1] [0-1_]*;
+</code></pre>
+<p>All digits can be separated by underscore <code>_</code>. The previous rules also enforce that we will have at least one digit <code>[0-9]</code> and not only underscores.</p>
+<h2 id="float-literals">Float Literals</h2>
+<p>A floating-point number literal requires a digit followed at least by either:</p>
+<ul>
+<li>a <code>.</code> followed by one or more digits</li>
+<li>an exponent <code>e</code> followed by an optional <code>+|-</code> and one or more digits</li>
+</ul>
+<p>All digits can be separated by underscore <code>_</code></p>
+<pre><code class="language-antlr">FLOAT: [0-9][0-9_]* ( ([eE] [-+]? [0-9][0-9_]*) | '.' [0-9][0-9_]* ([eE] [-+]? [0-9][0-9_]*)?);
+</code></pre>
+<h2 id="characters">Characters</h2>
+<p>A character is enclosed by a single quote <code>'</code></p>
+<pre><code class="language-antlr">CHAR:       '\'' (~['\\\r\n\u0085\u2028\u2029] | CommonCharacter) '\'';
+
+fragment CommonCharacter
+    : SimpleEscapeSequence
+    | HexEscapeSequence
+    | UnicodeEscapeSequence
+    ;
+</code></pre>
+<p>The character <code>\</code> is used for escaping the following control characters:</p>
+<pre><code class="language-antlr">fragment SimpleEscapeSequence
+    : '\\\''
+    | '\\&quot;'
+    | '\\\\'
+    | '\\0'
+    | '\\a'
+    | '\\b'
+    | '\\f'
+    | '\\n'
+    | '\\r'
+    | '\\t'
+    | '\\v'
+    ;
+</code></pre>
+<p>The escape <code>\</code> character is also used to input special characters:</p>
+<ul>
+<li>Hexadecimal character (e.g <code>\xFF</code>)</li>
+<li>Unicode UTF-16 character (e.g <code>\u12AC</code>)</li>
+<li>Unicode UTF-32 character (e.g <code>\U00012345</code>)</li>
+</ul>
+<pre><code class="language-antlr">fragment HexEscapeSequence
+    : '\\x' [0-9a-fA-F]
+    | '\\x' [0-9a-fA-F][0-9a-fA-F]
+    | '\\x' [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
+    | '\\x' [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
+    ;
+
+fragment UnicodeEscapeSequence
+    : '\\u' [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
+    | '\\U' [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
+            [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
+    ;   
+</code></pre>
+<h2 id="strings">Strings</h2>
+<p>The main difference with a character is that a string contains more than one character. Also we have the special raw or verbatim string ala <code>C#</code> using the prefix <code>@</code> character (e.g <code>@&quot;this is an escaped \n&quot;</code>)</p>
+<pre><code class="language-antlr">STRING_RAW: '@&quot;' (~'&quot;' | '&quot;&quot;')* '&quot;';
+STRING:     '&quot;'  (~[&quot;\\\r\n\u0085\u2028\u2029] | CommonCharacter)* '&quot;';
+</code></pre>
+<h2 id="symbols">Symbols</h2>
+<p>The symbols are used by the grammar in different scenarios, like separating an identifier from its type or in expression with operators.</p>
+<p>We do not define composed tokens here (e.g <code>&gt;&gt;</code> instead we have two consecutive <code>&gt;</code> <code>&gt;</code>) to allow the language parser to handle general and custom operators in an uniform manner (we will dig into this in the next posts about the language syntax)</p>
+<p>We also don't attach a particular semantic to the symbols, as a symbol might be used in different scenarios (e.g <code>*</code> for operator multiplication but also for pointer declaration and dereferencing), so I took the plain ASCII signification:</p>
+<pre><code class="language-antlr">EXCLAMATION: '!';
+NUMBER: '#';
+DOLLAR: '$';
+PERCENT: '%';
+AMPERSAND: '&amp;';
+
+
+OPEN_PARENTHESIS: '(';
+CLOSE_PARENTHESIS: ')';
+
+ASTERISK: '*';
+PLUS: '+';
+COMMA: ',';
+MINUS: '-';
+DOT: '.';
+SLASH: '/';
+COLON: ':';
+SEMI_COLON: ';';
+LESS_THAN: '&lt;';
+EQUAL: '=';
+GREATER_THAN:'&gt;';
+QUESTION: '?';
+AT: '@';
+
+OPEN_BRACKET: '[';
+BACKSLASH: '\\';
+CLOSE_BRACKET: ']';
+
+CARET: '^';
+GRAVE_ACCENT: '`';
+
+OPEN_BRACE: '{';
+PIPE: '|';
+CLOSE_BRACE: '}';
+
+TILDE: '~';
+</code></pre>
+<p>As you may notice, we are actually listing all printable, non letters/non digits symbols present in the ASCII characters, all the characters that should be accessible straight from the keyboard (sometimes combined with a SHIFT key).</p>
+<h2 id="appendix-fragments">Appendix: Fragments</h2>
+<pre><code class="language-antlr">fragment Whitespace
+    : UnicodeClassZS //'&lt;Any Character With Unicode Class Zs&gt;'
+    | '\u0009' //'&lt;Horizontal Tab Character (U+0009)&gt;'
+    | '\u000B' //'&lt;Vertical Tab Character (U+000B)&gt;'
+    | '\u000C' //'&lt;Form Feed Character (U+000C)&gt;'
+    ;
+
+// http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5B%3AZS%3A%5D&amp;g=&amp;i=
+fragment UnicodeClassZS
+    : '\u0020' // SPACE
+    | '\u00A0' // NO_BREAK SPACE
+    | '\u1680' // OGHAM SPACE MARK
+    | '\u2000' // EN QUAD
+    | '\u2001' // EM QUAD
+    | '\u2002' // EN SPACE
+    | '\u2003' // EM SPACE
+    | '\u2004' // THREE_PER_EM SPACE
+    | '\u2005' // FOUR_PER_EM SPACE
+    | '\u2006' // SIX_PER_EM SPACE
+    | '\u2007' // FIGURE SPACE
+    | '\u2008' // PUNCTUATION SPACE
+    | '\u2009' // THIN SPACE
+    | '\u200A' // HAIR SPACE
+    | '\u202F' // NARROW NO_BREAK SPACE
+    | '\u205F' // MEDIUM MATHEMATICAL SPACE
+    | '\u3000' // IDEOGRAPHIC SPACE
+    ;
+</code></pre>
+<h1 id="the-tokenizer">The Tokenizer</h1>
+<p>First step in the compiler pipeline, while not being usually the most consuming part, the tokenizer/lexer should still be developed with performance in mind, as it could become a real bottleneck, if not correctly implemented.</p>
+<p>For this tokenizer, I would like it to be:</p>
+<ul>
+<li>fast</li>
+<li>zero allocation</li>
+<li>non destructive with precise source location</li>
+<li>Full unicode UTF-32 identifier support</li>
+<li>Support reading from plain managed string or from UTF-8 byte array</li>
+</ul>
+<h2 id="real-support-for-unicode-characters">Real support for unicode characters</h2>
+<p>When using strings in <code>C#</code>, it is pretty common to iterate on characters. You should know that <a href="http://blog.coverity.com/2014/04/09/why-utf-16"><code>C#</code> strings are composed of UTF-16 characters</a> (one reason they are also very costly when you are dealing mostly with characters that would fit into the ASCII range and where UTF-8 strings are a lot more appealing there... but anyway...). A less known fact is that some unicode characters cannot be represented by a single UTF-16 char but need actually 2. A unicode characters can cover more than 128,000 characters (the highest code point is <code>(2^21bits)-1 = 0x001FFFFF</code>) and this is where in <code>C#</code> you need to deal carefully with them by checking if a first character c1 is a high surrogate (<code>char.IsHighSurrogate(c1)</code>) and is followed by a character c2 low surrogate (<code>char.IsLowSurrogate(c)</code>) from which you can recover the final UTF-32 character (<code>char.ConvertToUtf32(c1, c2)</code>)</p>
+<p>As I'm using the <code>XID_Start</code>/<code>XID_Continue</code> unicode characters specification for identifiers, I need to support a larger range of the character stream than usually supported by many programming language. It means that instead of using a plain <code>char</code> in the Tokenizer, I have opted to use a small struct <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/char32.cs"><code>char32.cs</code></a> to type and reflect the usage of real UTF-32 characters when parsing the document.</p>
+<pre><code class="language-csharp">/// &lt;summary&gt;
+/// A UTF-32 character ala Stark.
+/// &lt;/summary&gt;
+public struct char32
+{
+    /// &lt;summary&gt;
+    /// Initializes a new instance of the &lt;see cref=&quot;char32&quot;/&gt; UTF-32 character.
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;code&quot;&gt;The UTF-32 code character.&lt;/param&gt;
+    public char32(int code)
+    {
+        Code = code;
+    }
+
+    /// &lt;summary&gt;
+    /// Gets the UTF-32 code.
+    /// &lt;/summary&gt;
+    public int Code { get; }
+
+    /// &lt;summary&gt;
+    /// Performs an implicit conversion from &lt;see cref=&quot;char32&quot;/&gt; to &lt;see cref=&quot;System.Int32&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;c&quot;&gt;The c.&lt;/param&gt;
+    /// &lt;returns&gt;The result of the conversion.&lt;/returns&gt;
+    public static implicit operator int(char32 c)
+    {
+        return c.Code;
+    }
+
+    /// &lt;summary&gt;
+    /// Performs an implicit conversion from &lt;see cref=&quot;System.Int32&quot;/&gt; to &lt;see cref=&quot;char32&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;c&quot;&gt;The c.&lt;/param&gt;
+    /// &lt;returns&gt;The result of the conversion.&lt;/returns&gt;
+    public static implicit operator char32(int c)
+    {
+        return new char32(c);
+    }
+
+    public override string ToString()
+    {
+        return char.ConvertFromUtf32(Code);
+    }
+}
+</code></pre>
+<p>Note, if everything goes as far as I would love to be able to achieve in this experiment, I expect to convert at some point the compiler into the Stark language itself... so this choice of using a <code>char32</code> fits well with Stark, because by default, the UTF-8 <code>string8</code> (I have currently opted for this syntax for string, but will get back to this in the next post) will provide an iterator returning <code>char32</code> characters...</p>
+<p>Also, in order to iterate over the characters of a string, I wanted to use a similar iterator than the one I would have in Stark, so I have added a simple <code>C#</code> interface <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Collections/Iterator.cs"><code>Iterator.cs</code></a> (a trait in Stark) that provides mainly:</p>
+<pre><code class="language-csharp">/// &lt;summary&gt;
+/// Iterator ala Stark.
+/// &lt;/summary&gt;
+/// &lt;typeparam name=&quot;TElement&quot;&gt;The type of an element of the iteration.&lt;/typeparam&gt;
+/// &lt;typeparam name=&quot;TState&quot;&gt;The type of the state of the iteration.&lt;/typeparam&gt;
+public interface Iterator&lt;TElement, TState&gt; where TElement : struct 
+// Note that in Stark, we would not have a struct constraint on TElement
+// as TElement? would be possible
+{
+    /// &lt;summary&gt;
+    /// Gets the start state for the iteration.
+    /// &lt;/summary&gt;
+    TState Start { get; }
+
+    /// &lt;summary&gt;
+    /// Tries to get the next element in the iteration.
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;state&quot;&gt;The state.&lt;/param&gt;
+    /// &lt;returns&gt;none if no element, or an element&lt;/returns&gt;
+    TElement? TryGetNext(ref TState state);
+}
+</code></pre>
+<p>This iterator is generic, so we need to have a dedicated type <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/CharacterIterator.cs"><code>CharacterIterator</code></a> for characters:</p>
+<pre><code class="language-csharp">/// &lt;summary&gt;
+/// (trait) CharacterIterator ala Stark
+/// &lt;/summary&gt;
+// ReSharper disable once InconsistentNaming
+public interface CharacterIterator : Iterator&lt;char32, int&gt;
+{
+}
+</code></pre>
+<p>The nice thing about this <code>CharacterIterator</code> is that it can work with any kind of inputs, e.g:</p>
+<ul>
+<li>a <code>UTF-8</code> string (that would be a <code>byte[]</code> in <code>C#</code>)</li>
+<li>a <code>UTF-16</code> string (a plain <code>C#</code> string)</li>
+</ul>
+<p>For now, I have just added a basic <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/StringCharacterIterator.cs"><code>StringCharacterIterator</code></a> implementation to iterate over a UTF-16 string in memory:</p>
+<pre><code class="language-csharp">public struct StringCharacterIterator : CharacterIterator
+{
+    private readonly string _text;
+
+    public StringCharacterIterator(string text)
+    {
+        this._text = text;
+    }
+
+    public int Start =&gt; 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public char32? TryGetNext(ref int position)
+    {
+        if (position &lt; _text.Length)
+        {
+            var c1 = _text[position];
+            position++;
+
+            // Handle surrogates
+            return char.IsHighSurrogate(c1) ? NextCharWithSurrogate(ref position, c1) : c1;
+        }
+
+        position = _text.Length;
+        return null;
+    }
+
+    private int NextCharWithSurrogate(ref int position, char c1)
+    {
+        if (position &lt; _text.Length)
+        {
+            var c2 = _text[position];
+            position++;
+            if (char.IsLowSurrogate(c2))
+            {
+                return char.ConvertToUtf32(c1, c2);
+            }
+            throw new CharReaderException(&quot;Unexpected character after high-surrogate char&quot;);
+        }
+        throw new CharReaderException(&quot;Unexpected EOF after high-surrogate char&quot;);
+    }
+}
+</code></pre>
+<p>You can notice also that we are using here a <code>struct</code> for this character iterator and not a <code>class</code>. This is important because this struct will be used as a generic parameter of the <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/Tokenizer.cs"><code>Tokenizer</code></a>:</p>
+<pre><code class="language-csharp">/// &lt;summary&gt;
+/// Tokenizer enumerator that generates &lt;see cref=&quot;Token&quot;/&gt;, to be used from a foreach.
+/// &lt;/summary&gt;
+public class Tokenizer&lt;TReader&gt; : IEnumerable&lt;Token&gt; where TReader : struct, CharacterIterator
+{
+...
+}
+</code></pre>
+<p>And because the JIT is able to generate a dedicated JIT code when using parametrized generics with struct, we ensure that the character reader will be efficiently inlined (though comparing to the rest of the code, it might not make a significant difference...)</p>
+<h2 id="decoding-characters-to-tokens">Decoding characters to Tokens</h2>
+<p>The method <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/Tokenizer.cs#L78"><code>NextToken</code></a> in the Tokenizer is responsible to decode each incoming characters:</p>
+<pre><code class="language-csharp">private void NextToken()
+{
+    var start = _position;
+    switch (_c)
+    {
+        case '\u0085': // next line
+        case '\u2028': // line separator
+        case '\u2029': // paragraph separator
+        case '\n':
+            _token = new Token(TokenType.NewLine, start, _position);
+            NextChar();
+            break;
+        case ';':
+            _token = new Token(TokenType.SemiColon, start, _position);
+            NextChar();
+            break;
+        case '\r':
+            NextChar();
+            // case of: \r\n
+            if (_c == '\n')
+            {
+                _token = new Token(TokenType.NewLine, start, _position);
+                NextChar();
+                break;
+            }
+            // case of \r
+            _token = new Token(TokenType.NewLine, start, start);
+            break;
+        case ':':
+            NextChar();
+            _token = new Token(TokenType.Colon, start, start);
+            break;
+
+            ....
+</code></pre>
+<p>As you can see, for most of the symbol characters, it is pretty straightforward, as one character leads to one token. But for other tokens (comments, numbers, characters, strings, identifiers) it requires a bit more logic.</p>
+<p>But one important implementation detail: <strong>for the tokens, we use a <code>struct</code></strong> (unlike for example ANTLR which by default creates a <code>class</code>). Every lexers should do this, as it is a requirement in order to achieve <strong>zero allocations</strong>.</p>
+<p>It means for example that our <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/Token.cs"><code>Token.cs</code></a> doesn't even slice the original string to provide a matched text. Instead, it stores only position from the original stream:</p>
+<pre><code class="language-csharp">/// &lt;summary&gt;
+/// A lightweight token struct to avoid GC allocations.
+/// &lt;/summary&gt;
+public struct Token : IEquatable&lt;Token&gt;
+{
+    public static readonly Token Eof = new Token(TokenType.Eof, TextPosition.Eof, TextPosition.Eof);
+
+    /// &lt;summary&gt;
+    /// Initializes a new instance of the &lt;see cref=&quot;Token&quot;/&gt; struct.
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;type&quot;&gt;The type.&lt;/param&gt;
+    /// &lt;param name=&quot;start&quot;&gt;The start.&lt;/param&gt;
+    /// &lt;param name=&quot;end&quot;&gt;The end.&lt;/param&gt;
+    /// &lt;exception cref=&quot;System.ArgumentOutOfRangeException&quot;&gt;&lt;/exception&gt;
+    public Token(TokenType type, TextPosition start, TextPosition end)
+    {
+        if (start.Offset &gt; end.Offset) 
+            throw new ArgumentOutOfRangeException(nameof(start), $&quot;[{nameof(start)}] index must be &lt;= to [{nameof(end)}]&quot;);
+        Type = type;
+        Start = start;
+        End = end;
+    }
+
+    /// &lt;summary&gt;
+    /// The type of token.
+    /// &lt;/summary&gt;
+    public readonly TokenType Type;
+
+    /// &lt;summary&gt;
+    /// The start position of this token.
+    /// &lt;/summary&gt;
+    public readonly TextPosition Start;
+
+    /// &lt;summary&gt;
+    /// The end position of this token.
+    /// &lt;/summary&gt;
+    public readonly TextPosition End;
+
+    ...
+}
+</code></pre>
+<p>Each the <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/TokenType.cs">TokenType.cs</a> is a plain enum representing the token. A syntax parser is usually later only using this enum to efficiently parse the token stream.</p>
+<h2 id="example-matching-comments">Example: Matching comments</h2>
+<p>Typically, for comments, it starts by <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/Tokenizer.cs#L147">matching the first <code>/</code></a>:</p>
+<pre><code class="language-csharp">        case '/':
+            NextChar();
+            if (_c == '/' || _c == '*')
+            {
+                ReadComment(start);
+                break;
+            }
+            _token = new Token(TokenType.Slash, start, start);
+            break;
+</code></pre>
+<p>but matching the actual comments (either line, or multi-line or doc) is a bit more involving (method <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/Tokenizer.cs#L606">ReadComment</a>):</p>
+<pre><code class="language-csharp">private void ReadComment(TextPosition start)
+{
+    var end = _position;
+    // Read single line comment
+    if (_c == '/')
+    {
+        // Skip second /
+        NextChar();
+        // Check if we have a ///
+        // TODO: Add support for //!
+        bool isDocComment = _c == '/';
+        // Read until the end of the line/file
+        while (_c != Eof &amp;&amp; _c != '\r' &amp;&amp; _c != '\n')
+        {
+            end = _position;
+            NextChar();
+        }
+        _token = new Token(isDocComment ? TokenType.CommentDoc : TokenType.Comment, start, end);
+    }
+    else
+    {
+        // Skip second *
+        NextChar();
+        _nestedMultilineCommentCount++;
+        // Read until the end of the line/file
+        while (_c != Eof)
+        {
+            if (_c == '/')
+            {
+                NextChar();
+                if (_c == '*')
+                {
+                    _nestedMultilineCommentCount++;
+                    NextChar();
+                }
+            }
+            else if (_c == '*')
+            {
+                NextChar();
+                if (_c == '/')
+                {
+                    _nestedMultilineCommentCount--;
+                    if (_nestedMultilineCommentCount == 0)
+                    {
+                        end = _position;
+                        NextChar(); // skip last /
+                        _token = new Token(TokenType.CommentMultiLine, start, end);
+                        return;
+                    }
+                    NextChar();
+                }
+            }
+            else { 
+                end = _position;
+                NextChar();
+            }
+        }
+        AddError(&quot;Invalid multi-line comment. No matching */ for start /*&quot;, start, start);
+        _token = new Token(TokenType.Invalid, start, end);
+    }
+}
+</code></pre>
+<p>As you can see, compare to the original ANTLR short rules, we need to carefully handle the nested cases, EOF...etc.</p>
+<h2 id="matching-numbers">Matching numbers</h2>
+<p>For matching numbers, implementing the parser by hand allow us to have a single method that handle all the cases (from integer, to hexa to floats). The generated ANTLR Lexer doesn't work like this (usually it is using a <a href="https://en.wikipedia.org/wiki/State_transition_table">DFA table</a>) and can be less efficient than our code (due to some implicit backtracking that the lexer may introduce when trying to match a rule doesn't work...)</p>
+<p>Also, we have one case here where the handwritten parser has to peek an extra character after a dot <code>.</code> to make sure that it is not followed by a <code>.</code> (because if Stark, the <code>..</code> will be used for ranges).</p>
+<p>For example, the <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/Tokenizer.cs#L401">part</a> that is decoding the digits after the <code>.</code> is making sure that we don't try to parse after the <code>.</code> if is followed by another <code>.</code>:</p>
+<pre><code class="language-csharp">    // Read any number following
+    var hasRange = false;
+    if (_c == '.')
+    {
+        // If the next char is a '.' it means that we have a range iterator, so we don't touch it
+        if (PeekChar() != '.')
+        {
+            end = _position;
+            NextChar(); // Skip the dot .
+
+            // We expect at least a digit after .
+            if (!CharHelper.IsDigit(_c))
+            {
+                AddError(&quot;Expecting at least one digit after the float dot .&quot;, _position, _position);
+                _token = new Token(TokenType.Invalid, start, end);
+                return;
+            }
+
+            isFloat = true;
+            while (CharHelper.IsDigit(_c) || _c == '_')
+            {
+                end = _position;
+                NextChar();
+            }
+        }
+        else
+        {
+            // If we have a range, we don't expect to parse anything after
+            hasRange = true;
+        }
+    }
+</code></pre>
+<h2 id="matching-chars-and-strings">Matching chars and strings</h2>
+<p>For strings and characters, we are able to factorize the code for decoding escaped character and reuse this method <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/Tokenizer.cs#L518"><code>ReadChar</code></a> to decode a a single character or multiple charaters of a string.</p>
+<h2 id="matching-identifiers">Matching identifiers</h2>
+<p>Because characters allowed for identifiers cover a large range of characters, It required a more dedicated code to handle them efficiently.</p>
+<p>Basically, we split the decoding into:</p>
+<ul>
+<li><p>an early fast path that check against regular ASCII character ranges <code>_</code> <code>a-z</code>, <code>A-Z</code>, <code>0-9</code>, for checking the XID_Start character in <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/CharHelper.cs#L14"><code>CharHelper.IsIdentifierStart</code></a></p>
+<pre><code class="language-csharp">public static bool IsIdentifierStart(char32 c)
+{
+    // Extracted from http://unicode.org/Public/UNIDATA/DerivedCoreProperties.txt with XIDStartContinueGen
+    // Test regular ASCII characters first before going to a more costly binary search on XID_Start
+    if (c == '_' || (c &gt;= 'a' &amp;&amp; c &lt;= 'z') || (c &gt;= 'A' &amp;&amp; c &lt;= 'Z'))
+    {
+        return true;
+    }
+    return CharacterRangeContains(XID_Start_CharacterRanges, c);
+}
+</code></pre>
+</li>
+<li><p>a slower path <code>CharacterRangeContains</code> that performs a binary search on a large character range database for <code>XID_Start</code> and <code>XID_Continue</code></p>
+<pre><code class="language-csharp">private static bool CharacterRangeContains(CharacterRange[] range, char32 c)
+{
+    int lo = 0;
+    int hi = range.Length - 1;
+    while (lo &lt;= hi)
+    {
+        int mid = lo + ((hi - lo) &gt;&gt; 1);
+        var dir = range[mid].CompareTo(c);
+        if (dir == 0)
+        {
+            return true;
+        }
+        if (dir &lt; 0)
+        {
+            lo = mid + 1;
+        }
+        else
+        {
+            hi = mid - 1;
+        }
+    }
+    return false;
+}
+</code></pre>
+</li>
+</ul>
+<p>The <code>XID_Start_CharacterRanges</code> and <code>XID_Continue_CharacterRanges</code> are stored in a separate big file <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler/Parsing/CharHelper.CharacterRanges.cs"><code>CharHelper.CharacterRange.cs</code></a> that was generated by extracting the data from the unicode database.</p>
+<p>Note that currently, a keyword in the language (e.g <code>for</code> or <code>if</code>) is parsed as an identifier, but we may later slightly change the decoding of the identifiers in the tokenizer to integrate a fast path for decoding keywords as part of the identifier matching. But for now, we don't</p>
+<h2 id="precise-source-location">Precise source location</h2>
+<p>Another important aspect of a tokenizer is to always track precisely the positions of the tokens relative to the character input stream. The position implies:</p>
+<ul>
+<li>the offset from beginning of the stream</li>
+<li>a line and a column</li>
+</ul>
+<p>Without this, we could not recover the original string data and we could not also provide a precise and meaningful error message at the next parsing stage.</p>
+<p>The Tokenizer should not be destructive but should provide an <strong>enhanced view on the character stream</strong>.</p>
+<h2 id="differences-with-roslyn">Differences with Roslyn</h2>
+<p>Roslyn is a huge compiler, and for example, its <a href="https://github.com/dotnet/roslyn/blob/master/src/Compilers/CSharp/Portable/Parser/Lexer.cs">lexer</a> is way more involving than the simplistic tokenizer that we have developed here. But still we obviously need to parse the character stream, and the method <a href="https://github.com/dotnet/roslyn/blob/master/src/Compilers/CSharp/Portable/Parser/Lexer.cs#L409"><code>ScanSyntaxToken(ref TokenInfo info)</code></a> with a switch case on the current character is very similar to the one we described above.</p>
+<p>Though there are a couple of differences:</p>
+<ul>
+<li>When scanning numeric literals, Roslyn is going to decode the postfix (<code>L</code>...etc.) but I explained in my previous post that I would like to perform this at a later stage and not at the tokenizer stage. Also, Roslyn is actually decoding the string into an actual binary <code>float</code> or <code>double</code> when parsing the string, a logic that I prefer to let to the syntax parser instead (related to the postfix handling)</li>
+<li>When scanning doc comments, Roslyn is going to decode the XML stream to extract meaningful tokens inside the comments themselves which contributes for a large part of the lexer (so yes, basically, their lexer embeds also a basic XML lexer). We do not have this yet in our Tokenizer. I still don't know where this will be performed. Note that <strong>in Stark, we will use Markdown comments for documentation</strong>, so it will be different and I'm happy also that it will give an opportunity to use <a href="https://github.com/lunet-io/markdig/"><code>Markdig</code></a>!</li>
+<li>Roslyn has directive tokens (preprocessors) and requires some special paths in their lexer</li>
+</ul>
+<p>So overall, the Roslyn lexer is performing a lot more than our rudimentary tokenizer.</p>
+<h2 id="the-tests">The tests</h2>
+<p>Every part of the compiler pipeline should be carefully tested, and so the lexer requires many small tests to ensure that we are actually decoding characters correctly.</p>
+<p>We have to test in our <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler.Tests/TestTokenizer.cs"><code>TestTokenizer.cs</code></a> class that:</p>
+<ul>
+<li>all symbols, tokens are correctly decoded</li>
+<li>error cases are correctly reported (there are a few cases where the Tokenizer reports directly token errors)</li>
+<li>accurate source position for tokens</li>
+</ul>
+<p>Also, as I explained in the preamble, we have a reference ANTLR lexer generated from our tokens.md specs that we can check against. So it is pretty convenient also to have this test path, as we can directly parse a document with many different tokens, and check that our tokenizer and ANTLR lexer reports the exact same tokens and source positions. This is performed by the method <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler.Tests/TestTokenizer.cs#L428"><code>VerifyAgainstANTLRLexer</code></a> against the file <a href="https://github.com/stark-lang/stark/blob/d34f4bfcb628afe333323f52532d52a75622e9dc/src/compiler/Stark.Compiler.Tests/StarkTokenTests.sk"><code>StarkTokenTests.sk</code></a></p>
+<h1 id="benchmarks">Benchmarks</h1>
+<p>I couldn't resist to check the difference between our handwritten tokenizer and the ANTLR lexer, so I decided to benchmark both (with again the excellent <a href="https://github.com/dotnet/BenchmarkDotNet">BenchmarkDotNet</a>)</p>
+<p>And the results using .NET CLR are:</p>
+<pre><code>// * Summary *
+
+BenchmarkDotNet=v0.10.1, OS=Microsoft Windows NT 6.2.9200.0
+Processor=Intel(R) Core(TM) i5-6600K CPU 3.50GHz, ProcessorCount=4
+Frequency=3421879 Hz, Resolution=292.2371 ns, Timer=TSC
+  [Host]     : Clr 4.0.30319.42000, 32bit LegacyJIT-v4.6.1586.0
+  DefaultJob : Clr 4.0.30319.42000, 32bit LegacyJIT-v4.6.1586.0
+
+
+            Method |        Mean |    StdDev | Scaled | Scaled-StdDev |  Gen 0 | Allocated |
+------------------ |------------ |---------- |------- |-------------- |------- |---------- |
+     'ANTLR Lexer' | 116.3042 us | 0.4845 us |   1.00 |          0.00 | 1.0417 |  19.78 kB |
+ 'Stark Tokenizer' |  31.4979 us | 0.2129 us |   0.27 |          0.00 |      - |     121 B |
+
+// * Diagnostic Output - MemoryDiagnoser *
+Note: the Gen 0/1/2 Measurements are per 1k Operations
+</code></pre>
+<p>So basically, our lexer is roughly <strong>x3 to x4 faster</strong> than the generated ANTLR lexer, which is not highly surprising but still good!</p>
+<p>Also we can see that in terms of memory pressure, we have achieved our goal of a <strong>zero allocation lexer</strong> (unlike ANTLR default)</p>
+<h1 id="next">Next?</h1>
+<p>So we have now a specification for the tokens and a functional tokenizer. Before going to implement the syntax parser, we are going back to the blackboard or the white-paper, as the next parts are going to be a lot more challenging.</p>
+<p>Obviously, as you can realize, the tokenizer is a very small part of a compiler pipeline. While developing it, I have been also playing a lot with the syntax and concepts of the language, and the more I dig into all the details, the more I can already feel all the dirty and daunting tasks ready to jump-in into this experiment. Sometimes, It makes me feel about just quitting... :D but let's not look too much at the top of the mountain while we are still just in the valley. No worries if we can't make it to the top, but hopefully, step by step, I will try to climb a bit more at my pace...</p>
+<p>The next part should start to visit the language syntax and concepts. We will most likely come back to the primitive types first but we will also go through some of the fundamentals (modules vs namespaces, statement vs expressions...etc)</p>
+<p>Stay tuned!</p>
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2016 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  
+  </body>
+</html>
+

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.0.0">
+    <title>Generate automatically async/await code from sync code with Roslyn | xoofx</title>
+    <link rel="stylesheet" href="/css/tocbot.css">
+    <link rel="stylesheet" href="/css/prism.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/jquery.min.js" type="text/javascript" defer></script>
+    <script src="/js/popper.min.js" type="text/javascript" defer></script>
+    <script src="/js/anchor.min.js" type="text/javascript" defer></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript" defer></script>
+    <script src="/js/tocbot.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism.js" type="text/javascript" defer></script>
+    <script src="/js/prism-shell-session.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-clike.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-c.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-cpp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-csharp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-stark.js" type="text/javascript" defer></script>
+    <script src="/js/github-comments.js" type="text/javascript" defer></script>
+    <script src="/js/xoofx.js" type="text/javascript" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Generate automatically async/await code from sync code with Roslyn | xoofx">
+    <meta name="twitter:description" content="This is a quick post to give you some feedback about an experiment I just made with the Scriban Text Templating Library to add support for async/await automatically from the existing synchronous code, all of this done by using Roslyn. If you have an existing code base that works beautifully in a synchronous manner, but you would like also to provide a path for async/await patterns, you don't want to...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Generate automatically async/await code from sync code with Roslyn | xoofx">    
+  </head>
+  <body>
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <span class="title">
+		  <h1 class="title" itemprop="name"><a href="/blog/2018/12/26/generate-async-from-sync-code-with-roslyn/" itemprop="url">Generate automatically async/await code from sync code with Roslyn</a></h1>
+		
+    </span>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="26 Dec 2018" itemprop="datePublished">December 26, 2018</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.NET</a>, <a href="/blog/tag/roslyn/">Roslyn</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2018/2018-12-26-generate-async-from-sync-code-with-roslyn.md">edit</a>
+    </div>
+      <p>This is a quick post to give you some feedback about an experiment I just made with the <a href="http://xoofx.com/blog/2017/11/13/implementing-a-text-templating-language-and-engine-for-dotnet/">Scriban Text Templating Library</a> to add support for async/await automatically from the existing synchronous code, all of this done by using Roslyn.</p>
+<p>If you have an existing code base that works beautifully in a synchronous manner, but you would like also to provide a path for async/await patterns, you don't want to rewrite your entire code base to the async/await pattern, or to drop synchronous code for async/await only. It would either be a huge burden to maintain two code paths doing almost the same thing, or the use async/await only would actually perform significantly worse than the synchronous version, even if you are using the recently introduced <code>ValueTask&lt;T&gt;</code></p>
+<p>For Scriban, I wanted to have all this async/await version of the library entirely generated, so that whenever I update the synchronous code, I can automatically generate the async/await version. While implementing this, I found an old GitHub issue on Roslyn <a href="https://github.com/dotnet/roslyn/issues/12931"><em>&quot;Automatically create non-async methods from async methods&quot;</em></a> and that it was also experimented on the project <a href="https://github.com/npgsql/npgsql">npgsql</a> via <a href="https://github.com/roji/AsyncRewriter">AsyncRewriter</a> done by Shay Rojansky (Hey Shay!). The method used by AsyncRewriter was a bit different from what I was looking for, specifically that I didn't want to modify my existing code with attributes but let the codegen find the relevant methods transitively with just a few bootstrap hints.</p>
+<p>It's an interesting challenge and can be a very common point of library design issue (Should I maintain async/await only, or have both? How can I maintain them?), so let's see how that was done.</p>
+<h2 id="identifying-asyncawait-methods">Identifying async/await methods</h2>
+<p>The first step was to identify in the existing codebase where async/await can be actually used. There are mainly two end usages:</p>
+<ul>
+<li>The interface <code>IScriptOutput</code> is a tiny abstraction used by the engine to write a string to an output, that can be implemented by a StreamWriter, or a StringBuilder, or whatever. This interface has mainly a method <code>Write(string text, int offset, int count)</code></li>
+<li>The interface <code>IScriptCustomFunction</code> providing user custom functions/delegates that can be used within the template scripts. This interface has mainly a method <code>object Invoke(TemplateContext context, ScriptNode callerContext, ScriptArray arguments, ScriptBlockStatement blockStatement);</code></li>
+</ul>
+<p>Because the code was also using some virtual/abstract methods for the model of the syntax tree, I had to help finding the methods by telling that I also wanted to compile all the method inheriting from <code>ScriptNode.Evaluate</code></p>
+<p>This first selection of methods was very easy to express with Roslyn:</p>
+<pre><code class="language-csharp">var workspace = MSBuildWorkspace.Create();
+
+var solution = await workspace.OpenSolutionAsync(@&quot;..\..\..\..\scriban.sln&quot;);
+var project = solution.Projects.First(p =&gt; Path.GetFileName(p.FilePath) == &quot;Scriban.csproj&quot;);
+var compilation = await project.GetCompilationAsync();
+var models = compilation.SyntaxTrees.Select(tree =&gt; compilation.GetSemanticModel(tree)).ToList();
+
+var methods = new Stack&lt;IMethodSymbol&gt;();
+var visited = new HashSet&lt;IMethodSymbol&gt;();
+
+// ----------------------------------------------------------------------------------
+// 1) Collect origin methods from IScriptOutput.Write and all ScriptNode.Evaluate methods
+// ----------------------------------------------------------------------------------
+foreach (var model in models)
+{
+    foreach (var methodDeclaration in model.SyntaxTree.GetRoot().DescendantNodes().OfType&lt;MethodDeclarationSyntax&gt;())
+    {
+        if (methodDeclaration.Parent is InterfaceDeclarationSyntax)
+        {
+            var interfaceDecl = (InterfaceDeclarationSyntax) methodDeclaration.Parent;
+
+            var interfaceType = model.GetDeclaredSymbol(interfaceDecl);
+            if (interfaceType != null &amp;&amp; interfaceType.ContainingNamespace.Name == &quot;Runtime&quot; &amp;&amp; (interfaceType.Name == &quot;IScriptOutput&quot; || interfaceType.Name == &quot;IScriptCustomFunction&quot;))
+            {
+                var method = model.GetDeclaredSymbol(methodDeclaration);
+                if (visited.Add(method))
+                {
+                    methods.Push(method);
+                }
+            }
+        }
+        else
+        {
+            var methodModel = model.GetDeclaredSymbol(methodDeclaration);
+            if (!methodModel.IsStatic &amp;&amp; methodModel.Name == &quot;Evaluate&quot; &amp;&amp; methodModel.Parameters.Length == 1 &amp;&amp; methodModel.Parameters[0].Type.Name == &quot;TemplateContext&quot; &amp;&amp; InheritFrom(methodModel.ReceiverType, &quot;Syntax&quot;, &quot;ScriptNode&quot;))
+            {
+                while (methodModel != null)
+                {
+                    if (visited.Add(methodModel))
+                    {
+                        methods.Push(methodModel);
+                    }
+                    methodModel = methodModel.OverriddenMethod;
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<h2 id="building-a-graph-of-method-calls">Building a graph of method calls</h2>
+<p>Once we have this first set of mandatory async/await methods, we want to go through all their usages, and tag transitively all methods being &quot;infected&quot; by these async/await methods.</p>
+<p>In our case, we are navigating through these methods using the <code>SymbolFinder.FindCallersAsync</code>. I originally tried to use the Syntax Tree but I as actually having a problem storing these in a hashmap, asking this on stackoverflow <a href="https://stackoverflow.com/q/53866637/1356325"><em>&quot;How to collect all MethodDeclarationSyntax transitively with Roslyn?&quot;</em></a> and it turns out that I could work entirely with <code>IMethodSymbol</code> (the semantic model) instead of bouncing between the syntax tree and semantic model (Thanks Marius for the tip!)</p>
+<pre><code class="language-csharp">// ----------------------------------------------------------------------------------
+// 2) Collect method graph calls
+// ----------------------------------------------------------------------------------
+var methodGraph = new Dictionary&lt;IMethodSymbol, HashSet&lt;ITypeSymbol&gt;&gt;();
+var classGraph = new Dictionary&lt;ITypeSymbol, ClassToTransform&gt;();
+
+visited.Clear();
+while (methods.Count &gt; 0)
+{
+    var method = methods.Pop();
+    if (!visited.Add(method))
+    {
+        continue;
+    }
+
+    HashSet&lt;ITypeSymbol&gt; callerTypes;
+    if (!methodGraph.TryGetValue(method, out callerTypes))
+    {
+        callerTypes = new HashSet&lt;ITypeSymbol&gt;();
+        methodGraph.Add(method, callerTypes);
+    }
+
+    var finds = await SymbolFinder.FindCallersAsync(method, solution);
+    foreach (var referencer in finds.Where(f =&gt; f.IsDirect))
+    {
+        var callingMethodSymbol = (IMethodSymbol)referencer.CallingSymbol;
+        methods.Push(callingMethodSymbol);
+
+        // Push the method overriden
+        var methodOverride = callingMethodSymbol;
+        while (methodOverride != null &amp;&amp; methodOverride.IsOverride &amp;&amp; methodOverride.OverriddenMethod != null)
+        {
+            methods.Push(methodOverride.OverriddenMethod);
+            methodOverride = methodOverride.OverriddenMethod;
+        }
+
+        if (callingMethodSymbol.MethodKind == MethodKind.StaticConstructor)
+        {
+            continue;
+        }
+
+        var callingSyntax = referencer.CallingSymbol.DeclaringSyntaxReferences[0].GetSyntax();
+        var callingMethod = (MethodDeclarationSyntax)callingSyntax;
+        
+
+        foreach (var invokeLocation in referencer.Locations)
+        {
+            var invoke = callingMethod.FindNode(invokeLocation.SourceSpan);
+            while (invoke != null &amp;&amp; !(invoke is InvocationExpressionSyntax))
+            {
+                invoke = invoke.Parent;
+            }
+            Debug.Assert(invoke is InvocationExpressionSyntax);
+
+            var declaredSymbol = callingMethodSymbol.ReceiverType;
+
+            if (declaredSymbol.Name != &quot;TemplateRewriterContext&quot; &amp;&amp; callingMethodSymbol.Parameters.All(x =&gt; x.Type.Name != &quot;TemplateRewriterContext&quot; &amp;&amp; x.Type.Name != &quot;TemplateRewriterOptions&quot;)
+                &amp;&amp; (declaredSymbol.BaseType.Name != &quot;DynamicCustomFunction&quot; || declaredSymbol.Name == &quot;GenericFunctionWrapper&quot;))
+            {
+                ClassToTransform classToTransform;
+                if (!classGraph.TryGetValue(callingMethodSymbol.ReceiverType, out classToTransform))
+                {
+                    classToTransform = new ClassToTransform(callingMethodSymbol.ReceiverType);
+                    classGraph.Add(callingMethodSymbol.ReceiverType, classToTransform);
+                    callerTypes.Add(callingMethodSymbol.ReceiverType);
+                }
+
+                // Find an existing method to transform
+                var methodToTransform = classToTransform.MethodCalls.FirstOrDefault(x =&gt; x.MethodSymbol.Equals(callingMethodSymbol));
+                if (methodToTransform == null)
+                {
+                    methodToTransform = new MethodCallToTransform(callingMethodSymbol, callingMethod);
+                    classToTransform.MethodCalls.Add(methodToTransform);
+                }
+
+                // Add a call site
+                methodToTransform.CallSites.Add((InvocationExpressionSyntax)invoke);
+            }
+        }
+    }
+}
+</code></pre>
+<p>Here, we are just building a list of <code>ClassToTransform</code> with each class to transform having a list of <code>MethodCallToTransform</code> and then each having a list of call sites <code>InvocationExpressionSyntax</code> to change (that we would require to transform from sync to await calls)</p>
+<h2 id="transforming-the-code">Transforming the code</h2>
+<p>Once we have our graph, we just need to iterate through the syntax tree, duplicate it and modify the methods:</p>
+<ul>
+<li><p>Change the signature of the method from <code>XXX(...)</code> to <code>XXXAsync(...)</code></p>
+<pre><code class="language-csharp">// Rename method with `Async` postfix
+method = method.WithIdentifier(Identifier(method.Identifier.Text + &quot;Async&quot;));
+</code></pre>
+</li>
+<li><p>Add the keyword <code>async</code> to these methods:</p>
+<pre><code class="language-csharp">// Add async keyword to the method
+method = method.WithModifiers(method.Modifiers.Add(Token(SyntaxKind.AsyncKeyword).WithTrailingTrivia(Space)));
+</code></pre>
+</li>
+<li><p>Change the return type from <code>void</code> to <code>Task</code> or from <code>MyTypeXXX</code> to <code>Task&lt;MyTypeXXX&gt;</code></p>
+<pre><code class="language-csharp">TypeSyntax asyncReturnType;
+if (methodModel.ReturnsVoid)
+{
+    asyncReturnType = IdentifierName(&quot;ValueTask&quot;).WithTrailingTrivia(Space);
+}
+else
+{
+    var trailingTrivia = method.ReturnType.GetTrailingTrivia();
+
+    asyncReturnType = GenericName(
+            Identifier(&quot;ValueTask&quot;))
+        .WithTypeArgumentList(
+            TypeArgumentList(
+                SingletonSeparatedList(method.ReturnType.WithoutTrailingTrivia()))).WithTrailingTrivia(trailingTrivia);
+}
+
+method = method.WithReturnType(asyncReturnType);
+</code></pre>
+</li>
+<li><p>Update classes being modified to add the keyword partial and save the changes at the end (note that I didn't handle nested classes):</p>
+<pre><code class="language-csharp">if (typeDecl.Modifiers.All(x =&gt; x.Text != &quot;partial&quot;))
+{
+    var rootSyntax = typeDecl.SyntaxTree.GetRoot();
+    var originalDoc = solution.GetDocument(rootSyntax.SyntaxTree);
+
+    var previousDecl = typeDecl;
+    typeDecl = typeDecl.WithModifiers(typeDecl.Modifiers.Add(Token(SyntaxKind.PartialKeyword).WithTrailingTrivia(Space)));
+
+    rootSyntax = rootSyntax.ReplaceNode(previousDecl, typeDecl);
+
+    originalDoc = originalDoc.WithSyntaxRoot(rootSyntax);
+    solution = originalDoc.Project.Solution;
+}
+</code></pre>
+</li>
+<li><p>Update all call sites replacing synchronous code with <code>await</code> expressions with the proper usage of ConfigureAwait (I'm not including all the cases but it mostly boils down to the following):</p>
+<pre><code class="language-csharp">method = method.ReplaceNodes(callingMethod.CallSites, (callSite, r) =&gt;
+{
+    // We have other cases in the transform (`MemberBindingExpressionSyntax`, `IdentifierNameSyntax`...)
+    var m = (MemberAccessExpressionSyntax)newCallSite.Expression;
+    var newExpression = m.WithName(IdentifierName(m.Name.ToString() + &quot;Async&quot;));
+    newCallSite = newCallSite.WithExpression(newExpression);
+
+    var awaitCall = AwaitExpression(InvocationExpression(
+                MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    newCallSite,
+                    IdentifierName(&quot;ConfigureAwait&quot;)))
+            .WithArgumentList(
+                ArgumentList(
+                    SingletonSeparatedList&lt;ArgumentSyntax&gt;(
+                        Argument(
+                            LiteralExpression(
+                                SyntaxKind.FalseLiteralExpression))))))
+        .WithAwaitKeyword(Token(leadingTrivia, SyntaxKind.AwaitKeyword, TriviaList(Space)));
+    return awaitCall;
+});
+</code></pre>
+</li>
+<li><p>A specific case for <code>IScriptOutput.WriteAsync</code> to accept a last parameter <code>CancellationToken</code> and to flow this argument from (<code>TemplateContext.CancellationToken</code>) to this method. I was surprised when updating the code that <code>TextWriter</code> doesn't expose actually async methods with <code>CancellationToken</code> to later find that there is an issue on corefx <a href="https://github.com/dotnet/corefx/issues/17670"><em>&quot;Add CancellationToken to StreamReader.Read* methods&quot;</em></a></p>
+</li>
+</ul>
+<p>An example of the code generated is like this:</p>
+<pre><code class="language-csharp">    public partial class ScriptReturnStatement
+    {
+        public override async ValueTask&lt;object&gt; EvaluateAsync(TemplateContext context)
+        {
+            context.FlowState = ScriptFlowState.Return;
+            return await context.EvaluateAsync(Expression).ConfigureAwait(false);
+        }
+    }
+</code></pre>
+<p>while the original method was like this:</p>
+<pre><code class="language-csharp">        public override object Evaluate(TemplateContext context)
+        {
+            context.FlowState = ScriptFlowState.Return;
+            return context.Evaluate(Expression);
+        }
+</code></pre>
+<p>All the generated code is saved to a file <a href="https://github.com/lunet-io/scriban/blob/master/src/Scriban/ScribanAsync.generated.cs">ScribanAsync.generated.cs</a> and as you can see, it is in the end significant amount of code!</p>
+<h2 id="performance-with-valuetaskt">Performance with ValueTask&lt;T&gt;</h2>
+<p>I started the codegen using <code>Task&lt;T&gt;</code> but running a benchmark with the synchronized version, to was unsurprisingly generating a huge amount of allocations. I switched easily the codegen to use <code>ValueTask&lt;T&gt;</code> and I was able to divide by 5 the amount of allocations.</p>
+<p>For a library like Scriban that is mostly synchronous, it makes a lot more sense to use <code>ValueTask&lt;T&gt;</code></p>
+<p>Compared to the synchronous code, the <code>async</code>/<code>await</code> version is <strong>still 3x slower</strong>, but considering that it is not necessarily the common usage of Scriban, and that I can keep around the same good old synchronous code, I'm fine with the results (benchmark done with love with BenchmarkDotNet, as always!)</p>
+<pre><code>       Method |     Mean |     Error |    StdDev | Gen 0/1k Op | Gen 1/1k Op | Gen 2/1k Op | Allocated Memory/Op |
+------------- |---------:|----------:|----------:|------------:|------------:|------------:|--------------------:|
+      Scriban | 1.458 ms | 0.0037 ms | 0.0033 ms |     83.9844 |     17.5781 |     17.5781 |           370.53 KB |
+ ScribanAsync | 5.067 ms | 0.0618 ms | 0.0516 ms |    132.8125 |           - |           - |            645.5 KB |
+</code></pre>
+<h2 id="next">Next?</h2>
+<p>I can say that I was really surprised and happy with the results of this work. Bringing async/await to an existing library without having to manually duplicate the code is a huge time/bug/maintenance saver.</p>
+<p>Having Roslyn is also what made this experiment possible, and this is just amazing. Though, I must say that the immutable nature of the Roslyn API is quite laborious to work with. I made several mistakes when forgetting to reuse a tree I just modified or incorrectly mixing an old and new tree. But that was really fine, the final code of the codegen being just a few hundred lines of code for generating roughly 1600 lines of code, it was worth to do it and of course, a lot more future proof in case I have to update the async/await code.</p>
+<p>I was also surprised to not find many resources related to this particular subject, while I found it quite common, so I'm glad to share it here!</p>
+<p>Happy coding!</p>
+
+    </div>
+  </article>
+
+<div id="gh-comments" data-ghcommentid=4>
+  <h2>Comments</h2>
+  <div id="gh-comments-list" ></div>
+  <a href="javascript:void(0)" id="gh-load-comments" class="btn" style="display:none">Load more comments</a>
+</div>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2016 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  
+  </body>
+</html>
+

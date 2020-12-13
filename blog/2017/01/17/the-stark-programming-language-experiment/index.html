@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.0.0">
+    <title>The Stark Programming Language Experiment | xoofx</title>
+    <link rel="stylesheet" href="/css/tocbot.css">
+    <link rel="stylesheet" href="/css/prism.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/jquery.min.js" type="text/javascript" defer></script>
+    <script src="/js/popper.min.js" type="text/javascript" defer></script>
+    <script src="/js/anchor.min.js" type="text/javascript" defer></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript" defer></script>
+    <script src="/js/tocbot.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism.js" type="text/javascript" defer></script>
+    <script src="/js/prism-shell-session.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-clike.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-c.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-cpp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-csharp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-stark.js" type="text/javascript" defer></script>
+    <script src="/js/github-comments.js" type="text/javascript" defer></script>
+    <script src="/js/xoofx.js" type="text/javascript" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="The Stark Programming Language Experiment | xoofx">
+    <meta name="twitter:description" content=" In the past years, while using intensively C# for developing game engines and various libraries, I have been struggling with many limitations of the language and runtime and tried to mitigate these by using whatever unsafe/IL/native code could help, but of course, there are many things you can't just solve with basic workarounds... A few years ago, when I first read the paper Uniqueness and Reference Immutability for Safe...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="The Stark Programming Language Experiment | xoofx">    
+  </head>
+  <body>
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <span class="title">
+		  <h1 class="title" itemprop="name"><a href="/blog/2017/01/17/the-stark-programming-language-experiment/" itemprop="url">The Stark Programming Language Experiment</a></h1>
+		
+    </span>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="17 Jan 2017" itemprop="datePublished">January 17, 2017</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/stark/">Stark</a>, <a href="/blog/tag/compiler/">Compiler</a>, <a href="/blog/tag/llvm/">LLVM</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.Net</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2017/2017-01-17-the-stark-programming-language-experiment.md">edit</a>
+    </div>
+      <img src="/images/stark.png" style="width:150px; height: 150px; float: right;"/>
+<p>In the past years, while using intensively C# for developing game engines and various libraries, I have been struggling with many limitations of the language and runtime and tried to mitigate these by using whatever unsafe/IL/native code could help, but of course, there are many things you can't just solve with basic workarounds...</p>
+<p>A few years ago, when I first read the paper <a href="http://joeduffyblog.com/2012/10/28/uniqueness-and-reference-immutability-for-safe-parallelism/">Uniqueness and Reference Immutability for Safe Parallelism</a> and later the blog post of Joe Duffy about <a href="http://joeduffyblog.com/2013/12/27/csharp-for-systems-programming/">C# for System Programming</a> While I tried to contact him with my colleague to give our hands/help to make it possible to release it... we didn't get a response :) but I was really excited about it and immediately started to sketch a few ideas about what this language could be. My original sketches didn't go far: I wrote mainly a parser prototype with an ANTLR parser, digged a bit into the memory models (things like <a href="http://www.academia.edu/3300138/A_Region_Memory_Subsystem_for_SSCLI">Region based Memory SubSystem for SSCLI</a>), Rust was already under heavy development so it was interesting to watch this language evolving...incidentally, at that time, they announced to <a href="http://pcwalton.github.io/blog/2013/06/02/removing-garbage-collection-from-the-rust-language/">remove GC from Rust</a>. I wrote a <a href="https://github.com/xoofx/gcix">prototype of an Immix Garbage Collector</a> in C++, so in the end, nothing finished, nothing fancy... but I kept this strong taste of excitement of trying to build a new language and runtime that better fits my needs...</p>
+<p>In the meantime of my quest to improve things there, I played with some language and runtime experiments in C# with <a href="http://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/">struct inheritance</a> or <a href="http://xoofx.com/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr/">stack allocation for  reference types</a>... Of course, developing a new language and runtime is a huge daunting task, but it is even harder to try to evolve an existing language, runtime and ecosystem: I remember I asked at a MVP summit one or two years ago if C#/.NET could evolve significantly without introducing breaking changes... but legacy is legacy, at some point you can't really overcome the structural foundations of it that was built many years ago in the early footsteps of Java...</p>
+<p>So back to the ring, instead of going full submarine on this, I would like instead to re-start this journey as a big tutorial series on building a &quot;modern&quot; language and runtime from scratch... From the language specs, parser&amp;compiler, intermediate bytecode representation, LLVM backend compilation... I will try to implement a prototype of this new language and post the dirty details of the process as a blog post series. It is going to be certainly impossible, but let's just dream, it doesn't hurt and I will most likely learn many things while trying it... and hopefully, you will enjoy it...</p>
+<p>Let's call this language design experiment <strong>Stark</strong>, a name I used for my previous prototype, pun intended, with a bit of geeky reference and the intended point to get something &quot;bare&quot; or &quot;simple&quot; yet powerful...</p>
+<h1 id="why">Why?</h1>
+<p>&quot;Why not using XXX language instead?&quot;... the whole purpose of this experiment is to feel into my body-brain the pain and the joy of designing and developing a language and runtime... so you can't really replace this adventure by anything else...</p>
+<p>Even though I have been following a bit a language like Rust, I haven't been satisfied by the syntax or the cumbersome constraint of using the memory ownership system coupled with lifetime...</p>
+<p>Also, I don't have the pretention to bring anything massively new into this experiment... so be indulgent, this is going to be a playground journey, influenced by the few languages I have used or seen in my life... a subtile patchwork of things already done elsewhere! Among others, I will try to bring many ideas that the Midori team implemented in there language, relying largely on the fantastic blog post series of Joe Duffy.</p>
+<h1 id="stark-a-language-overview-at-10000-feet">Stark, a Language Overview at 10,000 feet</h1>
+<p>Let's try to draw a dream wish list with an emphasis balance between performance and productivity. It doesn't mean that this whole tutorial series will cover all of them!</p>
+<h2 id="about-the-language">About the language</h2>
+<ul>
+<li><p>Syntax familiar to a C# developer, with some cosmetic changes:</p>
+<ul>
+<li><p>make primitives more coherent (<code>int32</code>, <code>uint32</code>, <code>int16</code>, <code>uint16</code> ...etc.)</p>
+</li>
+<li><p>No mandatory need for most of trailing <code>;</code></p>
+</li>
+<li><p>Without parenthesis in <code>if</code>, <code>while</code>... etc.</p>
+<pre><code class="language-csharp">// Variable are immutable by default
+int32 x = 5
+// Similar to var in C# (but immutable)
+let y = 6
+// Specify mutable before the variable name
+let mutable z = 7
+// Remove ( )
+if x &gt;= 5
+{
+    z++
+}
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p><code>class</code> (reference type) and <code>struct</code> (value type)</p>
+<pre><code class="language-csharp">// Always contains a vtable and a memory management flags, by default not heritable
+// Use of virtual to allow inheritance
+virtual class SimpleObjectBase { }
+
+// sealed class by default
+class SimpleObject : SimpleObjectBase { }
+
+// Simple struct (no vtable)
+struct Vector2(float32 x, float32 y)
+
+</code></pre>
+</li>
+<li><p><code>trait</code> instead of interfaces (trait type) to allow a better extensibility story via <code>extends</code></p>
+<pre><code class="language-csharp">// Example of Iterator
+// Inspired by Jared Parson blog post &quot;Rethinking IEnumerable: http://blog.paranoidcoding.com/2014/08/19/rethinking-enumerable.html
+trait Iterator&lt;T, TState&gt; 
+{
+    TState iteratorStart { get }
+    T? tryGetNext(ref TState state)
+}
+
+// Provides an iterator for all classes implementing IList&lt;T&gt;
+extends IList&lt;T&gt; with Iterator&lt;T, uintz&gt;
+{
+    uintz iteratorStart =&gt; 0
+
+    T? tryGetNext(ref uintz index) =&gt; if index &lt; length some(this[index]) else none
+}
+
+// Allow to use a trait directly by inheritance
+class MyClassWithIterator&lt;T&gt; : Iterator&lt;T, int32&gt;
+{
+
+}
+</code></pre>
+</li>
+<li><p>builtin syntax for <code>tuple</code> (valuetypes) with deconstructors</p>
+<pre><code class="language-csharp">let a = (1, &quot;value&quot;)
+let x = a.0  // get 1
+let str = a.1 // get &quot;value&quot;
+let (y, str2) = a // deconstruct tuple into variables
+</code></pre>
+</li>
+<li><p><code>enum sum-type</code>/discriminated unions with the cool pattern matching</p>
+<pre><code class="language-csharp">// The type behind T?
+enum Option&lt;T&gt;
+{
+    none,
+    some(T)
+}
+</code></pre>
+</li>
+<li><p>Try to fix The Billion Dollar Mistake by having a <code>null</code> safe language</p>
+<pre><code class="language-csharp">process(string name, string? valueMayBe)
+{
+    // name is not null
+    // valueMayBe may not have a value
+    if let val ?= valueMayBe
+    {
+        list.add(name, val)
+    }
+    else
+    {
+        // ...
+    }
+}
+</code></pre>
+</li>
+<li><p>modules/namespaces, global functions, export type aliases</p>
+<pre><code class="language-csharp">// By default, namespace will be deduced from folder hierarchy
+// So most files in a project won't have to declare any namespaces
+namespace myNamespace::mySubNamespace
+{
+    public let x = 5
+
+    public int32 increment(int32 val) =&gt; val++
+}
+</code></pre>
+</li>
+<li><p>builtin <code>contracts</code>: for pre and post conditions via <code>requires</code> and <code>ensures</code></p>
+<pre><code class="language-csharp">public virtual class List&lt;T&gt;
+{
+    unsafe T[] array;  // unsafe because the array cannot be initialized with non null values
+
+    public uintz length { get }
+
+    // requires that index &lt; length, it is used for:
+    // - compiler optimizations
+    // - compiler errors
+    // - runtime fatal error
+    public T this[uintz index] requires index &lt; length 
+    {
+        get readonly 
+        {
+            unsafe { 
+                return array[index]
+            }
+        }
+        set
+        {
+            unsafe {
+              array[index] = value
+            }
+        }
+    }
+}
+</code></pre>
+</li>
+<li><p>Better <strong>control on memory</strong> and <strong>locality</strong>: allow class on the stack via <code>fixed</code> but also inline members in a class or struct. These variables can only be passed via <code>transient</code> locals/parameters. The default would be that the <code>new</code> keyword is only used when allocating on the heap (either GC managed or not)... otherwise it will be a normal constructor call (e.g <code>let x = Vector2(1, 2)</code> ). There will be also a single ownership allocation that will allow allocate on the heap but without having the GC to track these references (would be tracked by single ownership and destruction on last owner disposed)</p>
+<pre><code class="language-csharp">// struct allocated on the stack 
+// or static global if declared at a namespace level
+let vec2 = Vector2(1, 2) 
+
+// struct allocated on the heap
+let vec2 = new Vector2(1, 2) 
+// new T of a struct return a new instance of class Box&lt;T&gt;
+Box&lt;Vector2&gt; vec2 = new Vector2(1, 2)
+
+// Creates a list object on the stack (the array behind is still on the heap)
+let list = List&lt;int32&gt;() {1, 2, 3, 4}
+// Allocate on the heap
+let list2 = new List&lt;int32&gt;() {1, 2, 3, 4}
+
+// Allocate array on the stack
+let array = int32[] {1, 2, 3, 4}
+fixed int32[] array = int32[] {1, 2, 3, 4}
+
+// Call a function with this stack allocated array
+processArray(array)
+
+public processArray(transient int32[] array)
+{
+    // ...
+}
+</code></pre>
+</li>
+<li><p><strong>UTF8 string</strong>, so a char is a unicode (int), declared as immutable</p>
+<pre><code class="language-csharp">// static string literal (not creating any GC object)
+let mystr = &quot;mystring&quot; 
+
+mystr[1] // compilation error, no indexers
+
+// string allocated on the stack
+let mystr2 = string(&quot;string stack&quot;)
+// Declaration equivalent to:
+fixed string mystr2 = string(&quot;string stack&quot;)
+
+// string allocated on the heap
+let mystr3 = new string(&quot;string heap&quot;)
+</code></pre>
+</li>
+<li><p>support for slice over array/native memory (syntax yet to be defined)</p>
+</li>
+<li><p><strong>custom operators</strong></p>
+<pre><code class="language-csharp">// Equivalent to the pipe forward operator
+public TResult operator&lt;T,TResult&gt;(T v &quot;|&gt;&quot; function TResult f(T)) =&gt; f(v)
+</code></pre>
+</li>
+<li><p><strong>generics with <a href="https://en.wikipedia.org/wiki/Kind_(type_theory)">higher kind types</a></strong> and template parameters (so yes, more templates than generics actually)</p>
+<pre><code class="language-csharp">trait Functor&lt;F&lt;_&gt;&gt; // _ means any type
+{
+    F&lt;B&gt; map&lt;A, B&gt;(F&lt;A&gt; fa, function B f(A))
+}
+
+// integer passed to templates
+class List&lt;T, int32 defaultSize&gt;
+{
+
+}
+
+let list = new List&lt;int32, 16&gt;()
+</code></pre>
+</li>
+<li><p><strong>permissions</strong> on type/methods/generics: <code>immutable</code>, <code>mutable</code>, <code>readonly</code></p>
+</li>
+<li><p><strong>concurrency</strong>/controlled side effects: <code>isolated</code>, no static mutable allowed, pure constructors (no storing of this). Basically what has been done by Midori team. Check the blog post <a href="http://joeduffyblog.com/2016/11/30/15-years-of-concurrency/">15 years of concurrency</a></p>
+</li>
+<li><p>No more built-in <code>lock</code> but usage of synchronization primitives (because they monopolize valuable bits for the memory flags attached to a reference type)</p>
+</li>
+<li><p>&quot;Modern&quot; <strong>error model</strong>: panic/fatal for programmer errors, checked exceptions for other cases with <code>throws</code> and <code>try</code> semantic (note that implementation details doesn't mean real exceptions)</p>
+</li>
+<li><p>Support for easy lambda/closure function declaration (delegates in C#), allocated on the stack by default (without a <code>new</code> keyword)</p>
+<pre><code class="language-csharp">// Note that the function is marked as transient (cannot be stored)
+public void process(uintz count, transient function callback(string text))
+{
+    for i in 0..&lt;count
+    {
+        callback(&quot;HelloWorld from function&quot;)
+    }
+}
+
+// Call process with our callback (allocated on the stack)
+process(10, text =&gt; println(text))
+
+// Or allocated on the heap if it was necessary (not transient)
+process(10, new text =&gt; println(text))
+</code></pre>
+</li>
+<li><p><code>defer</code>: allow to defer code execution at the end of a scoped (TBD, still need to figure out the syntax, RAI struct or not...etc.)</p>
+</li>
+<li><p><code>async</code>/<code>await</code> (with any types as async result), similar to the way C# implements it</p>
+</li>
+<li><p><code>macros</code> as compiler extensions, similar to what Rust has been providing</p>
+</li>
+<li><p><code>annotations</code> on types/members, but also on code IR. <strong>conditionnal compilation/config features</strong> (to disable part of some code/types...etc.) ala Rust</p>
+<pre><code class="language-csharp">## noinline
+public int32 increment(int32 val) =&gt; val++
+</code></pre>
+</li>
+<li><p><code>partial</code> types/methods</p>
+</li>
+<li><p><code>unsafe</code>/pointers code only in unsafe region allowed only by a compiler switch</p>
+</li>
+<li><p><strong>Easy native interop</strong> (ala <code>DllImport</code>), also allow to link with static libs</p>
+</li>
+<li><p><strong>Minimalist RTTI</strong> only used for checking inheritance/type but no <code>System.Reflection</code>, no string <code>Type.Name</code>...etc. Prefer using code generation (e.g for property updater/binder, serialization...etc.)</p>
+</li>
+<li><p>Compiler will generate xplat IR modules (and native single exe or module DLLs if AOT is used)</p>
+</li>
+<li><p>Supports for SIMD types</p>
+</li>
+</ul>
+<h2 id="about-the-runtime">About the runtime</h2>
+<ul>
+<li><p><strong>Designed primarily for AOT</strong>, may allow JIT for fast iteration</p>
+</li>
+<li><p>Use <strong>LLVM for the compiler backend</strong> infrastructure</p>
+</li>
+<li><p>While many objects will be instantiated on the stack or on static immutable section in the shared library, standard <strong>Reference type will be using a Garbage Collector</strong> but that doesn't mean that it will be necessarily a tracing GC, but we could still use at the beginning a conservative bohem GC first, CoreCLR GC/conservative after, immix/immix+rc later... once LLVM has statepoint fully working in scenarios supported by the languages (similar constraints than CoreRT with stack maps, value types...etc.)</p>
+</li>
+<li><p>The whole <strong>runtime should be implemented in the language itself</strong>: No C/C++ runtime (apart for calling existing kernel functions or well established native libraries)</p>
+</li>
+<li><p><strong>trait types will be handled as a double pointers</strong> (trait implem vtable + this)</p>
+</li>
+<li><p>immutable static data instances loaded directly from readonly sections (no runtime init cost)</p>
+<pre><code class="language-csharp">// implictly immutable global static variable
+// allocated directly into a readonly section  
+immutable let globalList = List&lt;int32&gt;() { 1, 2, 3, 4}
+</code></pre>
+</li>
+</ul>
+<h1 id="next">Next?</h1>
+<p>This is a glimpse of the gigantic work that I would love to be able to bring (note the conditionnal all around), but more presumably, will at least try to implement some of the challenging bits... maybe enthusiastic folks will be interested in helping this project.</p>
+<p>In the next blog posts, I will try to code the early part of this project that will be available on github <a href="https://github.com/stark-lang/stark">https://github.com/stark-lang/stark</a></p>
+<p>For the ease of development, most of the code will be developed in C#.</p>
+<p>I plan to iterate first over a small but functional HelloWorld prototype working on a subset of the grammar and the features described above, while still trying to get everything working and connected from the parser, compiler, IR format and the LLVM back-end compiler to generate effectively a final <code>exe</code></p>
+<p>You can prepare your popcorns, lots of suspense and tears ahead!</p>
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2016 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  
+  </body>
+</html>
+

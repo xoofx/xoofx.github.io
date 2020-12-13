@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.0.0">
+    <title>Micro-benchmarking .NET Native and RyuJit | xoofx</title>
+    <link rel="stylesheet" href="/css/tocbot.css">
+    <link rel="stylesheet" href="/css/prism.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/jquery.min.js" type="text/javascript" defer></script>
+    <script src="/js/popper.min.js" type="text/javascript" defer></script>
+    <script src="/js/anchor.min.js" type="text/javascript" defer></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript" defer></script>
+    <script src="/js/tocbot.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism.js" type="text/javascript" defer></script>
+    <script src="/js/prism-shell-session.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-clike.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-c.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-cpp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-csharp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-stark.js" type="text/javascript" defer></script>
+    <script src="/js/github-comments.js" type="text/javascript" defer></script>
+    <script src="/js/xoofx.js" type="text/javascript" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Micro-benchmarking .NET Native and RyuJit | xoofx">
+    <meta name="twitter:description" content="[Disclaimer] As both RyuJIT and .NET Native are improving a lot between their updates/previews, results of benchmarks in this post may no longer be relevant. Benchmarks were ran with the following versions:RyuJIT CTP4 .NET Native developer preview 2 While .NET JIT is performing quite well on Windows, it is still behind a fully optimized C++ program, though an efficient compiled program is not only about code generation but also memory...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Micro-benchmarking .NET Native and RyuJit | xoofx">    
+  </head>
+  <body>
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <span class="title">
+		  <h1 class="title" itemprop="name"><a href="/blog/2014/06/15/micro-benchmarking-net-native-and-ryujit/" itemprop="url">Micro-benchmarking .NET Native and RyuJit</a></h1>
+		
+    </span>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="15 Jun 2014" itemprop="datePublished">June 15, 2014</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.Net</a>, <a href="/blog/tag/benchmark/">benchmark</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2014/2014-06-15-micro-benchmarking-net-native-and-ryujit.html">edit</a>
+    </div>
+      
+
+<span style="font-size: small;">[Disclaimer] As both RyuJIT and&nbsp; .NET Native are improving a lot between their
+        updates/previews, results of benchmarks in this post may no longer be relevant. Benchmarks were ran with the
+        following versions:</span><br />
+<ul><li><span style="color: #cc0000; font-size: small;">RyuJIT CTP4&nbsp; </span></li>
+    <li><span style="color: #cc0000; font-size: small;">.NET Native developer preview 2</span><span
+            style="font-size: small;">&nbsp; </span></li>
+</ul><br />While .NET JIT is performing quite well on Windows, it is still behind a fully optimized C++ program, though
+an efficient compiled program is not only about code generation but also memory management and data locality, the .NET
+Team has recently introduced two new technologies that might help for the code gen part: The introduction of&nbsp; <a
+    href="http://blogs.msdn.com/b/dotnet/archive/tags/dotnetnative/" target="_blank">.NET Native</a>, an offline .NET
+compiler (similar to ngen, but using the backend optimizer that is used by the C++ compiler) and the next generation of
+.NET JIT called "<a href="http://blogs.msdn.com/b/dotnet/archive/tags/ryujit/" target="_blank">RyuJit</a>". In this post
+I would like to present the results of some micro-benchmarks that are roughly evaluating some performance benefits of
+these two new technologies.<br /><br />First of all, you may have already read about a few benchmarks results available
+around about RyuJit and .NET Native, here is a non-exhaustive list I have found (if you have more pointers, let me
+know!):<br />
+<ul>
+    <li><a href="http://frankniemeyer.blogspot.com/2014/04/a-first-look-at-ruyjit-ctp3-and-simd.html" target="_blank">A
+            first look at RyuJIT CTP3 and SIMD (SSE2) support for .NET</a> by Frank Niemeyer</li>
+    <li><a href="http://blogs.msdn.com/b/clrcodegeneration/archive/2014/02/26/lies-damn-lies-and-benchmarks.aspx"
+            target="_blank">Lies, damn lies and benchmarks</a> by Kevin Frei </li>
+    <li><a href="http://java.dzone.com/articles/net-native-performance-and" target="_blank">.NET Native Performance</a>
+        by Sasha Goldstein</li>
+</ul>
+<ul></ul><br /><a name='more'></a>
+<h3>The micro-benchmark protocol</h3><br />Micro-benchmarking is not the best way to give a measure of the overall
+benefits, but it can help to dig into some particular patterns. For this benchmark, I haven't developed a new one but
+instead built a "freak-benchmark" composed of some micro-benchmarks I found on Internet, mainly:<br />
+<ul>
+    <li>"<a href="http://www.codeproject.com/Articles/212856/Head-to-head-benchmark-Csharp-vs-NET"
+            target="_blank">Head-to-head benchmark: C++ vs .NET</a>" by Qwertie has a nice collection of
+        micro-benchmarks. So I decided to use it as a basis</li>
+    <li>"<a href="http://www.cs.ucsb.edu/~ckrintz/racelab/PhxCSBenchmarks/" target="_blank">A Collection of
+            Phoenix-Compatible C# Benchmarks</a>" I used the port of a subset of Java Grande benchmarks.&nbsp;</li>
+    <li>Two custom benchmarks measuring the cost of interop which is important in cases where you can possibly call lots
+        of native methods (which is the case when using SharpDX for example)</li>
+</ul>RyuJit is also coming with SIMD, but I will reserve a dedicated post to test this new feature.<br /><br />I don't
+claim that these micro-benchmarks are exhaustive nor they are all correctly implemented (some of the JavaGrande
+benchmark seems to be not robust), but as we are measuring relative performance, that should be fine. In the end we just
+want to know how much .NET Native or RyuJit can perform compare to the same program running on the legacy
+JIT.<br /><br />Also as both .NET Native and RyuJit are in development, we can't really draw any definitive
+conclusions.<br /><br />.NET Native is only available for Windows Store App while RyuJit is only available on x64, hence
+the platforms tested in this bench are:<br />
+<ul>
+    <li>.NET 32 Desktop</li>
+    <li>.NET 32 AppStore</li>
+    <li>.NET 32 AppStore Native</li>
+    <li>.NET 64 Desktop</li>
+    <li>.NET 64 AppStore</li>
+    <li>.NET 64 AppStore Native</li>
+    <li>.NET 64 Desktop RyuJit </li>
+</ul><br />.NET32/.NET64 using .NET Framework 4.5.1. The machine is an Intel(R) Core(TM) i7-4770 CPU @ 3.4GHz with 16Go
+of RAM.<br /><br />The source of these benchmarks is available on GitHub <a
+    href="https://github.com/xoofx/BenchNativeApp" target="_blank">BenchNativeApp</a>. <br />
+<h3>Comparison .NET32 (x86)</h3><br />Comparison between:<br />
+<ul>
+    <li>.NET 32 Desktop</li>
+    <li>.NET 32 AppStore</li>
+    <li>.NET 32 AppStore Native</li>
+</ul>Normalized with performance relative to desktop. Higher is better. (2.0 means that a test is 2 times faster than
+desktop). I checked the standard dev was in some reasonable range.<br />
+<ul>
+    <li>In <span style="color: #6aa84f;">green</span>, results above +10%</li>
+    <li>In <span style="color: #e06666;">red</span>, results below -10% </li>
+</ul>&nbsp; <br />
+<table border="1" cellpadding="0" cellspacing="0" style="width: 522px;">
+    <colgroup>
+        <col style="mso-width-alt: 10349; mso-width-source: userset; width: 212pt;" width="283">
+        <col style="mso-width-alt: 2486; mso-width-source: userset; width: 51pt;" width="68">
+        <col style="mso-width-alt: 2742; mso-width-source: userset; width: 56pt;" width="75">
+        <col style="mso-width-alt: 3510; mso-width-source: userset; width: 72pt;" width="96">
+    </colgroup>
+    <tbody>
+        <tr height="40" style="height: 30.0pt;">
+            <td class="xl65" height="40" style="height: 30.0pt; width: 212pt;" width="283">Name</td>
+            <td class="xl67" style="width: 51pt;" width="68">
+                <div style="text-align: center;">.NET 32 </div>(Desktop)
+            </td>
+            <td class="xl67" style="text-align: center; width: 56pt;" width="75">.NET 32 <br />(AppStore)</td>
+            <td class="xl67" style="text-align: center; width: 72pt;" width="96">.NET 32 Native <br />(AppStore)</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 1 Adding items<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.90</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.72</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 2 Running queries</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.96</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.81</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 3 Removing items<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.96</td>
+            <td class="xl66">0.92</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 0 Ints to strings</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.79</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.13</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 1 Adding/setting</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.91</td>
+            <td class="xl66">1.02</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 2 Running queries</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.83</td>
+            <td class="xl66">1.07</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 3 Removing items</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.85</td>
+            <td class="xl66">1.05</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 1 Adding items<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.89</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 2 Running queries</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.90</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 3 Removing items<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.77</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: FPL16<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.02</td>
+            <td class="xl66">0.97</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: uint<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.03</td>
+            <td class="xl66">0.97</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: ulong<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66">0.94</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.51</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: float<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.86</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: FPI8<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.23</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: FPL16<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.55</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: int<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.02</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.04<span style="background-color: #38761d;"></span></td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: long<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.83</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                3.34</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: FPI8<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.30</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66">0.93</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int via IMath<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.57</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int without generics<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.10</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">06-Simple parsing: 3 Parse (x1000000)<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">06-Simple parsing: 4 Sort (x1000000)<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.09</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Interface NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.71</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: No-inline NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.03</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Static NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                <span style="mso-spacerun: yes;">&nbsp;&nbsp; </span>no-op</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Virtual NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.11</td>
+            <td class="xl66">1.07</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <double>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></double>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.43</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <float>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></float>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.68</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <int>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></int>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.95</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.59</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: Array2D<double><span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></double>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.64</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: double[n*n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.78</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: double[n][n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66">1.04</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: int[n][n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.21</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">09-Sudoku<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.04</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">10-Polynomials<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.03</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">11-JGFArithBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                23.81</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">12-JGFAssignBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.80</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.20</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">13-JGFCastBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.27</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">14-JGFCreateBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.98</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.81</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">15-JGFFFTBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">16-JGFHeapSortBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+            <td class="xl66">1.01</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">17-JGFLoopBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.04</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">18-JGFRayTracerBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.98</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.88</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">19-float4x4 matrix mul, Managed Standard</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.63</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">20-float4x4 matrix mul, Managed unsafe<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66">0.96</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">21-float4x4 matrix mul, Interop Standard</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.23</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.42</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">22-float4x4 matrix mul, Interop SSE2<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.36</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.82</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">23-managed add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                7.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">24-managed no-inline add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.10</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">25-interop add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.21</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">26-interop indirect add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.26</td>
+        </tr>
+    </tbody>
+</table><br />
+<h4>Quick analysis</h4>We would probably expect a column full of green lights for the .NET Native, but this is
+unfortunately not the case! Some notes:<br />
+<ul>
+    <li>.NET Native is as efficient as a C++ compiler at coalescing arithmetic instructions (test 11, or 23). Basically
+        the test 23 is able to reduce the addition set of <code>x+=1, x+=2, x+=-3, x+=1, x+=2, x+=-3, x+=1</code> to a
+        single <code>x+= 1</code>, resulting in some impressive speedup. Coalescing of instructions is probably the
+        factor that is helping in most tests there.</li>
+    <li>Some float/double x87 calculations seems to perform badly with .NET Native. </li>
+    <li>Pure interop seems slightly more efficient, which is good whenever we are frequently calling native functions
+        (like when using SharpDX/Direct3D11). Note that indirect interop (wrapping a DllImport by another function) is
+        also faster which is great, as It was an issue with current interop that were not inlined by the JIT when they
+        are wrapped, resulting in lots of duplicate prologue/epilogue code for unmanaged/managed transitions (while when
+        it is correctly inlined, consecutive access to interop functions are handled in group when switching context
+        unmanaged/managed)</li>
+    <li>Some tests are 2x times slower with .NET Native, though I haven't look at the generated x86 code.</li>
+</ul>Overall it is still promising, we can see some significant boosts in some tests while some others are performing a
+bit worse.<br /><br />
+<h3>Comparison .NET64 (x64)</h3><br />Comparison between:<br />
+<ul>
+    <li>.NET 64 Desktop</li>
+    <li>.NET 64 AppStore</li>
+    <li>.NET 64 AppStore Native</li>
+    <li>.NET 64 Desktop RyuJit </li>
+</ul>Normalized with performance relative to desktop. Higher is better. (2.0 means that a test is 2 times faster than
+desktop)<br />
+<ul>
+    <li>In <span style="color: #6aa84f;">green</span>, results above +10%</li>
+    <li>In <span style="color: #e06666;">red</span>, results below -10% </li>
+</ul>&nbsp; <br />
+<table border="1" cellpadding="0" cellspacing="0" style="width: 610px;">
+    <colgroup>
+        <col style="mso-width-alt: 9984; mso-width-source: userset; width: 205pt;" width="273">
+        <col style="mso-width-alt: 2596; mso-width-source: userset; width: 53pt;" width="71">
+        <col style="mso-width-alt: 2742; mso-width-source: userset; width: 56pt;" width="75">
+        <col style="mso-width-alt: 3620; mso-width-source: userset; width: 74pt;" width="99">
+        <col style="mso-width-alt: 3364; mso-width-source: userset; width: 69pt;" width="92">
+    </colgroup>
+    <tbody>
+        <tr height="40" style="height: 30.0pt;">
+            <td class="xl65" height="40" style="height: 30.0pt; width: 205pt;" width="273">Name</td>
+            <td class="xl67" style="width: 53pt;" width="71">.NET 64<br /><span
+                    style="mso-spacerun: yes;">&nbsp;</span>(Desktop)</td>
+            <td class="xl67" style="width: 56pt;" width="75">.NET 64<br />(AppStore)</td>
+            <td class="xl67" style="width: 74pt;" width="99">.NET 64 Native<br />(AppStore)</td>
+            <td class="xl67" style="width: 69pt;" width="92">.NET 64 RyuJit<br />(Desktop)</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 1 Adding items<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.04</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.02</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 2 Running queries</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.91</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.95</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 3 Removing items<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.95</td>
+            <td class="xl66">0.95</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 0 Ints to strings</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.69</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.72</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 1 Adding/setting</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.85</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.84</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 2 Running queries</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.82</td>
+            <td class="xl66">0.90</td>
+            <td class="xl66">0.95</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 3 Removing items</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.81</td>
+            <td class="xl66">0.91</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 1 Adding items<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.98</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.10</td>
+            <td class="xl66">1.04</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 2 Running queries</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.02</td>
+            <td class="xl66">1.06</td>
+            <td class="xl66">0.97</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 3 Removing items<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66">1.02</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.16</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: FPL16<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.15</td>
+            <td class="xl66">1.03</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: uint<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.97</td>
+            <td class="xl66">0.94</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: ulong<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.15</td>
+            <td class="xl66">0.95</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                4.20</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.10</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: float<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.36</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: FPI8<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.91</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.42</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: FPL16<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.96</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.21</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                5.19</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: int<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.83</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.89</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: long<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.96</td>
+            <td class="xl66">0.93</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.34</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.33</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: FPI8<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.29</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.98</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.28</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int via IMath<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.65</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int without generics<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.70</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">06-Simple parsing: 3 Parse (x1000000)<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.50</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">06-Simple parsing: 4 Sort (x1000000)<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.95</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.30</td>
+            <td class="xl66">0.95</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Interface NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.69</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.85</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: No-inline NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.92</td>
+            <td class="xl66">0.96</td>
+            <td class="xl66">0.96</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Static NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                Not Applicable</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.20</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Virtual NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.92</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.74</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <double>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></double>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.14</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.17</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <float>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></float>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                5.01</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                4.95</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <int>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></int>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.34</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.16</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: Array2D<double><span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></double>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                3.83</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.75</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: double[n*n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: double[n][n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+            <td class="xl66">0.96</td>
+            <td class="xl66">0.98</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: int[n][n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.19</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.12</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">09-Sudoku<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.38</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.48</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">10-Polynomials<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.94</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">11-JGFArithBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.02</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.12</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">12-JGFAssignBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.02</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.53</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">13-JGFCastBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.39</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">14-JGFCreateBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.96</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.81</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">15-JGFFFTBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.16</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.18</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.16</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">16-JGFHeapSortBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">17-JGFLoopBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.08</td>
+            <td class="xl66">1.01</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">18-JGFRayTracerBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.87</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.13</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">19-float4x4 matrix mul, Managed Standard</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+            <td class="xl66">1.04</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.36</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">20-float4x4 matrix mul, Managed unsafe<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+            <td class="xl66">0.90</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">21-float4x4 matrix mul, Interop Standard</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.20</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.46</td>
+            <td class="xl66">1.03</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">22-float4x4 matrix mul, Interop SSE2<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.36</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.92</td>
+            <td class="xl66">1.05</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">23-managed add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                4.05</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">24-managed no-inline add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.89</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.48</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">25-interop add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.17</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.11</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">26-interop indirect add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.28</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.38</td>
+        </tr>
+    </tbody>
+</table><br />
+<h4>Quick analysis</h4>Slightly better than x86 code gen, the .NET Native x64 and RyuJit are on average performing
+better than their JIT counterpart. Some notes:<br />
+<ul>
+    <li>Unexpectedly, coalescing of arithmetic instructions (test 11, or 23) is not happening for .NET Native, but for
+        RyuJit.</li>
+    <li>Performance on float/double is better. Most likely SSE registers are better used.</li>
+    <li>Sudoku tests is getting a nice +40-50% faster with .NET Native and RyuJit</li>
+</ul><br /><br />
+<h3>Comparison .NET32 Native vs .NET64 Native </h3>Just use .NET 32 Native as a reference (1.0) and compare it to the
+.NET 64 Native.<br />Normalized with performance relative to .NET 32 Native. Higher is better. (2.0 means that a test on
+x64 Native is 2 times faster than x86 )<br />
+<ul>
+    <li>In <span style="color: #6aa84f;">green</span>, results above +10%</li>
+    <li>In <span style="color: #e06666;">red</span>, results below -10% </li>
+</ul><br />
+<table border="1" cellpadding="0" cellspacing="0" style="width: 523px;">
+    <colgroup>
+        <col style="mso-width-alt: 10349; mso-width-source: userset; width: 212pt;" width="283">
+        <col style="mso-width-alt: 4388; mso-width-source: userset; width: 90pt;" width="120">
+        <col style="mso-width-alt: 4388; mso-width-source: userset; width: 90pt;" width="120">
+    </colgroup>
+    <tbody>
+        <tr height="40" style="height: 30.0pt;">
+            <td class="xl68" height="40" style="height: 30.0pt; width: 212pt;" width="283">Name</td>
+            <td class="xl67" style="width: 90pt;" width="120">.NET 32 <br />Native (AppStore)</td>
+            <td class="xl67" style="width: 90pt;" width="120">.NET 32 vs 64<br />Native (AppStore)</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td class="xl65" height="20" style="height: 15.0pt;">00-Big int Dictionary: 1 Adding items<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.31</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 2 Running queries</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.35</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 3 Removing items<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.19</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 0 Ints to strings</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.13</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 1 Adding/setting</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.22</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 2 Running queries</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.17</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 3 Removing items</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.16</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 1 Adding items<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 2 Running queries</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 3 Removing items<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.96</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: FPL16<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.10</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: uint<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.12</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: ulong<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.12</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.07</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: float<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.40</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: FPI8<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: FPL16<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.49</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: int<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.97</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: long<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                7.65</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: FPI8<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.01</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int via IMath<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.07</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int without generics<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.12</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">06-Simple parsing: 3 Parse (x1000000)<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">06-Simple parsing: 4 Sort (x1000000)<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.96</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Interface NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: No-inline NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.20</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Static NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                not applicable</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Virtual NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.16</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <double>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></double>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.29</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <float>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></float>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.24</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <int>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></int>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.38</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: Array2D<double><span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></double>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: double[n*n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.30</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: double[n][n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: int[n][n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.37</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">09-Sudoku<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.13</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">10-Polynomials<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">11-JGFArithBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.61</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">12-JGFAssignBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.86</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">13-JGFCastBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.57</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">14-JGFCreateBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.93</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">15-JGFFFTBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.05</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">16-JGFHeapSortBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.08</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">17-JGFLoopBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">0.97</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">18-JGFRayTracerBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.07</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">19-float4x4 matrix mul, Managed Standard</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.34</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">20-float4x4 matrix mul, Managed unsafe<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.02</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">21-float4x4 matrix mul, Interop Standard</td>
+            <td class="xl66">1.00</td>
+            <td class="xl66">1.09</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">22-float4x4 matrix mul, Interop SSE2<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.15</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">23-managed add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.16</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">24-managed no-inline add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.35</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">25-interop add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.15</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">26-interop indirect add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl66">1.00</td>
+            <td class="xl66"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.15</td>
+        </tr>
+    </tbody>
+</table><br />
+<h4>Quick analysis</h4>.NET 64 Native code gen is better than .NET 32 Native code gen. Haven't dig into code gen, but
+more registers for x64 might help optim while x86 is still fighting with a limited set of registers (and x86 code is not
+using SSE instructions, so it doesn't help). Good to see that interop is also better on x64, while it is not the case
+for JIT x64 where it is usually much slower.<br /><br />
+<h3>Comparison .NET64 Native vs .NET64 RyuJit</h3><br />Use .NET 64 Native as a reference (1.0) and compare it to the
+.NET 64 RyuJit.<br />Normalized with performance relative to .NET 64 Native. Higher is better. (2.0 means that a test on
+x64 RyuJit is 2 times faster than x64 Native )<br />
+<ul>
+    <li>In <span style="color: #6aa84f;">green</span>, results above +10%</li>
+    <li>In <span style="color: #e06666;">red</span>, results below -10% </li>
+</ul>&nbsp; <br />
+<table border="1" cellpadding="0" cellspacing="0" style="width: 443px;">
+    <colgroup>
+        <col style="mso-width-alt: 9984; mso-width-source: userset; width: 205pt;" width="273">
+        <col style="mso-width-alt: 2742; mso-width-source: userset; width: 56pt;" width="75">
+        <col style="mso-width-alt: 3474; mso-width-source: userset; width: 71pt;" width="95">
+    </colgroup>
+    <tbody>
+        <tr height="60" style="height: 45.0pt;">
+            <td class="xl66" height="60" style="height: 45.0pt; width: 205pt;" width="273">Name</td>
+            <td class="xl65" style="width: 56pt;" width="75">.NET 64 <br />Native (AppStore)</td>
+            <td class="xl65" style="width: 71pt;" width="95">.NET 64 vs 64<br />RyuJit<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td class="xl63" height="20" style="height: 15.0pt;">00-Big int Dictionary: 1 Adding items<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.02</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 2 Running queries</td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.95</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">00-Big int Dictionary: 3 Removing items<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 0 Ints to strings</td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.38</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 1 Adding/setting</td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.18</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 2 Running queries</td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.05</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">01-Big string Dictionary: 3 Removing items</td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.10</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 1 Adding items<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.94</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 2 Running queries</td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.91</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">02-Big int sorted map: 3 Removing items<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.14</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: FPL16<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.89</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: uint<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.97</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">03-Square root: ulong<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.83</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.26</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: float<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.73</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: FPI8<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.56</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: FPL16<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                4.31</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: int<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.07</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">04-Simple arithmetic: long<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.96</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: double<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: FPI8<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.78</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.78</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int via IMath<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.53</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">05-Generic sum: int without generics<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.59</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">06-Simple parsing: 3 Parse (x1000000)<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                2.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">06-Simple parsing: 4 Sort (x1000000)<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.73</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Interface NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.24</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: No-inline NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Static NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.00</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">07-Trivial method calls: Virtual NoOp<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.81</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <double>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></double>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.03</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <float>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></float>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: <int>[n][n]<span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></int>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.86</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: Array2D<double><span
+                        style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></double>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.72</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: double[n*n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.99</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: double[n][n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.02</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">08-Matrix multiply: int[n][n]<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.94</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">09-Sudoku<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.07</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">10-Polynomials<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.05</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">11-JGFArithBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">1.10</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">12-JGFAssignBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.52</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">13-JGFCastBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.40</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">14-JGFCreateBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.23</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">15-JGFFFTBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.98</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">16-JGFHeapSortBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.98</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">17-JGFLoopBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.93</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">18-JGFRayTracerBench<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.30</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">19-float4x4 matrix mul, Managed Standard</td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.31</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">20-float4x4 matrix mul, Managed unsafe<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                1.12</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">21-float4x4 matrix mul, Interop Standard</td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.71</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">22-float4x4 matrix mul, Interop SSE2<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.55</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">23-managed add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #C6EFCE; color: #006100; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                4.05</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">24-managed no-inline add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.68</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">25-interop add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64">0.95</td>
+        </tr>
+        <tr height="20" style="height: 15.0pt;">
+            <td height="20" style="height: 15.0pt;">26-interop indirect add<span
+                    style="mso-spacerun: yes;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </td>
+            <td class="xl64">1.00</td>
+            <td class="xl64"
+                style="background: #FFC7CE; color: #9c0006; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">
+                0.30</td>
+        </tr>
+    </tbody>
+</table><br />
+<h4>Quick analysis</h4><br />Surprisingly, RyuJit is performing quite well or sometimes even better than .NET 64 Native.
+Might be interesting to dig into this. <br /><br />
+<h3>Summary</h3><br />As both .NET Native and RyuJit are still in alpha/beta stages, we can't really assert any
+definitive conclusions here. We can see a trend of improvements in some specific areas, while some tests are still
+performing a bit worse than the legacy JIT. <i><span style="color: #660000;">[Edit]The release of .NET Native Developer
+        Preview 3 on June 30 2014, is showing some improvements in code gen, so .NET Native and RyuJIT are definitely
+        being improved between updates and it is great! [/Edit] </span></i><br /><br />It is good to see.NET 64 getting
+better and performing well with .NET Native and RyuJit, Until now I have been a bit reluctant at using it, but it looks
+more robust compare to x86 code gen.<br /><br />While code gen can be undoubtedly improved with offline compilers or a
+more modern JIT like RyuJit, we probably can't expect the moon. As I said in this introduction, code gen is only a part
+of the overall performance cake. The other part, that is most likely not yet covered by these new compiler
+architectures, is <i>data locality</i>: things like ability to create fat objects - embed instantiation of objects
+instance into another instance - or creation of short live objects (not value types) on the stack instead of the heap
+are still areas where .NET can probably be improved. I will hopefully take more time in a next post to explain why this
+is an important area of improvements and what could be done.<br /><br />Anyway, this is great to see .NET performance
+back into the ring! I'm eager also to be able to use .NET Native on desktop.
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2016 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  
+  </body>
+</html>
+

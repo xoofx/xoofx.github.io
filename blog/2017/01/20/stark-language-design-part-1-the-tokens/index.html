@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.0.0">
+    <title>Stark - Language Design Part I - The Tokens | xoofx</title>
+    <link rel="stylesheet" href="/css/tocbot.css">
+    <link rel="stylesheet" href="/css/prism.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/jquery.min.js" type="text/javascript" defer></script>
+    <script src="/js/popper.min.js" type="text/javascript" defer></script>
+    <script src="/js/anchor.min.js" type="text/javascript" defer></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript" defer></script>
+    <script src="/js/tocbot.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism.js" type="text/javascript" defer></script>
+    <script src="/js/prism-shell-session.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-clike.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-c.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-cpp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-csharp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-stark.js" type="text/javascript" defer></script>
+    <script src="/js/github-comments.js" type="text/javascript" defer></script>
+    <script src="/js/xoofx.js" type="text/javascript" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Stark - Language Design Part I - The Tokens | xoofx">
+    <meta name="twitter:description" content="After my introduction post about the Stark Language Experiment, and before going deeper into the implementation of the lexer and parser, we definitely need to decide the overall syntax of the language, or at least some structural foundations. We don't need to go through every single tiny corner cases (macros for example are not critical, it is often not that difficult to integrate them afterwards) but we still have to...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Stark - Language Design Part I - The Tokens | xoofx">    
+  </head>
+  <body>
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <span class="title">
+		  <h1 class="title" itemprop="name"><a href="/blog/2017/01/20/stark-language-design-part-1-the-tokens/" itemprop="url">Stark - Language Design Part I - The Tokens</a></h1>
+		
+    </span>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="20 Jan 2017" itemprop="datePublished">January 20, 2017</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/stark/">Stark</a>, <a href="/blog/tag/csharp/">C#</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2017/2017-01-20-stark-language-design-part-1-the-tokens.md">edit</a>
+    </div>
+      <p>After my introduction post about the <a href="/blog/2017/01/17/the-stark-programming-language-experiment">Stark Language Experiment</a>, and before going deeper into the implementation of the lexer and parser, we definitely need to decide the overall syntax of the language, or at least some structural foundations. We don't need to go through every single tiny corner cases (macros for example are not critical, it is often not that difficult to integrate them afterwards) but we still have to figure-out some details that may affect usability or complicate parsing or may produce a grammar that is not even possible to parse easily...</p>
+<p>Let's start by defining most of the language tokens necessary for developing the lexer (the lexer part will contain a more formal definition for matching tokens):</p>
+<ul>
+<li>comments</li>
+<li>literals for primitive types (numbers, char, strings)</li>
+<li>identifiers</li>
+<li>operator, separators, punctuation characters</li>
+<li>end of statement/line convention, importance of spaces or not...etc</li>
+</ul>
+<p>Though I will end this post with a special guest topic not related to the lexer: using prefix (e.g <code>int32 x = 5</code>) or postfix (e.g <code>let x : int32 = 5</code>) for type annotations? As this was asked by someone on Twitter, that's something we can talk early about here... as I may change to the later instead of the former notation I used in my previous introduction post of the Stark language. Let's find out why...</p>
+<h1 id="comments">Comments</h1>
+<p>We will use regular C# comments there. In my previous prototype I used the <code>#</code> for single line (e.g often used by shell scripts or python) and <code>##</code> for multiple lines... but, let's use instead a syntax that is more common and familiar in similar languages (C#, Rust, F#, Swift...):</p>
+<ul>
+<li>Single line comments starts by <code>//</code> until the end of the line.</li>
+<li>Multi-line comments starts by <code>/*</code> and must be closed by <code>*/</code>. Note that unlike C/C#/Java..etc. <strong>Nested multi-line comments are supported</strong> (like Rust do for example). It feels more intuitive to support them (most likely early C parsers didn't bother to handle nested, so it became the norm?) I have seen many people debating about this... like, some even considering that nested comments are evil and it is better to enclose them with <code>#if 0</code>...<code>#endif</code>, seriously... oO</li>
+<li>Documentation comments starts by <code>///</code> to generate a documentation for the following item.</li>
+</ul>
+<p>In Rust, there was a need for a 3rd type of documentation comments <code>//!</code> to comment the parent type (and not the following item). Not sure if we may need this at some point, but we can refine this later...</p>
+<h1 id="literals-and-primitive-types">Literals and primitive types</h1>
+<p>If we take the C# or Java primitives, many of them have been influenced by C, like <code>char</code>, <code>int</code>, <code>long</code> - though this one is special because it is more <code>long long</code> in C++, <code>float</code>, <code>double</code>... Things are getting a bit weird because the associated typed struct for a <code>float</code> is called <code>Single</code>, where the associated type for a <code>int</code> is <code>Int32</code>... which can be confusing...</p>
+<p>I don't think that these primitives are easy to grasp quickly and I prefer using a much more explicit convention using postfix bits that will make overall the language more coherent.</p>
+<p>Rust for example is using <code>i32</code> for C# <code>int</code>, <code>f32</code> for C# <code>float</code>... it feels better, but that's one thing I'm a bit annoyed with Rust is its condensed syntax that at some point combined with other parts of the languages (generics + lifetime) can give a difficult time for a casual reader of the language. I like the C# approach of having a bit longer keywords to describe things, it is still important to have compact keywords for very common types. So we won't go to something like <code>integer32</code>...</p>
+<p>We can adopt the following convention:</p>
+<ul>
+<li><p><strong>Boolean</strong>: We will keep <code>bool</code> type that can declare a value that is <code>true</code> or <code>false</code></p>
+</li>
+<li><p><strong>Integers</strong>: uint/int with a bit postfix 8/16/32/64 for integers: so we will have <code>int8</code>/<code>uint8</code>, <code>int16</code>/<code>uint16</code>, <code>int32/uint32</code>, <code>int64</code>/<code>uint64</code>
+They can be declared in multiple ways:</p>
+<pre><code class="language-csharp">120 // A plain integer int32 by default
+0xff // An hexadecimal number 
+0o777 // An octal number
+0b1111_1111 // a binary number
+</code></pre>
+<p>Note that the integer <code>-15</code> is actually parsed as a prefix minus expression with an integer. Typically, the lexer will return 2 tokens there...</p>
+<p>For visual convenience, digit can be separated by a <code>_</code></p>
+<p>There is also what kind of postfix a literal should have to force it to an actual type.
+Typically in C#, we use <code>var i = 15u</code> for an <code>uint</code> (and if the value is bigger, it would be an <code>ulong</code>, and there is more with <a href="https://msdn.microsoft.com/en-us/library/aa664674">L and UL together</a>)</p>
+<p>So I'm thinking that we should just postfix with the type like:</p>
+<pre><code class="language-csharp">let a = 15uint32
+let b = 16float32
+</code></pre>
+<p>The idea behind this is that it could work for a generalized <a href="https://docs.microsoft.com/en-us/dotnet/articles/fsharp/language-reference/units-of-measure">unit of measure system like in F#</a>. I haven't digged into this idea, so once we get further into the type system, we may revisit this back.</p>
+</li>
+<li><p><strong>Floats</strong>: floating point numbers with a bit postfix 32/64: <code>float32</code> or <code>float64</code>. The literals should be similar to C#, nothing fancy.</p>
+</li>
+<li><p><strong>Characters</strong>: We will keep <code>char</code> as it is good enough. Note that unlike C#, it won't be a 16bits character but a <em><a href="http://www.unicode.org/glossary/#unicode_scalar_value">unicode scalar value</a> except high-surrogate and low-surrogate code points. It is an unsigned integer in the ranges of integers 0 to <code>0xD7FF</code> and <code>0xE000</code> to <code>0x10FFFF</code> inclusive</em>. Like for operations on numbers that can cause overflow, we will have yet to define later how this range is going to be enforced (at compilation time, for sure, at runtime also?). Question is: Do we want to have a <code>char32</code> (for UTF-32) and <code>char16</code> instead? It is not highly critical for now to choose, we can change this a bit later.</p>
+<p>A <code>char</code> literal would be enclosed between <code>'</code> like <code>'\n'</code> or <code>'a'</code> or <code>'\u12f2'</code> or ``\x20`</p>
+</li>
+<li><p><strong>Strings</strong>: the <code>string</code> type will not be a real primitive (as it is a reference type, using class with a vtable...etc.) but a string literal will be encoded like in C# for normal strings: <code>&quot;This is a string&quot;</code> and raw strings <code>@&quot;This is a raw string&quot;</code>. The exact supported escape characters will be specified in my next post when developing the lexer. String interpolation (in C# <code>$&quot;My string {name}&quot;</code>) will come much later if we have advanced enough into the development of the language, as this is mainly convenient and less fundamental. The string type will be later defined as a real <code>class string</code> backed into the core library.</p>
+</li>
+<li><p>What about the <code>decimal</code> type in C#? As it doesn't fit anything real into a register processor, I will let that for later as a good exercise to add a new type of number with associated operations (and literals with units...etc.)...</p>
+</li>
+<li><p><strong>Native Integers</strong>: the native pointer size type is an integer of the size of a pointer (e.g On a 64bit machine, it is a 64bit integer). We will use <code>intz</code> and <code>uintz</code>. The <code>z</code> would be for the <code>int</code>(si)<code>z</code>(e)... not sure it is a super good idea... Rust is using <code>usize</code> and <code>isize</code>... maybe it is better named, easier to understand? This type is actually important because unlike C#, I plan to make all the default indexer on arrays, lists...etc. using the type <code>uintz</code>. It brings type safety/natural checking and reflects more correctly the range limit access to the memory. Let me know what you think about this one (not critical to decide early for it)</p>
+</li>
+<li><p><strong>Pointer types</strong>: the pointer type <code>intptr</code> and <code>uintptr</code> similar to C#</p>
+</li>
+</ul>
+<p>I still don't know how these primitives will be declared in the language. Typically in C#, you have for a primitive like <code>int</code> associated with an equivalent struct <code>Int32</code> that declares some variables/constant and operations for it (like Minimum, Maximum, TryParse()...etc.)</p>
+<p>I would love to see if I can achieve to declare <code>int32</code> explicitly in the core library like this:</p>
+<pre><code class="language-csharp">##nativeType  // instruct the compiler that the following struct is a native type
+public struct int32 : ...
+{
+    // ...
+    static 
+    {
+        let minValue = -2147483648
+        let maxValue = 2147483647
+    }
+}
+</code></pre>
+<p>While it requires still a strong cooperation with the compiler (for the example annotation <code>##nativeType</code>, special treatment behind because you can't easily declare in the language itself how to perform a <code>+</code> operation for example, or because literals need to map to them at some point), I like the idea that even primitive types are not marked as keywords but actual defined types. While developing a HLSL parser in the past, I discovered that forcing keywords for things like <code>float4x4</code> was actually more annoying than it is (and I had actually to reroute these types to something like <code>vector&lt;float, 4&gt;</code>)</p>
+<p>Note that as I will explain a bit more in my next post about the lexer, why these <code>int32</code>, <code>char</code>...etc will not be considered as specific tokens for the lexer...</p>
+<h1 id="identifiers">Identifiers</h1>
+<p>Nothing crazy there, it is quite similar to C#, with something similar to a starting <code>[_a-zA-Z]</code> and followed by <code>[_a-zA-Z0-9]*</code> (note that in reality like C#, we will have to cover other unicode characters and will follow the <a href="http://unicode.org/reports/tr31/">UAX31</a> specification with <code>XID_START</code>, <code>XID_CONTINUE</code>) . The slight difference here is that the special case where an identifier is only composed of <code>_</code> may generate a different token (underscore only) instead of a token identifier. This may be used as a way to differentiate the any type <code>_</code> that we plan to use for higher kind types. Plus, I find quite confusing to allow a variable composed only of <code>_</code> or <code>_______</code> or <code>_____</code> (C# typically allows this!)</p>
+<p>Note also that I'm not introducing anything about special identifiers prefixed by <code>$</code> for example (e.g used for a macro processing)... We will see later how we need to deal with them. Most likely for macros as far as I can predict... but let's not hold this for granted, because the macro syntax might require a more subtile way of handling special identifiers substitution/expansion...</p>
+<h1 id="operator-separator-punctuation-characters">Operator, separator, punctuation characters</h1>
+<p>Many punctuation characters are used by a programming language like <code>[</code> <code>]</code> <code>{</code> <code>}</code> <code>(</code> <code>)</code> <code>:</code> <code>=</code> <code>;</code> ...etc.</p>
+<p>Punctuation strings are often matched by a lexer like <code>&lt;&lt;</code> <code>&gt;&gt;</code> <code>&amp;&amp;</code>... Though as we will see, it is sometimes quite annoying to have the lexer starting to group tokens like <code>&lt;&lt;</code> as a single token, because then we need to be careful when handling a simple class generic instantiation like <code>List&lt;List&lt;int&gt;&gt;</code> here the trailing <code>&gt;&gt;</code>. We would start naively to match the starting <code>&lt;</code> with a single token but we could have a trailing <code>&lt;&lt;</code> that would effectively close 2 at once... and believe or not, but many C++ compiler didn't handle always that well...</p>
+<h1 id="end-of-statement-and-end-of-line">End of statement and End Of Line</h1>
+<p>Despite my long habit of using C/Java/C# like languages, I still don't like many of their unnecessary character verbosity...</p>
+<p>Typically the case of the trailing <code>;</code> at the end of a statement like <code>var i = 5;</code></p>
+<p>In Stark, I would like to remove its mandatory usage, though you could still have them around if you want, or if you have a case where putting a complex declaration  on a single line separated by <code>;</code> makes more sense. Then it means that the EOL characters (<code>\r</code> or <code>\r\n</code> or <code>\n</code>) would be significant.</p>
+<p>Last year, I developed a <a href="https://github.com/lunet-io/scriban/blob/master/doc/language.md">Scriban, a quite powerful text templating language and runtime for .NET</a>, similar to Liquid or Handlebars, but imho, more powerful :D (and I haven't been able to take the time promote it in whatever ways, as I used it primarily to develop lunet, a prototype of a static website generator...)... but when developing this small language, I enjoyed a lot to introduce the non mandatory <code>;</code>... it makes the syntax very clean. I know that some people may miss it, but I believe that it is not as structural as, e.g a language using <code>{</code> <code>}</code> for delimitating blocks vs a language using spaces (like python)...</p>
+<p>Speaking of which, as a fun fact, in my previous prototype, I developed everything, including the ANTLR proto, with a space aware language... I know that there are strong opinions on it, I don't have any but... I switched back to a &quot;familiar&quot; <code>{</code>/<code>}</code> instead, because they do allow compact syntaxes when you need them... (specially for closures as parameters...etc.)... F# made the chose to support somewhat both... why not, but don't think I'm going to follow this (I know more people around me would be annoyed of having a language using significant whitespace so...)</p>
+<p>Lastly, all spaces will be parsed by the lexer and forwarded to the parser as well. I don't expect many cases where I need to have a space information, but it can be very useful in some cases. Like Roslyn, I expect the parser to keep all tokens around in case of source round-trip manipulations...</p>
+<h1 id="guest-topic-the-case-of-prefix-and-postfix-type-annotation">Guest topic: The case of prefix and postfix type annotation</h1>
+<blockquote class="twitter-tweet" data-conversation="none" data-lang="en"><p lang="en" dir="ltr"><a href="https://twitter.com/xoofx">@xoofx</a> how about postfix type annotation like in typescript?</p>&mdash; Ivan Milutinović (@milutinovici) <a href="https://twitter.com/milutinovici/status/821662755476402179">January 18, 2017</a></blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+<p>When declaring a local variable:</p>
+<ul>
+<li>Postfix type annotation: <code>let i : int32 = 5</code></li>
+<li>Pre-fix type annotation: <code>int32 i = 5</code></li>
+</ul>
+<p>When declaring a function parameters:</p>
+<ul>
+<li>Postfix: <code>processData(data: List&lt;int32&gt;) -&gt; int32 { ... }</code></li>
+<li>Pre-fix: <code>int32 processData(List&lt;int32&gt; data) { ... }</code></li>
+</ul>
+<p>Members of a struct or a class:</p>
+<ul>
+<li><p>Postfix:</p>
+<pre><code class="language-csharp">struct Vector2
+{
+    x: float32
+    y: float32
+}
+</code></pre>
+</li>
+<li><p>Prefix:</p>
+<pre><code class="language-csharp">struct Vector2
+{
+    float32 x
+    float32 y
+}
+</code></pre>
+</li>
+</ul>
+<p>Let's check some opinions on that: <a href="http://softwareengineering.stackexchange.com/questions/316217/why-does-the-type-go-after-the-variable-name-in-modern-programming-languages">Why does the type go after the variable name in modern programming languages?</a></p>
+<p>Actually, in addition to many old, many recent &quot;modern&quot; languages have been adopting the postfix type annotation (Swift, Rust, Typescript to name a few...). And again, incidentally, in my previous prototype, I was using them, but in my previous post, I didn't and the syntax was closer to what we have with C#</p>
+<p>While the prefix syntax looks more compact, there is a lot more to favour a postfix syntax:</p>
+<ul>
+<li><p>The variable/method name comes first. Reading from left to right feels more natural (this is my function name, here is its 1st parameter and its type, here is the return type of the function). Member names of a struct/class are more naturally aligned whatever return parameter they have...</p>
+</li>
+<li><p>It makes possible to use implicit type inference more easily. Typically in F# you can write something like this:</p>
+<pre><code class="language-fsharp">let inline (&gt;&gt;) f g = g(f)
+</code></pre>
+<p>instead of a more verbose equivalent if I had to express it in the hypothetical Stark syntax using plain generics:</p>
+<pre><code class="language-csharp">operator&lt;TInput, TResult&gt;(TInput f &quot;&gt;&gt;&quot; func TResult g(TInput f) ) =&gt; g(f)
+</code></pre>
+<p>instead with type inference, we could declare:</p>
+<pre><code class="language-csharp">operator(f &quot;&gt;&gt;&quot; g) =&gt; g(f)
+</code></pre>
+<p>note I don't know yet if we will end up with automatic type inference like this... but for sure, it looks a lot more appealing</p>
+</li>
+<li><p>Possibly less potential problems of running into a context sensitive grammar. This happens typically when using pointers <code>int32* x</code>: is it a variable <code>int32</code> multiplied by <code>x</code>? I could fix this by requiring the pointer to be prefix but then... I don't know how Roslyn typically handle this, but I'm afraid that it requires to defer the interpretation of such a simple statement... and for a parser, that's bad... and it is also most likely bad for a human reader unfamiliar with pointers</p>
+</li>
+</ul>
+<p>My main argument so far for prefix is that it gives a more compact form (and the syntax is closer to C/C#/Java)... but there is actually more arguments in favour of a postfix version...</p>
+<p>So as I feel more potential future for this syntax, <strong>Stark will use postfix type annotation instead</strong>...</p>
+<h1 id="next">Next?</h1>
+<p>So we have informally defined the basic tokens that we will use to parse our language. I think it is important to explain why we are choosing a particular syntax against another... instead of giving a &quot;here is the syntax, eat it&quot;.</p>
+<p>I still need to formalize parsing a bit more using a standard notation (like <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF</a>... though it seems many are using simpler syntax)... so that overall it will feel more solid and help to catch potential grammar problems earlier.</p>
+<p>We will see that when translating this formal description to a handwritten parser, we may parse things slightly differently (and sometimes more efficiently than a generated parser)</p>
+<p>The next part should cover the development of the Stark Lexer (good name for a bad guy in a Superman movie), with hopefully some code pushed to the <a href="https://github.com/stark-lang/stark">Stark github repo</a>... we will get back to a whitepaper after and start formalizing basic control flows, type declarations...etc.</p>
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2016 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  
+  </body>
+</html>
+

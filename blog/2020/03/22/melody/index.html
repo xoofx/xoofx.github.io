@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.0.0">
+    <title>Melody - Micro Operating System - Prototype 2019 | xoofx</title>
+    <link rel="stylesheet" href="/css/tocbot.css">
+    <link rel="stylesheet" href="/css/prism.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/jquery.min.js" type="text/javascript" defer></script>
+    <script src="/js/popper.min.js" type="text/javascript" defer></script>
+    <script src="/js/anchor.min.js" type="text/javascript" defer></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript" defer></script>
+    <script src="/js/tocbot.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism.js" type="text/javascript" defer></script>
+    <script src="/js/prism-shell-session.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-clike.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-c.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-cpp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-csharp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-stark.js" type="text/javascript" defer></script>
+    <script src="/js/github-comments.js" type="text/javascript" defer></script>
+    <script src="/js/xoofx.js" type="text/javascript" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Melody - Micro Operating System - Prototype 2019 | xoofx">
+    <meta name="twitter:description" content="This is the third part of the blog post series about The Odyssey of Stark and Melody and more specifically, about the development of Melody, a prototype of a micro operating system relying on seL4 micro-kernel and the Stark language developed during last year. Overview Secure Principle of least privilege Efficient Build a bundle of applications with its micro operating system. Use only what is required by these applications. Lightweight...">
+    <meta name="twitter:image" content="https://xoofx.com/images/stark-melody.png">
+    <meta name="twitter:image:alt" content="Melody - Micro Operating System - Prototype 2019 | xoofx">    
+  </head>
+  <body>
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <span class="title">
+		  <h1 class="title" itemprop="name"><a href="/blog/2020/03/22/melody/" itemprop="url">Melody - Micro Operating System - Prototype 2019</a></h1>
+		<span class="subtitle">Development of a Micro Operating System based on seL4 micro-kernel and by using the Stark programming language.</span>
+    </span>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="22 Mar 2020" itemprop="datePublished">March 22, 2020</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/stark/">Stark</a>, <a href="/blog/tag/melody/">Melody</a>, <a href="/blog/tag/os/">OS</a>, <a href="/blog/tag/compiler/">Compiler</a>, <a href="/blog/tag/llvm/">LLVM</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.NET</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2020-03-22-melody.md">edit</a>
+    </div>
+      <p>This is the third part of the blog post series about <a href="/blog/2020/03/05/stark-melody-dotnet-sel4">The Odyssey of Stark and Melody</a> and more specifically, about the development of Melody, a prototype of a micro operating system relying on <a href="https://sel4.systems">seL4 micro-kernel</a> and the <a href="https://github.com/stark-lang/stark">Stark</a> language developed during last year.</p>
+<h2 id="overview">Overview</h2>
+<img src="/images/stark-melody.png" class="mx-auto" style="display: block"/>
+<ul>
+<li><p>Secure</p>
+<ul>
+<li>Principle of least privilege</li>
+</ul>
+</li>
+<li><p>Efficient</p>
+<ul>
+<li>Build a bundle of applications with its micro operating system. Use only what is required by these applications.</li>
+</ul>
+</li>
+<li><p>Lightweight</p>
+</li>
+</ul>
+<h2 id="capabilities">Capabilities</h2>
+<p>TODO</p>
+<h2 id="the-sel4-micro-kernel">The seL4 micro-kernel</h2>
+<h2 id="integration-with-melody">Integration with Melody</h2>
+<p>TODO</p>
+<h2 id="next-steps">Next Steps</h2>
+<p>TODO</p>
+<p>Happy coding!</p>
+
+    </div>
+  </article>
+
+<div id="gh-comments" data-ghcommentid=10>
+  <h2>Comments</h2>
+  <div id="gh-comments-list" ></div>
+  <a href="javascript:void(0)" id="gh-load-comments" class="btn" style="display:none">Load more comments</a>
+</div>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2016 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  
+  </body>
+</html>
+

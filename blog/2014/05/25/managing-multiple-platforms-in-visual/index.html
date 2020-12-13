@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.0.0">
+    <title>Managing multiple platforms in Visual Studio | xoofx</title>
+    <link rel="stylesheet" href="/css/tocbot.css">
+    <link rel="stylesheet" href="/css/prism.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/jquery.min.js" type="text/javascript" defer></script>
+    <script src="/js/popper.min.js" type="text/javascript" defer></script>
+    <script src="/js/anchor.min.js" type="text/javascript" defer></script>
+    <script src="/js/bootstrap.min.js" type="text/javascript" defer></script>
+    <script src="/js/tocbot.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism.js" type="text/javascript" defer></script>
+    <script src="/js/prism-shell-session.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-clike.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-c.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-cpp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-csharp.min.js" type="text/javascript" defer></script>
+    <script src="/js/prism-stark.js" type="text/javascript" defer></script>
+    <script src="/js/github-comments.js" type="text/javascript" defer></script>
+    <script src="/js/xoofx.js" type="text/javascript" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Managing multiple platforms in Visual Studio | xoofx">
+    <meta name="twitter:description" content="Who has not struggled to correctly manage multiple platform configurations in Visual Studio without ending to edit a solution file or tweak some msbuild files by hand? Recently, I decided to cleanup the antique SharpDX.sln in SharpDX that was starting to be a bit fat and not easy to manage. The build is not extremely bizarre there, but as it needs to cover the combinations of NetPlatform x OSPlatform x...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Managing multiple platforms in Visual Studio | xoofx">    
+  </head>
+  <body>
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <span class="title">
+		  <h1 class="title" itemprop="name"><a href="/blog/2014/05/25/managing-multiple-platforms-in-visual/" itemprop="url">Managing multiple platforms in Visual Studio</a></h1>
+		
+    </span>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="25 May 2014" itemprop="datePublished">May 25, 2014</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/sharpdx/">SharpDX</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/visual-studio/">Visual Studio</a>, <a href="/blog/tag/msbuild/">msbuild</a>, <a href="/blog/tag/net/">.Net</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2014/2014-05-25-managing-multiple-platforms-in-visual.html">edit</a>
+    </div>
+      
+
+
+Who has not struggled to correctly manage multiple platform configurations in Visual Studio without ending to edit a solution file or tweak some msbuild files by hand? Recently, I decided to cleanup the antique <code>SharpDX.sln</code> in SharpDX that was starting to be a bit fat and not easy to manage. The build is not extremely bizarre there, but as it needs to cover the combinations of NetPlatform x OSPlatform x DirectXVersion x Debug/Release with around 40 projects (without the samples), it is an interesting case of study. It turns out that modifying the solution to <b>make a clean multi-platform build was impossible without hacking msbuild</b> in order to circumvent unfortunate designs found in Microsoft msbuild files (and later to found at work in Xamarin build files as well). In this post, we will go through the gotchas found, and we will see also <b>why Visual Studio should really improve the configuration manager</b> if they want to improve our developers experience.<br /><a name='more'></a><br />
+<h3>Preliminaries</h3>
+There are a couple of things to understand on how VisualStudio and msbuild are working with solution files and configuration. This is just a little overview about the key settings and how they affect your build. I found some good introduction about this in the post "<a href="http://www.galaktor.net/2011/04/targeting-platforms-in-visual-studio.html" target="_blank">Targeting Platforms in Visual Studio</a>" worth a read.<br /><br />If we look at a simple solution containing only a single project:<br /><br />
+<pre class="language-csharp"><code>
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{56849035-CEF7-446D-AF0A-51EE9DC1DDB7}"
+EndProject
+Global
+ GlobalSection(SolutionConfigurationPlatforms) = preSolution
+  Debug|Any CPU = Debug|Any CPU
+  Release|Any CPU = Release|Any CPU
+ EndGlobalSection
+ GlobalSection(ProjectConfigurationPlatforms) = postSolution
+  {56849035-CEF7-446D-AF0A-51EE9DC1DDB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+  {56849035-CEF7-446D-AF0A-51EE9DC1DDB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+  {56849035-CEF7-446D-AF0A-51EE9DC1DDB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+  {56849035-CEF7-446D-AF0A-51EE9DC1DDB7}.Release|Any CPU.Build.0 = Release|Any CPU
+ EndGlobalSection
+ GlobalSection(SolutionProperties) = preSolution
+  HideSolutionNode = FALSE
+ EndGlobalSection
+EndGlobal
+</code></pre>
+<br />What we can see from the solution is that it defines:<br /><br />In <code>SolutionConfigurationPlatforms</code>, the mapping between solution configuration/platforms to project configuration/platforms. When you read the line :<br />
+<pre class="language-csharp"><code>Debug|Any CPU = Debug|Any CPU
+</code></pre>
+<br />It means that the Solution configuration/platform <code>Debug|Any CPU</code> will map to the project configuration/platform <code>Debug|Any CPU</code>.<br /><br />The project configuration and platform are the actual values that will be used when using later the properties <code>Configuration</code> and <code>Platform</code> in the msbuild proj (csproj...etc.) as we can see it used by the <code>TestConsole.csproj</code> above: <br />
+<pre class="language-xml"><code>
+  &lt;PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "&gt;
+    &lt;PlatformTarget&gt;AnyCPU&lt;/PlatformTarget&gt;
+    &lt;DebugSymbols&gt;true&lt;/DebugSymbols&gt;
+</code></pre>
+The solution also defines in the section <code>ProjectConfigurationPlatforms</code> the projects that will be build for each solution configuration/platform, as well as a mapping to the actual project configuration/platform.  In SharpDX, the configuration/platform in <a href="https://github.com/sharpdx/SharpDX/blob/master/SharpDX.sln#L127" target="_blank">SharpDX.sln</a> are configured like this: <br />
+<pre class="language-csharp"><code>
+GlobalSection(SolutionConfigurationPlatforms) = preSolution
+  Debug|DIRECTX11_2 = Debug|DIRECTX11_2
+  Debug|Net20 = Debug|Net20
+  Debug|Net40 = Debug|Net40
+  Debug|Win8 = Debug|Win8
+  Debug|WP81 = Debug|WP81
+  Debug|WP8-ARM = Debug|WP8-ARM
+  Debug|WP8-x86 = Debug|WP8-x86
+  Release|DIRECTX11_2 = Release|DIRECTX11_2
+  Release|Net20 = Release|Net20
+  Release|Net40 = Release|Net40
+  Release|Win8 = Release|Win8
+  Release|WP81 = Release|WP81
+  Release|WP8-ARM = Release|WP8-ARM
+  Release|WP8-x86 = Release|WP8-x86
+EndGlobalSection
+</code></pre>
+As you can see, we are just using different configuration/platforms in order to target multiple .NET framework, different DirectX version and specifics OSes. But surprisingly, if you are trying to use this kind of configuration in your solution, It will not work out of the box.  <br /><br />
+<h3>Problem #1: Where is the solution platform?</h3>
+<br />By default, Visual Studio settings in C# is hiding the solution platform. Instead, what you will get is only the solution configuration:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a href="http://2.bp.blogspot.com/-MqGLJJ_vu08/U4FF3AlUZaI/AAAAAAAAF_k/V1xkPeX5iYs/s1600/VSConfigSelector.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="http://2.bp.blogspot.com/-MqGLJJ_vu08/U4FF3AlUZaI/AAAAAAAAF_k/V1xkPeX5iYs/s1600/VSConfigSelector.png" /></a></div>
+<br /><br />This is really annoying, because if someone just open your solution, It will not realize that there are actually different platforms. The solution will just select the first defined platform.  In order to get back the solution platform selector in Visual Studio, you need to activate back the button by selecting on the right side of the solution configuration the drop-down button "Add or Select buttons":<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/-H2NybcmeibU/U4FG3G_FQcI/AAAAAAAAF_w/_E15hC15nFQ/s1600/VSRestorePlatformSelector.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="http://4.bp.blogspot.com/-H2NybcmeibU/U4FG3G_FQcI/AAAAAAAAF_w/_E15hC15nFQ/s1600/VSRestorePlatformSelector.png" height="480" width="640" /></a></div>
+<br />While I understand the ergonomic original reasons for hiding this button, in the era of multiple platform development, this should no longer be hidden and the default should show it. I hope that Visual Studio will fix this in a future release.<br /><br />
+<h3>Problem #2: Project Platform semantic</h3>
+<br />This is the problem that made the refactoring of the SharpDX.sln quite laborious to hack. On the surface, solution platforms look nice. They provide a way to organize your project to target multiple platforms/configurations from the same solution. On the backside, it is not working as expected, mainly because <b>some msbuild files are interpreting the value of the project platform</b>.<br /><br />And this is where I would like to take the opportunity here to explain why <b>project platforms should have no semantic values for Visual Studio or Xamarin build files</b>. Project platforms should be considered as user defined platforms, they are a way to organize our project in whatever combinations and <b>these semantics should be owned by the developer of the project</b>.<br /><br />Unfortunately, Visual Studio msbuild files don't allow to use a custom project platform because they are expecting some specific platforms. For example, if you are developing a Windows Store Apps, you will find that a Windows Store Apps project won't compile if the platform is different from "Any CPU/x86/x64//Win32/arm"!. This is hardcoded in the file <code>C:\Program Files (x86)\MSBuild\Microsoft\VisualStudio\v11.0\AppxPackage\Microsoft.AppxPackage.Targets</code> line 1270 like this (Windows Phone platform and Xamarin are suffering the same problem):<br />
+<pre class="language-xml"><code>&lt;PropertyGroup&gt;
+ &lt;_ProjectArchitectureOutput&gt;Invalid&lt;/_ProjectArchitectureOutput&gt;
+ &lt;_ProjectArchitectureOutput Condition="'$(Platform)' == 'AnyCPU'"&gt;neutral&lt;/_ProjectArchitectureOutput&gt;
+ &lt;_ProjectArchitectureOutput Condition="'$(Platform)' == 'x86'"&gt;x86&lt;/_ProjectArchitectureOutput&gt;
+ &lt;_ProjectArchitectureOutput Condition="'$(Platform)' == 'Win32'"&gt;x86&lt;/_ProjectArchitectureOutput&gt;
+ &lt;_ProjectArchitectureOutput Condition="'$(Platform)' == 'x64'"&gt;x64&lt;/_ProjectArchitectureOutput&gt;
+ &lt;_ProjectArchitectureOutput Condition="'$(Platform)' == 'arm'"&gt;arm&lt;/_ProjectArchitectureOutput&gt;
+&lt;/PropertyGroup&gt;
+</code></pre>
+Using directly the <code>Platform</code> from a core VisualStudio msbuild file is a mistake (same for Configuration, that is used in some Visual Studio msbuild targets), as it is forcing the original solution to use only these platforms. Instead, build files from Visual Studio should use a property that can be redefined by the project (like the property <code>PlatformTarget</code> that is used by the C# compiler). We should have a way to redefine the mapping in whatever way we would like.  In other words, Solution platform and configurations should be fully owned by the developer of the solution. Their semantics are project specific and Visual Studio should allow us to define the remapping to a target platform (like <code>AnyCPU</code>) in our project like this:  <br />
+<pre class="language-xml"><code>
+  &lt;PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|ThisIsMyConfig' "&gt;
+    &lt;PlatformTarget&gt;AnyCPU&lt;/PlatformTarget&gt;
+    ...
+</code></pre>
+Fortunately, there is a hack to manage this, though it is not completely safe. By default, the properties <code>Platform</code> and <code>Configuration</code> are immutable in msbuild, because they are considered as global properties passed to msbuild, so they cannot be modified. But there is a way to override the platform "ThisIsMyConfig" to "AnyCPU" for some specific build (like WindowsStoreApps).  In SharpDX, this is made possible by the target "SharpDXForcePlatform" as can be seen in this <a href="https://github.com/sharpdx/SharpDX/blob/master/Build/SharpDX.PreSettings.targets#L353" target="_blank">file</a>. In order to work, the trick is: <br />
+<ul>
+   <li>Add a target that will be executed automatically whenever there is a build. This is done by declaring a msbuild project with the attribute <code>InitialTargets="YourTargetToForcePlatform"</code></li>
+   <li>
+      In the <code>YourTargetToForcePlatform</code>, we can override the <code>Platform</code> property programmatically (they are mutable only when using this trick from a target). In the following code, we are remapping the <code>Platform</code> <b>Win8</b> to <code>AnyCPU</code> like this:  
+      <pre class="language-xml"><code>
+&lt;Target Name="SharpDXForcePlatform"&gt;
+    &lt;!--
+Windows 8 App Store =&gt; AnyCPU
+Windows Phone 8.1 =&gt; AnyCPU
+--&gt;
+    &lt;CreateProperty Condition=" '$(Platform)' == 'Win8' or '$(Platform)' == 'WP81'" Value="AnyCPU"&gt;
+      &lt;Output
+          TaskParameter="Value"
+          PropertyName="Platform" /&gt;
+    &lt;/CreateProperty&gt;
+</code></pre>
+   </li>
+</ul>
+This way, when the build start, the <code>Platform</code> property is correctly setup for the platform being compiled. Beware that the property <code>Platform</code> used outside a target (in property groups...etc.) is still linked to the original semantic which is actually good. But if a Visual Studio build is using the property <code>Platform</code> outside a target, this trick will not work.<br /><br />So bottom line of this problem is that Visual Studio builds should really take care of this and avoid forcing any semantic for the configuration/platform. Without this, we are forced to use the hack described above or worst, to duplicate the solution (this was the case for SharpDX, which made the full build quite a pain).<br /><br /><br /><br />
+<h3>Problem #3: The unwanted Mixed Platforms</h3>
+When you are using custom platforms names, and you want to add a new project to your solution, you will most likely end-up with a new solution platform Mixed Platforms. This is really annoying when we are already dealing with multiple platforms, we don't want Visual Studio to add a useless platform. The solution is to remove it by hand in the .sln, but we should not have to do this. At worst Visual Studio should ask the developer "Do you really want to add a new mixed platform to your solution?", at best, remove this Mixed Platforms.<br /><br /><br />
+<h3>Problem #4: The Configuration Manager</h3>
+<br />When managing several platforms with several dozens of projects, the configuration manager is a real pain to use, and we are always forced to edit the sln by hand and perform some regexp replace on the file to cleanup it or to fix it.<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a href="http://2.bp.blogspot.com/-RFIAJTnKhcE/U4GtLYvHYbI/AAAAAAAAGAA/fgTfVjl83hE/s1600/VSConfigurationManager.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="http://2.bp.blogspot.com/-RFIAJTnKhcE/U4GtLYvHYbI/AAAAAAAAGAA/fgTfVjl83hE/s1600/VSConfigurationManager.png" height="402" width="640" /></a></div>
+<br /><br /><br />There are lots of issues with the current Configuration Manager:<br />
+<ul>
+   <li>The <b>window is not resizable </b>! If you have more than 12 projects in your solution, you are good to use the scrollview quite a lot.</li>
+   <li>It is <b>not possible to have a global view </b>of all your projects and which one is activated for which platforms...etc. Considering that you need to check (Debug AND Release) x number of  platforms, and you have go around for a while by clicking, waiting,  clicking, scrolling... a nightmare!</li>
+   <li>It is <b>not possible to bulk edit your projects</b>. You have to go though each single project, single click, dropdowns...etc. for each projects.</li>
+   <li><b>Switching configuration or platform is slow</b> when you have lots of projects (or some custom .targets). I don't understand why Visual Studio seems to reevaluate all the projects, so it can take 2-3 seconds when switching the configuration/platform while everything should be already accessible from memory (both solution and projects)</li>
+</ul>
+<br />
+<h3>vNext</h3>
+Whoever has done some cross platform development (even just inside .NET, by targeting different .NET framework) with Visual Studio will most likely have struggled with the issues describe above.<br /><br />With the rise of Xamarin more tightly integrated into Visual Studio, more development targeting all Windows eco-system (Windows Desktop, Windows AppStore, Windows Phone Store) and Android/iOS, all these issues should be really fixed to improve our productivity. Fingers crossed for VS2014 if someone at the Visual Studio team is reading this!<br /><br />How do you manage these issues in your projects? Do you have any other ideas to improve the situation when targeting multiple platforms in Visual Studio?<br /><br /><span style="font-size: x-small;">PS: I will have to double check whether there is some uservoice or connect bugs for the issues described in this post. If you have any link already, I'm interested!</span> <br /><br /><br />
+
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2016 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  
+  </body>
+</html>
+

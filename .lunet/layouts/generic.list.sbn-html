@@ -5,32 +5,30 @@ layout_type: single
 <div class="col-sm-12">
   <div class="entry-content"> 
     {{ content }}
-    <div class="rss"><a href="{{ relref "/feed.xml" }}"><span class="fa fa-rss-square"/></a></div>
+    <div class="rss"><a href="{{ relref "/feed.xml" }}"><i class="fa fa-rss-square"></i></a></div>
     <div class="archives" itemscope itemtype="http://schema.org/Blog">
-    {{~ previous_date = null; for post in pages.by_date.reverse ~}}
+    {{~ previous_date = null; ~}}
+    {{~ for post in pages.by_date.reverse ~}}
       {{~ if post.layout != 'blog' || post.layout_type == 'list'; continue; end; ~}}
       {{~ post_date = post.date | date # make sure that the date is parsed }}
       {{~ if post_date.year != previous_date?.year ~}}
-        {{~ previous_date = post_date ~}}
-        {{~ if !for.first ~}}
+        {{~ if previous_date ~}}
       </ul>
         {{~ end ~}}
+        {{~ previous_date = post_date ~}}
       <h2 class="year">{{ post_date | date.to_string "%Y" }}</h2>
       <ul>
       {{~ end ~}}
         <li>
           <a href="{{ relref post.url }}">{{post.title}}</a>
           <span class="blog-post-meta">
-            - <span class="date"><time datetime="{{ post_date }}" itemprop="datePublished">{{ post_date | date.to_string "%b %e" }}</time></span>
+            - <span class="date"><time datetime="{{ post_date | date.to_string '%Y-%m-%d' }}" itemprop="datePublished">{{ post_date | date.to_string "%b %e" }}</time></span>
             {{ render_tags post }}
           </span>
           {{~ if post.subtitle ~}}
           <span class="subtitle">{{ post.subtitle}}</span>
           {{~ end ~}}
         </li>
-      {{~ if for.last ~}}
-        </ul>
-      {{~ end ~}}
     {{~end # for post ~}}
       </ul>
     </div>

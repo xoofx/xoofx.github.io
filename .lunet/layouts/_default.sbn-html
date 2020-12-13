@@ -29,7 +29,7 @@
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2016 - {{ date.now.year }}, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - {{ date.now.year }}, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  
   </body>
 </html>

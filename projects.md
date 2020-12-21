@@ -6,9 +6,9 @@ title: Projects
 In my spare time, I have developed a couple of open-source projects on [github](https://github.com/xoofx) and try to maintain them:
 
 - [babelmark 3](https://babelmark.github.io/) A website that allows to compare various Markdown implementations (including Markdig!)
-- [Markdig](https://github.com/lunet-io/markdig) A Markdown processor for .NET, a fully extensible implementation of the [CommonMark](http://commonmark.org/) standard with excellent performance, both in terms of speed, and GC pressure.
+- [Markdig](https://github.com/xoofx/markdig) A Markdown processor for .NET, a fully extensible implementation of the [CommonMark](http://commonmark.org/) standard with excellent performance, both in terms of speed, and GC pressure.
 - [NUglify](https://github.com/xoofx/NUglify) A HTML, JavaScript and CSS minification Library for .NET (fork of AjaxMin + new features)
-- [Scriban](https://github.com/lunet-io/scriban) A fast, powerful and lightweight text templating language and engine for .NET 
+- [Scriban](https://github.com/scriban/scriban) A fast, powerful and lightweight text templating language and engine for .NET 
 - [SharpScss](https://github.com/xoofx/SharpScss) A pinvoke .NET wrapper around libsass to convert SCSS to CSS
 - [GitRocketFilter](https://github.com/xoofx/GitRocketFilter) A super fast alternative to `git-filter-branch`, powerful command line tool to rewrite git branches powered by .NET, equivalent of
 - [SharpDX](http://sharpdx.org) The definitive DirectX wrapper for .NET

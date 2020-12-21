@@ -279,7 +279,7 @@ while the original method was like this:
         }
 ``` 
 
-All the generated code is saved to a file [ScribanAsync.generated.cs](https://github.com/lunet-io/scriban/blob/master/src/Scriban/ScribanAsync.generated.cs) and as you can see, it is in the end significant amount of code!
+All the generated code is saved to a file [ScribanAsync.generated.cs](https://github.com/scriban/scriban/blob/master/src/Scriban/ScribanAsync.generated.cs) and as you can see, it is in the end significant amount of code!
 
 ## Performance with ValueTask\<T\>
 

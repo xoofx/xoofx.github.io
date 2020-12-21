@@ -55,11 +55,11 @@
       <i class="fa fa-tags"></i><a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/markdown/">Markdown</a>, <a href="/blog/tag/markdig/">Markdig</a>, <a href="/blog/tag/net/">.Net</a>
   	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2016/2016-06-13-implementing-a-markdown-processor-for-dotnet.md">edit</a>
     </div>
-      <img align="right" width="160px" height="160px" src="https://raw.githubusercontent.com/lunet-io/markdig/master/img/markdig.png">
+      <img align="right" width="160px" height="160px" src="https://raw.githubusercontent.com/xoofx/markdig/master/img/markdig.png">
 <blockquote>
 <p><strong>Update 16 June 2016</strong>: Added a <a href="/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet">Benchmarks</a> section</p>
 </blockquote>
-<p>Earlier this year, for two intensive months, I have spent all my spare time implementing <a href="https://github.com/lunet-io/markdig">Markdig</a>, a new Markdown processor for .NET. In this post, I will report back about the quirks and pitfalls I have found while coding this as well as the performance and design considerations I had to balance with.</p>
+<p>Earlier this year, for two intensive months, I have spent all my spare time implementing <a href="https://github.com/xoofx/markdig">Markdig</a>, a new Markdown processor for .NET. In this post, I will report back about the quirks and pitfalls I have found while coding this as well as the performance and design considerations I had to balance with.</p>
 <p>The post is organized like this:</p>
 <ul>
 <li>A <a href="/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet">Why?</a> introduction where I explain why the need for a new .NET Markdown parser</li>
@@ -154,7 +154,7 @@
       </tr>
   </table>
 </div>
-<p><sup>1</sup>: For CommonMark.NET, there is a full rewrite of the parser in a <a href="https://github.com/AMDL/CommonMark.NET/tree/pipe-tables">pipe_tables</a> branch, not yet official, not finished? I also took the time to evaluate a bit more this one, but I was not really convinced by some design decisions (e.g: <a href="https://github.com/Knagis/CommonMark.NET/issues/78">using only composition over a simple inheritance scheme for the syntax tree</a>) and a plugin architecture that was not enough versatile for what I was looking for... Still, overall, CommonMark.NET is a pretty solid library, perf and code quality wise. To boostrap the development, I have re-used some of their decoding primitives for Markdig (e.g <a href="https://github.com/lunet-io/markdig/blob/master/src/Markdig/Helpers/EntityHelper.cs">HTML Entity decoding</a>)</p>
+<p><sup>1</sup>: For CommonMark.NET, there is a full rewrite of the parser in a <a href="https://github.com/AMDL/CommonMark.NET/tree/pipe-tables">pipe_tables</a> branch, not yet official, not finished? I also took the time to evaluate a bit more this one, but I was not really convinced by some design decisions (e.g: <a href="https://github.com/Knagis/CommonMark.NET/issues/78">using only composition over a simple inheritance scheme for the syntax tree</a>) and a plugin architecture that was not enough versatile for what I was looking for... Still, overall, CommonMark.NET is a pretty solid library, perf and code quality wise. To boostrap the development, I have re-used some of their decoding primitives for Markdig (e.g <a href="https://github.com/xoofx/markdig/blob/master/src/Markdig/Helpers/EntityHelper.cs">HTML Entity decoding</a>)</p>
 <p>So I started to challenge if I could write a full CommonMark compliant parser with all the features and dreams I had in mind...</p>
 <h1 id="the-commonmark-specs">The CommonMark specs</h1>
 <p>Luckily, the <a href="http://spec.commonmark.org/">CommonMark specs</a> done by <a href="http://johnmacfarlane.net/">John Mac Farlane</a> are <strong>amazing</strong> and frankly, without them, I wouldn't have even started this colossal work, because if the code was laborious and sometimes tricky, the specs are much more involving...</p>
@@ -171,8 +171,8 @@ Test
 <p>You can have a look at the differences of this <a href="https://babelmark.github.io/?text=%5Bfoo%5D%3A+%0A++%2Furl%0A++%22title%22%0ATest%0A%3D%3D%3D%3D%0A%0A%5Bfoo%5D">example on babelmark3</a> (A service I released recently, check-it out!). Obviously, it is not well handled. It is not surprising then that there is even a CommonMark compliant processor that is giving a different result...</p>
 <p>While coding this specific case, I had for example to plug the handling of link definitions and setText heading into the ParagraphBlock parser:</p>
 <ul>
-<li>Link definitions when closing the parsing of a paragraph block (See <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/ParagraphBlockParser.cs#L46">here</a>)</li>
-<li>setText heading when continuing parsing a paragraph block (See <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/ParagraphBlockParser.cs#L36">here</a>)</li>
+<li>Link definitions when closing the parsing of a paragraph block (See <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/ParagraphBlockParser.cs#L46">here</a>)</li>
+<li>setText heading when continuing parsing a paragraph block (See <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/ParagraphBlockParser.cs#L36">here</a>)</li>
 </ul>
 <p>The good thing is the CommonMark specs still come with an <a href="http://spec.commonmark.org/0.25/#appendix-a-parsing-strategy">appendix &quot;a parsing strategy&quot;</a> that helped a lot (even though I didn't follow exactly the recommended approach for handling emphasis, which is the trickiest part)</p>
 <p>Basically the parsing is done in two steps:</p>
@@ -222,7 +222,7 @@ that continues on a second line
     break;
 [...]
 </code></pre>
-<p>you need to handle <em>each incoming character</em> like <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/InlineProcessor.cs#L115">this</a>:</p>
+<p>you need to handle <em>each incoming character</em> like <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/InlineProcessor.cs#L115">this</a>:</p>
 <pre><code class="language-csharp">var parsers = Parsers.GetParsersForOpeningCharacter(c);
 if (parsers != null)
 {
@@ -248,9 +248,9 @@ if (parsers != null)
     }
 }
 </code></pre>
-<p>Each block and inline parsers in Markdig defines a set of <strong>OpeningCharacters</strong>. Here for <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/QuoteBlockParser.cs#L20">example for a BlockQuote</a>, it is simply define as <code>OpeningCharacters = new[] {'&gt;'};</code> but for handling regular emphasis (like <code>**...**</code>) and all additional emphasis (strikeout, del, insert...etc.), you need to <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/Inlines/EmphasisInlineParser.cs#L51">dynamically adapt the list of Opening Characters</a> based on what is registered.</p>
+<p>Each block and inline parsers in Markdig defines a set of <strong>OpeningCharacters</strong>. Here for <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/QuoteBlockParser.cs#L20">example for a BlockQuote</a>, it is simply define as <code>OpeningCharacters = new[] {'&gt;'};</code> but for handling regular emphasis (like <code>**...**</code>) and all additional emphasis (strikeout, del, insert...etc.), you need to <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/Inlines/EmphasisInlineParser.cs#L51">dynamically adapt the list of Opening Characters</a> based on what is registered.</p>
 <p>Things gets worse handling inlines inside a paragraph block. For instance, if you look at the beginning of this phrase, there is no characters that could be interpreted as inline elements (e.g a pair of <code>*</code> for an emphasis), so when you want to efficiently handle this line, you want to eat characters with a bulk method. You don't want to go through the <code>Parsers.GetParsersForOpeningCharacter(c);</code> and subsequent loop to handle each single character. So in that case, the InlineParser, which is responsible of processing a sequence of literal text (that don't have any other meaning for inlines), has to be optimized.</p>
-<p>Example of <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/Inlines/LiteralInlineParser.cs#L37">InlineParser.cs</a> with bulk parsing:</p>
+<p>Example of <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Parsers/Inlines/LiteralInlineParser.cs#L37">InlineParser.cs</a> with bulk parsing:</p>
 <pre><code class="language-csharp">var nextStart = processor.Parsers.IndexOfOpeningCharacter(text, slice.Start + 1, slice.End);
 </code></pre>
 <p>Here, we try to find in the coming characters any characters that <em>could be</em> an opening characters of another inline construct. Behind the scene, this method is optimized only to iterate quickly on the string and doing nothing else than checking if the character is an opening character.</p>
@@ -276,7 +276,7 @@ if (parsers != null)
 <p>Most of the techniques used here are to lower GC pressure, improve locality and help to reduce CPU footprint.</p>
 <h2 id="stringslice-a-lightweight-string-part">1) StringSlice, a lightweight string part</h2>
 <p>In the case of Markdown, a large part of a document is composed of small strings that will end-up written directly to the output when converting to HTML. In this case, and this is also often true for text templating system, you don't want to perform any <code>substrings</code> on the original full Markdown document. You just want to work with slices/views of it without the burden of allocating additional objects.</p>
-<p>Hence, in Markdig, there is a <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/StringSlice.cs"><code>StringSlice</code></a> type for handling such a case.</p>
+<p>Hence, in Markdig, there is a <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/StringSlice.cs"><code>StringSlice</code></a> type for handling such a case.</p>
 <p>It has basically 3 fields:</p>
 <ul>
 <li>the original string (the full Markdown text)</li>
@@ -288,11 +288,11 @@ if (parsers != null)
 <p>For this case, I wanted to use a dedicated optimized slice for strings (with useful attached method that cannot be put as extension methods, as we don't have yet implicit ref for them!). Otherwise, I can suggest also <a href="https://github.com/joeduffy/slice.net">Slice.net</a> by Joe Duffy for a generic version of it.</p>
 <h2 id="use-custom-struct-listt">2) Use custom struct List&lt;T&gt;</h2>
 <p>Any time I had to use a <code>List&lt;T&gt;</code> as an internal object state to store a variable array of items, I have replaced it with a version handling directly the array.</p>
-<p>For instance, the StringSlice can be organized in a <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/StringLineGroup.cs"><code>StringSliceGroup</code></a>, this type is again a struct. We save the cost of the <code>List&lt;T&gt;</code> object which is a wrapper around <code>T[]</code></p>
+<p>For instance, the StringSlice can be organized in a <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/StringLineGroup.cs"><code>StringSliceGroup</code></a>, this type is again a struct. We save the cost of the <code>List&lt;T&gt;</code> object which is a wrapper around <code>T[]</code></p>
 <h2 id="object-pooling">3) Object pooling</h2>
 <p>Pooling is one regular technique to reduce GC pressure. Specially with <code>StringBuilder</code> which allocates chunks of memory behind the scene!</p>
-<p>In Markdig there is a generic <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/ObjectCache.cs"><code>ObjectCache&lt;T&gt;</code></a> along a specialized <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/StringBuilderCache.cs"><code>StringBuilderCache</code></a></p>
-<p>A notable addition to the <code>StringBuilderCache</code> is a Thread Static Local (TLS) for accessing a local <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/StringBuilderCache.cs#L15"><code>StringBuilder</code></a> from <em>almost</em> anywhere inside a method. Instead of having to pass around an <code>ObjectCache</code> to each method signature, I could use just <code>StringBuilderCache.Local()</code> whenever I needed, without also having to release it. Note that such a class you need to make sure that there is no nested usage of it in a nested method call stack.</p>
+<p>In Markdig there is a generic <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/ObjectCache.cs"><code>ObjectCache&lt;T&gt;</code></a> along a specialized <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/StringBuilderCache.cs"><code>StringBuilderCache</code></a></p>
+<p>A notable addition to the <code>StringBuilderCache</code> is a Thread Static Local (TLS) for accessing a local <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/StringBuilderCache.cs#L15"><code>StringBuilder</code></a> from <em>almost</em> anywhere inside a method. Instead of having to pass around an <code>ObjectCache</code> to each method signature, I could use just <code>StringBuilderCache.Local()</code> whenever I needed, without also having to release it. Note that such a class you need to make sure that there is no nested usage of it in a nested method call stack.</p>
 <pre><code class="language-csharp">public class StringBuilderCache : DefaultObjectCache&lt;StringBuilder&gt;
 {
     /// &lt;summary&gt;
@@ -320,7 +320,7 @@ if (parsers != null)
 <h2 id="string.indexof-and-string.indexofany">5) string.IndexOf() and string.IndexOfAny()</h2>
 <p>If there is a need to scan for a particular character in a string and process things afterwards from this position, you may think that a custom <code>string.IndexOf</code> would be better, but it is actually implemented in the CoreCLR as almost an intrinsic, much faster than whatever you could come with a managed and unsafe equivalent, so trust <code>IndexOf</code>, it is fast!</p>
 <p>On the other hand, if you need to check for many characters, the <code>string.IndexOfAny</code> is not that fast, and for matching opening characters in Markdig, I had to write a dedicated version, assuming that you know in advance the characters to match and can build pre-computation tables for them.</p>
-<p>The class <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/CharacterMap.cs"><code>CharacterMap&lt;T&gt;</code></a> was extensively used in Markdig to pre-compute maps between a <code>char</code> and an associated data instance. First used as a pluggable replacement for <code>switch/case</code>, but also for <code>IndexOfAny</code>, the following method <a href="https://github.com/lunet-io/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/CharacterMap.cs#L118"><code>IndexOfOpeningCharacter</code></a> was then used as a faster replacement:</p>
+<p>The class <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/CharacterMap.cs"><code>CharacterMap&lt;T&gt;</code></a> was extensively used in Markdig to pre-compute maps between a <code>char</code> and an associated data instance. First used as a pluggable replacement for <code>switch/case</code>, but also for <code>IndexOfAny</code>, the following method <a href="https://github.com/xoofx/markdig/blob/58f797533180357518dbb8a101235545474de237/src/Markdig/Helpers/CharacterMap.cs#L118"><code>IndexOfOpeningCharacter</code></a> was then used as a faster replacement:</p>
 <pre><code class="language-csharp">public unsafe int IndexOfOpeningCharacter(string text, int start, int end)
 {
     var maxChar = isOpeningCharacter.Length;
@@ -365,7 +365,7 @@ if (parsers != null)
 <p>Markdig is no longer using these methods but instead is loading the full Markdown document into a string and is working with <code>StringSlice</code>, as I realized that it was more efficient to load the document once into a string instead of loading each line in a new string. This method provides also a much better handling of precise source code position (e.g for syntax highlighting).</p>
 <p>Also one thing that was a bit frustrating when trying to squeeze out some performance from string handling was the internal accessibility of the <a href="https://github.com/dotnet/coreclr/blob/6cd92b2da7b3aac86598e7b8d7b6fad063239b6b/src/mscorlib/src/System/String.cs#L1554"><code>FastAllocateString</code></a> which allows to allocate a string on the heap without zeroing it, very useful, used in <a href="https://github.com/dotnet/coreclr/search?utf8=%E2%9C%93&amp;q=FastAllocateString">many places in the .NET framework</a> but inaccessible for us, unfortunately... :(</p>
 <h2 id="listt-or-t-instead-of-dictionarystring-t">6) List&lt;T&gt; or T[] instead of Dictionary&lt;string, T&gt;</h2>
-<p>This is also not something new, but for small Dictionary (last time I checked, I guess it was for less than 10 elements, may be around 7-8), an array gives actually a faster access and also is much cheaper in terms of memory. This is used in Markdig to store attached <a href="https://github.com/lunet-io/markdig/blob/c80ac89e9645e5b4da55d1fe85957fe3afcb3b3a/src/Markdig/Renderers/Html/HtmlAttributes.cs">HtmlAttributes</a> to each syntax tree and it helped to save a few mega bytes when you have hundred of thousands of instances all around when parsing large documents!</p>
+<p>This is also not something new, but for small Dictionary (last time I checked, I guess it was for less than 10 elements, may be around 7-8), an array gives actually a faster access and also is much cheaper in terms of memory. This is used in Markdig to store attached <a href="https://github.com/xoofx/markdig/blob/c80ac89e9645e5b4da55d1fe85957fe3afcb3b3a/src/Markdig/Renderers/Html/HtmlAttributes.cs">HtmlAttributes</a> to each syntax tree and it helped to save a few mega bytes when you have hundred of thousands of instances all around when parsing large documents!</p>
 <p>On average, even if you replace internally a <code>Dictionary&lt;XXX,TTT&gt;</code> by a <code>List&lt;T&gt;</code> (assuming that T contains an access to the key), you will see <strong>4x to 5x times better performance</strong> (just for the allocating/feeding part, access perf also better when number of elements are &lt; 10). See this <a href="https://gist.github.com/xoofx/c517e0c1770d9bdf1d3fa0dea832935b">gist</a> for more details.</p>
 <h1 id="benchmarks">Benchmarks</h1>
 <p>This is an early preview of the benchmarking against various implementations:</p>
@@ -376,7 +376,7 @@ if (parsers != null)
 </ul>
 <p><strong>.NET implementations</strong>:</p>
 <ul>
-<li><a href="https://github.com/lunet-io/markdig">Markdig</a> (version: 0.5.x): itself</li>
+<li><a href="https://github.com/xoofx/markdig">Markdig</a> (version: 0.5.x): itself</li>
 <li><a href="https://github.com/Knagis/CommonMark.NET">CommonMark.NET(master)</a> (version: 0.11.0): CommonMark implementation for .NET, no support for extensions, port of cmark
 <ul>
 <li><a href="https://github.com/AMDL/CommonMark.NET/tree/pipe-tables">CommonMark.NET(pipe_tables)</a>: An evolution of CommonMark.NET, supports extensions, not released yet</li>
@@ -398,8 +398,8 @@ if (parsers != null)
 <li><strong>15% to 30% less allocations</strong> and GC pressure</li>
 </ul>
 <p>Because Marked.NET,  MarkdownSharp and DocAsCode.MarkdownLite are way too slow, they are not included in the following charts:</p>
-<p><img src="https://raw.githubusercontent.com/lunet-io/markdig/master/img/BenchmarkCPU.png" alt="BenchMark CPU Time" /></p>
-<p><img src="https://raw.githubusercontent.com/lunet-io/markdig/master/img/BenchmarkMemory.png" alt="BenchMark Memory" /></p>
+<p><img src="https://raw.githubusercontent.com/xoofx/markdig/master/img/BenchmarkCPU.png" alt="BenchMark CPU Time" /></p>
+<p><img src="https://raw.githubusercontent.com/xoofx/markdig/master/img/BenchmarkMemory.png" alt="BenchMark Memory" /></p>
 <h3 id="performance-for-x86">Performance for x86:</h3>
 <pre><code>BenchmarkDotNet-Dev=v0.9.7.0+
 OS=Microsoft Windows NT 6.2.9200.0

@@ -55,8 +55,8 @@
       <i class="fa fa-tags"></i><a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.Net</a>
   	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2017/2017-11-13-implementing-a-text-templating-language-and-engine-for-dotnet.md">edit</a>
     </div>
-      <p><a href="https://github.com/lunet-io/scriban"><img align="right" width="140px" height="140px" src="https://raw.githubusercontent.com/lunet-io/scriban/master/img/scriban.png"></a></p>
-<p>Last year, before developing <a href="http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/"><code>markdig</code></a>, I spent a few weeks developing a brand new text templating language and engine called <a href="https://github.com/lunet-io/scriban"><code>scriban</code></a>.</p>
+      <p><a href="https://github.com/scriban/scriban"><img align="right" width="140px" height="140px" src="https://raw.githubusercontent.com/scriban/scriban/master/img/scriban.png"></a></p>
+<p>Last year, before developing <a href="http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/"><code>markdig</code></a>, I spent a few weeks developing a brand new text templating language and engine called <a href="https://github.com/scriban/scriban"><code>scriban</code></a>.</p>
 <p>Though, while I have received a few enthusiastic feedback on this project, I haven't taken the time to promote, polish and finish it to the level that I originally expected to push... Until the past weeks where I have finally put the last efforts to bring hopefully a solid stone to the Text Templating .NET OSS ecosystem</p>
 <p>So today, I feel quite relieved and excited to <strong>release the first 1.0.0 beta version of <code>scriban</code></strong>, and along the celebration of this release, I would like to share in this post a bit of the underlying decisions and implementation tricks that have been put into this project.</p>
 <p>The post is organized like this:</p>
@@ -105,7 +105,7 @@
 </ul>
 <p>At that time, I evaluated several language/syntax wise options:</p>
 <ul>
-<li><p><a href="https://shopify.github.io/liquid/">Liquid</a> templates using <a href="https://github.com/dotliquid/dotliquid">DotLiquid</a>: With my experience with liquid templates in Jekyll, while I liked the simplicity of the language, I felt also too many times frustrated by its limitations. It looked not built from the ground-up as a well-thought language, but more like a hack language, not really specified in many parts. I discovered also that it was actually so under specified that custom tag implementations would allow different syntaxes in the language (that would be incompatible with other liquid implems). I have described this in the <a href="https://github.com/lunet-io/scriban/blob/master/doc/liquid-support.md">Known issues</a> of liquid support in <code>scriban</code> (you read this well, there is a compatibility mode to parse Liquid templates in <code>scriban</code>! More details further down!)</p>
+<li><p><a href="https://shopify.github.io/liquid/">Liquid</a> templates using <a href="https://github.com/dotliquid/dotliquid">DotLiquid</a>: With my experience with liquid templates in Jekyll, while I liked the simplicity of the language, I felt also too many times frustrated by its limitations. It looked not built from the ground-up as a well-thought language, but more like a hack language, not really specified in many parts. I discovered also that it was actually so under specified that custom tag implementations would allow different syntaxes in the language (that would be incompatible with other liquid implems). I have described this in the <a href="https://github.com/scriban/scriban/blob/master/doc/liquid-support.md">Known issues</a> of liquid support in <code>scriban</code> (you read this well, there is a compatibility mode to parse Liquid templates in <code>scriban</code>! More details further down!)</p>
 </li>
 <li><p><a href="https://mustache.github.io/">Mustache</a> templates using <a href="https://github.com/jdiamond/Nustache">Nustache</a>: the &quot;logic-less&quot; philosophy of the language didn't resonate in me, so the lack of versatility of the language was a deal-breaker.</p>
 </li>
@@ -136,7 +136,7 @@
 <p>Language wise, as I didn't find the graal, I didn't look much further if any existing solutions in .NET were enough efficient. But looking quickly at the few options at that time, most of the implementations were often using regex based parsers (which are very slow) and their codebase were not carefully crafted to avoid GC allocations at parsing and rendering time.</p>
 <h1 id="the-language-syntax">The language syntax</h1>
 <p>For the syntax, I wanted something very familiar (e.g liquid), simple to learn, so I didn't come up with something very different from what the others have been doing.</p>
-<p>For this project, I took very seriously the need for a documentation, so you will find a lot more details in the <code>scriban</code> <a href="https://github.com/lunet-io/scriban/blob/master/doc/language.md#language">language documentation</a>.</p>
+<p>For this project, I took very seriously the need for a documentation, so you will find a lot more details in the <code>scriban</code> <a href="https://github.com/scriban/scriban/blob/master/doc/language.md#language">language documentation</a>.</p>
 <p>Here is an example of the syntax (unfortunately, I don't have currently highlighting working for <code>scriban</code> in this blog post):</p>
 <pre><code class="language-html">&lt;ul id='products'&gt;
   {{~ for product in products ~}}
@@ -156,7 +156,7 @@
 <li>You enter a filter by opening with <code>{{</code> and closing with <code>}}</code>. Filters are typically used to display data <code>{{ myvar }}</code> and can be used with pipe calls <code>{{ myvar | truncate: 15 }}</code></li>
 </ul>
 <p>In <code>scriban</code>, we have more a traditional form of a language, with true statements and expressions (and thus, also expression statements). In that sense, there is no concepts of tags or filters, so I simply opted for the pair <code>{{</code> and <code>}}</code> to enter a code block.</p>
-<p>The character <code>~</code>  used with <code>{{~</code> and <code>~}}</code> allow to strip whitespace characters and <code>scriban</code> is coming with <a href="https://github.com/lunet-io/scriban/blob/master/doc/language.md#14-whitespace-control">two modes</a>. In the example above, this mode would strip the entire line (trim space on the left and trim space on the right up to the first newline).</p>
+<p>The character <code>~</code>  used with <code>{{~</code> and <code>~}}</code> allow to strip whitespace characters and <code>scriban</code> is coming with <a href="https://github.com/scriban/scriban/blob/master/doc/language.md#14-whitespace-control">two modes</a>. In the example above, this mode would strip the entire line (trim space on the left and trim space on the right up to the first newline).</p>
 <p>I have bring also a few practical stuffs in the language that I have been looking for a lot in <code>liquid</code>:</p>
 <ul>
 <li>You can have multiple line statements/expressions without having to constantly open/close code blocks:
@@ -187,7 +187,7 @@
 <li><code>{{ while myvar }}</code> ... <code>{{ end }}</code></li>
 <li><code>{{ capture }}</code> ... <code>{{ end }}</code></li>
 </ul>
-<p>That's probably the main difference to highlight, otherwise the syntax is very similar to <code>liquid</code>. You will find more details for a comparison of <code>liquid</code> with <code>scriban</code> in the <a href="https://github.com/lunet-io/scriban/blob/master/doc/liquid-support.md">liquid-support documentation</a>)</p>
+<p>That's probably the main difference to highlight, otherwise the syntax is very similar to <code>liquid</code>. You will find more details for a comparison of <code>liquid</code> with <code>scriban</code> in the <a href="https://github.com/scriban/scriban/blob/master/doc/liquid-support.md">liquid-support documentation</a>)</p>
 <h2 id="custom-functions">Custom functions</h2>
 <p>One limitation I hit quite often with liquid was its inability to declare local functions directly into the language to compact very simple expressions that you want to express with a single call.</p>
 <p>Suppose that you would want to make a function that would downcase a text, truncate to 15 characters and upper case the first letter and use it in multiple place in your template, in scriban you could declare a function to do this:</p>
@@ -219,7 +219,7 @@ end
 <p>In <code>scriban</code> you have the ability to use local variable by prefixing them with <code>$</code>, like <code>$myvar</code></p>
 <p>Typically, in the example above for the function pretty_compact, we used the special variable <code>$</code> which when used alone gives access to the arguments of the current function (or the current include page)</p>
 <h2 id="statements-as-arguments">Statements as arguments</h2>
-<p>In <code>scriban</code> there is the <a href="https://github.com/lunet-io/scriban/blob/master/doc/language.md#98-wrap-function-arg1argn--end"><code>wrap</code> statement</a> that allow to execute a function and pass a block of statements to this function:</p>
+<p>In <code>scriban</code> there is the <a href="https://github.com/scriban/scriban/blob/master/doc/language.md#98-wrap-function-arg1argn--end"><code>wrap</code> statement</a> that allow to execute a function and pass a block of statements to this function:</p>
 <pre><code class="language-scriban-html">{{
 func wrapped
 	for $i in 1..&lt;$0
@@ -252,7 +252,7 @@ end
 <pre><code class="language-scriban-html">{{ z = x + y }}
 </code></pre>
 <h2 id="and-more">And more...</h2>
-<p>Check the <a href="https://github.com/lunet-io/scriban/blob/master/doc/language.md#language">language documentation</a> to learn more about <code>scriban</code> language syntax.</p>
+<p>Check the <a href="https://github.com/scriban/scriban/blob/master/doc/language.md#language">language documentation</a> to learn more about <code>scriban</code> language syntax.</p>
 <p>I wrote also a <a href="https://marketplace.visualstudio.com/items?itemName=xoofx.scriban">Scriban syntax colorizer for Visual Studio Code</a> so that you can enjoy a bit of syntax highlighting with scriban templates.</p>
 <h1 id="engine-details">Engine details</h1>
 <p>The power of <code>scriban</code> is not only defined by its flexible language but also by the efficiency of its runtime for both:</p>
@@ -263,13 +263,13 @@ end
 <h2 id="parsing">Parsing</h2>
 <p>In <code>scriban</code> I have used the traditional approach of developing a full hand-written lexer and parser:</p>
 <ul>
-<li>The <a href="https://github.com/lunet-io/scriban/blob/master/src/Scriban/Parsing/Lexer.cs">lexer</a> is the class responsible for transforming a flow of characters into a flow of language tokens (e.g an identifier, a string, a number, a raw string, a whitespace, a newline...etc.)</li>
-<li>The <a href="https://github.com/lunet-io/scriban/blob/master/src/Scriban/Parsing/Parser.cs">parser</a> is the class responsible for transforming this flow of language tokens into a full <a href="https://github.com/lunet-io/scriban/tree/master/src/Scriban/Syntax">Abstract Syntax Tree</a> (AST) of the original script template, a runtime representation of it.</li>
+<li>The <a href="https://github.com/scriban/scriban/blob/master/src/Scriban/Parsing/Lexer.cs">lexer</a> is the class responsible for transforming a flow of characters into a flow of language tokens (e.g an identifier, a string, a number, a raw string, a whitespace, a newline...etc.)</li>
+<li>The <a href="https://github.com/scriban/scriban/blob/master/src/Scriban/Parsing/Parser.cs">parser</a> is the class responsible for transforming this flow of language tokens into a full <a href="https://github.com/scriban/scriban/tree/master/src/Scriban/Syntax">Abstract Syntax Tree</a> (AST) of the original script template, a runtime representation of it.</li>
 </ul>
 <h3 id="the-lexer">The lexer</h3>
 <p>In order to push the performance of the templating system, GC allocations have been carefully tracked.</p>
 <p>Typically for the lexer, we have a zero GC allocation lexer that is only producing a series of token (which is a struct) through a custom IEnumerable iterator (also a struct) so that we are able to get a very minimal memory footprint.</p>
-<p>A <a href="https://github.com/lunet-io/scriban/blob/master/src/Scriban/Parsing/Token.cs">token</a> is simply a struct with the following information:</p>
+<p>A <a href="https://github.com/scriban/scriban/blob/master/src/Scriban/Parsing/Token.cs">token</a> is simply a struct with the following information:</p>
 <ul>
 <li>Type of the token (identifier, number...etc)</li>
 <li>Precise starting character offset from the source document, including also precise line and column.</li>
@@ -338,27 +338,27 @@ public abstract object Evaluate(TemplateContext context);
 </tbody>
 </table>
 <h3 id="built-in-functions-and-pre-computed-delegates">Built-in functions and pre-computed delegates</h3>
-<p>The runtime comes with <a href="https://github.com/lunet-io/scriban/blob/master/doc/builtins.md#builtins"><strong>90+ builtin functions</strong></a> and in order to make these functions as fast as possible, I have pre-computed the delegates that are calling these functions to avoid using <code>System.Reflection</code></p>
+<p>The runtime comes with <a href="https://github.com/scriban/scriban/blob/master/doc/builtins.md#builtins"><strong>90+ builtin functions</strong></a> and in order to make these functions as fast as possible, I have pre-computed the delegates that are calling these functions to avoid using <code>System.Reflection</code></p>
 <p>In the repository, there is a program <code>Scriban.CodeGen</code> that will take the <code>Scriban</code> assembly and generates all the relevant marshalling delegates:</p>
-<p>For example, if we have a method with a signature <code>static bool MyMethod(string a, string b)</code>, it will generate a <a href="https://github.com/lunet-io/scriban/blob/74867d0cd544571f88415759d211f19d953e8698/src/Scriban/Runtime/CustomFunction.Generated.cs#L124-L187">proper optimized delegate</a> to handle this call.</p>
+<p>For example, if we have a method with a signature <code>static bool MyMethod(string a, string b)</code>, it will generate a <a href="https://github.com/scriban/scriban/blob/74867d0cd544571f88415759d211f19d953e8698/src/Scriban/Runtime/CustomFunction.Generated.cs#L124-L187">proper optimized delegate</a> to handle this call.</p>
 <p>By generating these delegates, we are able to provide roughly a 20% boost while rendering when using these builtin functions. Any end-user functions having similar parameters will also benefit from these, otherwise, the runtime will fallback to a more generic - and slightly slower - route for handling these calls.</p>
 <h3 id="automatic-import-of.net-objects">Automatic import of .NET objects</h3>
 <p>When working with .NET objects, the runtime is able to pass .NET objects almost as-is to the template, as long as it is made accessible explicitly to the <code>TemplateContext</code>.</p>
 <p>You can still control how the .NET objects are exposed through a:</p>
 <ol>
-<li><a href="https://github.com/lunet-io/scriban/blob/master/doc/runtime.md#member-renamer"><code>MemberRenamerDelegate</code></a> that gives you control over the naming convention used for naming fields/properties exposed.</li>
-<li><a href="https://github.com/lunet-io/scriban/blob/master/doc/runtime.md#member-filter"><code>MemberFilterDelegate</code></a> that allows to filter members of a type being exposed</li>
+<li><a href="https://github.com/scriban/scriban/blob/master/doc/runtime.md#member-renamer"><code>MemberRenamerDelegate</code></a> that gives you control over the naming convention used for naming fields/properties exposed.</li>
+<li><a href="https://github.com/scriban/scriban/blob/master/doc/runtime.md#member-filter"><code>MemberFilterDelegate</code></a> that allows to filter members of a type being exposed</li>
 </ol>
 <h3 id="and-more-1">And more...</h3>
-<p>You can check the <a href="https://github.com/lunet-io/scriban/blob/master/doc/runtime.md#runtime">runtime documentation</a> to have more details about how to use the engine.</p>
+<p>You can check the <a href="https://github.com/scriban/scriban/blob/master/doc/runtime.md#runtime">runtime documentation</a> to have more details about how to use the engine.</p>
 <h1 id="documentation-and-tests">Documentation and tests</h1>
 <p>For <code>scriban</code>, I finally took the time to write more documentation than I did in my previous OSS projects. That was frankly not the most exciting part, but I fully understand that to strengthen the adoption of a new language and runtime, you need to provide enough confidence, so that people can quickly jump into this library without too much fear.</p>
 <p>I have provided the following core documents:</p>
 <ul>
-<li>See the <a href="https://github.com/lunet-io/scriban/blob/master/doc/language.md">Language</a> document for a description of the language syntax.</li>
-<li>See the <a href="https://github.com/lunet-io/scriban/blob/master/doc/builtins.md">Built-in functions</a> document for the list of the built-in functions.</li>
-<li>See the <a href="https://github.com/lunet-io/scriban/blob/master/doc/runtime.md">Runtime</a> document for a description of the .NET runtime API to compile and run templates.</li>
-<li>See the <a href="https://github.com/lunet-io/scriban/blob/master/doc/liquid-support.md">Liquid support</a> document for more details about the support of liquid templates.</li>
+<li>See the <a href="https://github.com/scriban/scriban/blob/master/doc/language.md">Language</a> document for a description of the language syntax.</li>
+<li>See the <a href="https://github.com/scriban/scriban/blob/master/doc/builtins.md">Built-in functions</a> document for the list of the built-in functions.</li>
+<li>See the <a href="https://github.com/scriban/scriban/blob/master/doc/runtime.md">Runtime</a> document for a description of the .NET runtime API to compile and run templates.</li>
+<li>See the <a href="https://github.com/scriban/scriban/blob/master/doc/liquid-support.md">Liquid support</a> document for more details about the support of liquid templates.</li>
 </ul>
 <p>Most of the tests are done through input text files (scriban templates) and expected output files. This has been quite easy to work with such a setup. Maybe the one thing I'm not super happy is the fact that I have put sometimes a bit too more tests into a single file, instead of having more finer grained tests...</p>
 <p>Also, after implementing the tests for <code>markdig</code>, that are actually driven by markdown specifications files, If I had to redo it today, I would most likely opt for this option, as it makes your documentation and tests nicely integrated together.</p>
@@ -385,7 +385,7 @@ public abstract object Evaluate(TemplateContext context);
   }
 </code></pre>
 </li>
-<li><p>There is a tool in the repository <code>Scriban.DocGen</code> that is extracting the markdown XML documentation. For the <code>string.append</code> function, we can generate directly the following <a href="https://github.com/lunet-io/scriban/blob/master/doc/builtins.md#stringappend">markdown documentation</a>.</p>
+<li><p>There is a tool in the repository <code>Scriban.DocGen</code> that is extracting the markdown XML documentation. For the <code>string.append</code> function, we can generate directly the following <a href="https://github.com/scriban/scriban/blob/master/doc/builtins.md#stringappend">markdown documentation</a>.</p>
 </li>
 <li><p>But also, we are able to verify that the example provided by this function is actually running and correct. So the unit tests are parsing back the generated markdown document and extracting the relevant input scriban template (above <code>{{ &quot;Hello&quot; | string.append &quot; World&quot; }}</code>) and the expected output (above <code>Hello World</code>). Using this setup, it was really easy to find any problems with the samples!</p>
 </li>
@@ -408,7 +408,7 @@ public abstract object Evaluate(TemplateContext context);
 </ul>
 <p>I have also added <a href="https://github.com/aspnet/Razor">Razor</a> (2.0.0), Syntax: Razor/C#, not in the charts but in the raw results. This is not a relevant comparison for the fact that it a not a &quot;end-user&quot; text templating engine (not safe) but it gives some insights about the best raw performance you can achieve with it for the rendering part, as it is generating very raw pre-compiled C# code that is basically issuing a bunch of <code>WriteLiteral(text_as_is)</code>, so you can't really do better than Razor in terms of performance.</p>
 <p>For benchmarking, we are using the fantastic <a href="https://github.com/dotnet/BenchmarkDotNet">BenchmarkDotNet</a></p>
-<p>See the <a href="https://github.com/lunet-io/scriban/blob/master/src/Scriban.Benchmarks/Program.cs">Scriban.Benchmark/Program.cs</a> for details of the benchmark implementation.</p>
+<p>See the <a href="https://github.com/scriban/scriban/blob/master/src/Scriban.Benchmarks/Program.cs">Scriban.Benchmark/Program.cs</a> for details of the benchmark implementation.</p>
 <h2 id="parser-benchmarks">Parser Benchmarks</h2>
 <p>The methodology is to compile the following Scriban script:</p>
 <pre><code class="language-html">&lt;ul id='products'&gt;
@@ -483,7 +483,7 @@ Processor=Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), ProcessorCount=8
   1 us      : 1 Microsecond (0.000001 sec)
 </code></pre>
 <p>About the results, we couldn't include Handlebars.NET in the following chart, as it is compiling to IL so it takes a lot more time to compile a template.</p>
-<p><img src="https://raw.githubusercontent.com/lunet-io/scriban/master/img/benchmark-parsing.png" alt="BenchMark Parser Time and Memory" /></p>
+<p><img src="https://raw.githubusercontent.com/scriban/scriban/master/img/benchmark-parsing.png" alt="BenchMark Parser Time and Memory" /></p>
 <h2 id="rendering-benchmarks">Rendering Benchmarks</h2>
 <p>The methodology is to use the previously compiled script and use it with a list of 500 Products to output a final string</p>
 <pre><code>     Method |        Mean |      Error |     StdDev |     Gen 0 |   Gen 1 |   Gen 2 |   Allocated |
@@ -498,7 +498,7 @@ Processor=Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), ProcessorCount=8
       Razor |    326.1 us |   3.023 us |   2.680 us |   64.4531 | 34.1146 | 22.4609 |   264.66 KB |
 </code></pre>
 <p>Note that for Stubble, It was not possible to match the behavior of the other engines, so it is including the parsing time (which is anyway insignificant compare to the rendering time in this particular case)</p>
-<p><img src="https://raw.githubusercontent.com/lunet-io/scriban/master/img/benchmark-rendering.png" alt="BenchMark Rendering Time and Memory" /></p>
+<p><img src="https://raw.githubusercontent.com/scriban/scriban/master/img/benchmark-rendering.png" alt="BenchMark Rendering Time and Memory" /></p>
 <h2 id="overall-results">Overall results</h2>
 <p>For the parser part:</p>
 <ul>
@@ -516,7 +516,7 @@ Processor=Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), ProcessorCount=8
 <p>I was not actually expecting to <a href="https://twitter.com/xoofx/status/903616672002711552">write this post soon</a>, but the fact that I started <code>scriban</code> almost 2 years ago, without giving it the final touch that it deserved, I felt guilty - and hold back - to let this project in an unbalanced state. So I'm glad that I have come to a polished milestone and be able to move on!</p>
 <p>Overall, the project was really fun to code, both in terms of designing the language and providing a lightweight interpreter for it.</p>
 <p>I don't know if I will ever have the time and courage to further prototype <code>lunet</code>, but I will be glad if <code>scriban</code> can contribute to your project. So, if you are looking for a liquid compatible engine, give it a try. If you are looking also to use a more shiny language, give it a try too!</p>
-<p>I'm going to keep the 1.0.0-beta-xxx for a few weeks, before stamping it to a final 1.0.0, so if you have any issues using this library, let me know directly on the <a href="https://github.com/lunet-io/scriban">scriban</a> GitHub issues.</p>
+<p>I'm going to keep the 1.0.0-beta-xxx for a few weeks, before stamping it to a final 1.0.0, so if you have any issues using this library, let me know directly on the <a href="https://github.com/scriban/scriban">scriban</a> GitHub issues.</p>
 <p>Happy Coding!</p>
 
     </div>

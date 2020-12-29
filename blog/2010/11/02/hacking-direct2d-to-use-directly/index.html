@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.4.1.0">
+    <meta name="generator" content="lunet 0.4.2.0">
     <title>Hacking Direct2D to use directly Direct3D 11 instead of Direct3D 10.1 API | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
@@ -14,10 +14,11 @@
     <meta name="twitter:description" content=" Disclaimer about this hack: This hack was nothing more than a proof of concept and I *really* don't have time to dig into any kind of bugs related to it.[Edit]13 Jan 2011, After Windows Update KB2454826, this hack was not working. I have patched the sample to make it work again. Of course, you shouldn't consider this hack for anykind of production use. Use the standard DXGI shared sync...">
     <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Hacking Direct2D to use directly Direct3D 11 instead of Direct3D 10.1 API | xoofx">    
-
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-0DVR9ML8KY');</script>  
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
   </head>
   <body>
+
   <div class="container">
     <div class="row">
       <nav class="navbar navbar-expand-md navbar-light w-100">
@@ -174,7 +175,5 @@ d2dFactory-&gt;CreateDxgiSurfaceRenderTarget(
   </div>
 	<footer class="blog-footer">
         <p>Copyright &copy; 2009 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
-	</footer>  
-  </body>
+	</footer>  </body>
 </html>
-

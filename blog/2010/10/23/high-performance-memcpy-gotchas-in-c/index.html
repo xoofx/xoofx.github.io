@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.4.1.0">
+    <meta name="generator" content="lunet 0.4.2.0">
     <title>High performance memcpy gotchas in C# | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
@@ -14,10 +14,11 @@
     <meta name="twitter:description" content="(Edit 8 Jan 2011: Update protocol test with Buffer.BlockCopy)(Edit 11 Oct 2012: Please vote for the x86 cpblk deficiency on Microsoft Connect)Following my last post about an interesting use of the "cpblk" IL instruction as an unmanaged memcpy replacement, I have to admit that I didn't take the time to carefully verify that performance is actually better. Well, I was probably too optimistic... so I have made some tests and...">
     <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="High performance memcpy gotchas in C# | xoofx">    
-
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-0DVR9ML8KY');</script>  
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
   </head>
   <body>
+
   <div class="container">
     <div class="row">
       <nav class="navbar navbar-expand-md navbar-light w-100">
@@ -544,7 +545,5 @@ Don't trust your .NET VM, check your code on both x86 and x64. It's interesting 
   </div>
 	<footer class="blog-footer">
         <p>Copyright &copy; 2009 - 2020, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
-	</footer>  
-  </body>
+	</footer>  </body>
 </html>
-

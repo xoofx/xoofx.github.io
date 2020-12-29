@@ -3,10 +3,11 @@ author = "Alexandre Mutel"
 title = "xoofx"
 description = "xoofx website"
 
-html.head.title = do; ret page.title + " | " + site.title; end
-
 basepath = ""
 baseurl = baseurl ?? "https://xoofx.com"
+
+# Use `base` as a default layout
+layout = "base"
 
 # Github repository
 github_user = "xoofx"
@@ -82,3 +83,12 @@ end
 with taxonomies
     tags = {singular: 'tag', url: '/blog/tag/', map: { "C#": "csharp" }}
 end
+
+# Setup Google Analytics
+with tracking.google
+    id = "G-0DVR9ML8KY"
+end
+
+# Configure some HTML defaults
+html.head.title = do; ret page.title + " | " + site.title; end
+html.attributes = 'lang="en" itemscope itemtype="http://schema.org/WebPage"'

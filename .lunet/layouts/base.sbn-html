@@ -1,12 +1,6 @@
-<!DOCTYPE html>
-<html lang="en" itemscope itemtype="http://schema.org/WebPage">
-  <head>
-    {{~ Head ~}}
-    {{~ if site.baseurl == "https://xoofx.com" }}
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-0DVR9ML8KY');</script>  
-    {{~ end ~}}
-  </head>
-  <body>
+---
+layout: _default
+---
   <div class="container">
     <div class="row">
       <nav class="navbar navbar-expand-md navbar-light w-100">
@@ -30,7 +24,4 @@
   </div>
 	<footer class="blog-footer">
         <p>Copyright &copy; 2009 - {{ date.now.year }}, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
-	</footer>  
-  </body>
-</html>
-
+	</footer>

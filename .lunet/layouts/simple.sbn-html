@@ -1,5 +1,5 @@
 ---
-layout: _default
+layout: base
 ---
 <div class="col-sm-12">
     <h1 class="title">{{ page.title_html ?? page.title }}</h1>

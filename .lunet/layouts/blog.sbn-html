@@ -1,5 +1,5 @@
 ---
-layout: _default
+layout: base
 ---
 <div class="col-sm-9 js-toc-content">
   <p id="lunet-results"></p>

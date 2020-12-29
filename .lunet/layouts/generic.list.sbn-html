@@ -1,5 +1,5 @@
 ---
-layout: _default
+layout: base
 layout_type: single
 ---
 <div class="col-sm-12">

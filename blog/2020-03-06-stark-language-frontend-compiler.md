@@ -115,6 +115,7 @@ Then I started to bring some more important syntax changes:
   - A departure from C# is that modules and namespaces are following `snake_case`
   <br>
 
+  { .table }
   | Item | Convention |
   | ---- | ---------- |
   | Package | `snake_case` (but prefer single word) |
@@ -128,10 +129,10 @@ Then I started to bring some more important syntax changes:
   | Constant variables | `SCREAMING_SNAKE_CASE` |
   | Enum items | `SCREAMING_SNAKE_CASE` |
   | Type parameters | concise `UpperCamelCase`, prefixed by single uppercase letter: `T` |
-  {: .table }
 
 - Use of a more uniform naming for primitive types, following the syntax of Rust:
   
+  { .table }
   | C# | Stark |
   | ---- | ---------- |
   | `bool` | `bool` |
@@ -149,7 +150,6 @@ Then I started to bring some more important syntax changes:
   | `double` | `f64` |
   | `object` | `object` |
   | `string` | `string` |
-  {: .table }
   
   <br>You will notice that `int` and `uint` represents actually native integers (e.g an `int` is an `i32` or `i64` depending if the target CPU 32 or 64 bits). In Stark, they are first class types and are for example used as the default type for array/collection size/indexers.
 - Use of `implements` interface inheritance/prototype contracts and `extends` for sub-classing, similar to Java.
@@ -686,13 +686,13 @@ A change like "remove boxing of value type" required a departure from [ECMA-335]
 
 In **II.23.1.15 Flags for types [TypeAttributes]** in the table, at the section _Class semantics attributes_:
 
+{ .table }
 | Flag |  Value | Description |
 |-|-|-|
 |`ClassSemanticsMask` | `0x00000060` (changed) | Use this mask to retrieve class semantics information.
 |`Class` | `0x00000000` | Type is a class
 |`Interface` | `0x00000020` | Type is an interface
 |`Struct` | `0x00000040` (new) | Type is a struct
-{: .table }
 
 It's not the sole change that I had to make. For example:
 

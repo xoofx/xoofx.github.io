@@ -150,40 +150,132 @@ public virtual class Object {
 <li>A departure from C# is that modules and namespaces are following <code>snake_case</code>
 <br></li>
 </ul>
-<p>| Item | Convention |
-| ---- | ---------- |
-| Package | <code>snake_case</code> (but prefer single word) |
-| Namespace | <code>snake_case</code> (but prefer single word) |
-| Module | <code>snake_case</code> (but prefer single word) |
-| Types: class, struct, interface, enum, union | <code>UpperCamelCase</code> |
-| Union cases | <code>UpperCamelCase</code> |
-| Functions | <code>snake_case</code> |
-| Local variables | <code>snake_case</code> |
-| Static variables | <code>SCREAMING_SNAKE_CASE</code> |
-| Constant variables | <code>SCREAMING_SNAKE_CASE</code> |
-| Enum items | <code>SCREAMING_SNAKE_CASE</code> |
-| Type parameters | concise <code>UpperCamelCase</code>, prefixed by single uppercase letter: <code>T</code> |
-</p>
+<table class="table">
+<thead>
+<tr>
+<th>Item</th>
+<th>Convention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Package</td>
+<td><code>snake_case</code> (but prefer single word)</td>
+</tr>
+<tr>
+<td>Namespace</td>
+<td><code>snake_case</code> (but prefer single word)</td>
+</tr>
+<tr>
+<td>Module</td>
+<td><code>snake_case</code> (but prefer single word)</td>
+</tr>
+<tr>
+<td>Types: class, struct, interface, enum, union</td>
+<td><code>UpperCamelCase</code></td>
+</tr>
+<tr>
+<td>Union cases</td>
+<td><code>UpperCamelCase</code></td>
+</tr>
+<tr>
+<td>Functions</td>
+<td><code>snake_case</code></td>
+</tr>
+<tr>
+<td>Local variables</td>
+<td><code>snake_case</code></td>
+</tr>
+<tr>
+<td>Static variables</td>
+<td><code>SCREAMING_SNAKE_CASE</code></td>
+</tr>
+<tr>
+<td>Constant variables</td>
+<td><code>SCREAMING_SNAKE_CASE</code></td>
+</tr>
+<tr>
+<td>Enum items</td>
+<td><code>SCREAMING_SNAKE_CASE</code></td>
+</tr>
+<tr>
+<td>Type parameters</td>
+<td>concise <code>UpperCamelCase</code>, prefixed by single uppercase letter: <code>T</code></td>
+</tr>
+</tbody>
+</table>
 </li>
 <li><p>Use of a more uniform naming for primitive types, following the syntax of Rust:</p>
-<p>| C# | Stark |
-| ---- | ---------- |
-| <code>bool</code> | <code>bool</code> |
-| <code>byte</code> | <code>u8</code> |
-| <code>sbyte</code> | <code>i8</code> |
-| <code>short</code> | <code>i16</code> |
-| <code>ushort</code> | <code>u16</code> |
-| <code>int</code> | <code>i32</code> |
-| <code>uint</code> | <code>u32</code> |
-| <code>long</code> | <code>i64</code> |
-| <code>ulong</code> | <code>u64</code> |
-| <code>System.IntPtr</code> | <code>int</code> |
-| <code>Systme.UIntPtr</code> | <code>uint</code> |
-| <code>float</code> | <code>f32</code> |
-| <code>double</code> | <code>f64</code> |
-| <code>object</code> | <code>object</code> |
-| <code>string</code> | <code>string</code> |
-</p>
+<table class="table">
+<thead>
+<tr>
+<th>C#</th>
+<th>Stark</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bool</code></td>
+<td><code>bool</code></td>
+</tr>
+<tr>
+<td><code>byte</code></td>
+<td><code>u8</code></td>
+</tr>
+<tr>
+<td><code>sbyte</code></td>
+<td><code>i8</code></td>
+</tr>
+<tr>
+<td><code>short</code></td>
+<td><code>i16</code></td>
+</tr>
+<tr>
+<td><code>ushort</code></td>
+<td><code>u16</code></td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td><code>i32</code></td>
+</tr>
+<tr>
+<td><code>uint</code></td>
+<td><code>u32</code></td>
+</tr>
+<tr>
+<td><code>long</code></td>
+<td><code>i64</code></td>
+</tr>
+<tr>
+<td><code>ulong</code></td>
+<td><code>u64</code></td>
+</tr>
+<tr>
+<td><code>System.IntPtr</code></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><code>Systme.UIntPtr</code></td>
+<td><code>uint</code></td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td><code>f32</code></td>
+</tr>
+<tr>
+<td><code>double</code></td>
+<td><code>f64</code></td>
+</tr>
+<tr>
+<td><code>object</code></td>
+<td><code>object</code></td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td><code>string</code></td>
+</tr>
+</tbody>
+</table>
 <p><br>You will notice that <code>int</code> and <code>uint</code> represents actually native integers (e.g an <code>int</code> is an <code>i32</code> or <code>i64</code> depending if the target CPU 32 or 64 bits). In Stark, they are first class types and are for example used as the default type for array/collection size/indexers.</p>
 </li>
 <li><p>Use of <code>implements</code> interface inheritance/prototype contracts and <code>extends</code> for sub-classing, similar to Java.</p>
@@ -646,13 +738,37 @@ public module all_tests {
 <h2 id="departure-from-ecma-335">Departure from ECMA-335</h2>
 <p>A change like &quot;remove boxing of value type&quot; required a departure from <a href="https://www.ecma-international.org/publications/standards/Ecma-335.htm">ECMA-335</a> as a struct is identified at the IL level when it inherits <code>System.ValueType</code> which is a reference type. The following changes were applied to the standard:</p>
 <p>In <strong>II.23.1.15 Flags for types [TypeAttributes]</strong> in the table, at the section <em>Class semantics attributes</em>:</p>
-<p>| Flag |  Value | Description |
-|-|-|-|
-|<code>ClassSemanticsMask</code> | <code>0x00000060</code> (changed) | Use this mask to retrieve class semantics information.
-|<code>Class</code> | <code>0x00000000</code> | Type is a class
-|<code>Interface</code> | <code>0x00000020</code> | Type is an interface
-|<code>Struct</code> | <code>0x00000040</code> (new) | Type is a struct
-</p>
+<table class="table">
+<thead>
+<tr>
+<th>Flag</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ClassSemanticsMask</code></td>
+<td><code>0x00000060</code> (changed)</td>
+<td>Use this mask to retrieve class semantics information.</td>
+</tr>
+<tr>
+<td><code>Class</code></td>
+<td><code>0x00000000</code></td>
+<td>Type is a class</td>
+</tr>
+<tr>
+<td><code>Interface</code></td>
+<td><code>0x00000020</code></td>
+<td>Type is an interface</td>
+</tr>
+<tr>
+<td><code>Struct</code></td>
+<td><code>0x00000040</code> (new)</td>
+<td>Type is a struct</td>
+</tr>
+</tbody>
+</table>
 <p>It's not the sole change that I had to make. For example:</p>
 <ul>
 <li>I have also added an <code>Alignment</code> field to <code>ClassLayout</code> in order to specify custom alignment of types (e.g SIMD vector types can require 16 bytes or more)</li>

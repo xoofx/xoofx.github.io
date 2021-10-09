@@ -5,6 +5,7 @@ title: Projects
 
 In my spare time, I have developed a couple of open-source projects on [github](https://github.com/xoofx) and try to maintain them:
 
+- [SuperluminalPerf](https://github.com/xoofx/SuperluminalPerf) SuperluminalPerf is a small .NET managed wrapper around the [Superluminal PerformanceAPI](https://www.superluminal.eu/docs/documentation.html).
 - [lunet](https://github.com/lunet-io/lunet) A fast and powerful static website generator written in C# (prototype, used for this website and [kalk](https://kalk.dev/))
 - [kalk](https://github.com/xoofx/kalk) This is the repository of [kalk](https://kalk.dev/), a powerful command line calculator app for developers.
 - [Blake3.NET](https://github.com/xoofx/Blake3.NET) Blake3.NET is a fast managed wrapper around the SIMD Rust implementations of the BLAKE3 cryptographic hash function.

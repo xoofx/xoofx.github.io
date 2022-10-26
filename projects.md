@@ -5,6 +5,13 @@ title: Projects
 
 In my spare time, I have developed a couple of open-source projects on [github](https://github.com/xoofx) and try to maintain them:
 
+- [Antlr4Ast](https://github.com/xoofx/Antlr4Ast) Antlr4Ast is a .NET library that provides a parser and abstract syntax tree (AST) for ANTLR4/g4 files.
+- [Varena](https://github.com/xoofx/Varena) Varena is a .NET library that provides a fast and lightweight arena allocator using virtual memory.
+- [draytek-watcher](https://github.com/xoofx/draytek-watcher) Daemon to reboot the WAN interface of a DrayTek router if it looks down
+- [dotnet-releaser](https://github.com/xoofx/dotnet-releaser) Easily build, run tests and coverage, cross-compile, package and publish your .NET library or application to NuGet and GitHub.
+- [grpc-curl](https://github.com/xoofx/grpc-curl) grpc-curl is a command line tool for interacting with gRPC servers
+- [UnityNuGet](https://github.com/xoofx/UnityNuGet) Provides a service to install NuGet packages into a Unity project via the Unity Package Manager.
+- [SharpNng](https://github.com/xoofx/SharpNng) SharpNng is a lightweight low-level managed wrapper around the Lightweight Messaging Library NNG
 - [SuperluminalPerf](https://github.com/xoofx/SuperluminalPerf) SuperluminalPerf is a small .NET managed wrapper around the [Superluminal PerformanceAPI](https://www.superluminal.eu/docs/documentation.html).
 - [lunet](https://github.com/lunet-io/lunet) A fast and powerful static website generator written in C# (prototype, used for this website and [kalk](https://kalk.dev/))
 - [kalk](https://github.com/xoofx/kalk) This is the repository of [kalk](https://kalk.dev/), a powerful command line calculator app for developers.

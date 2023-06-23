@@ -1,43 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://xoofx.com/404</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/projects</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/about</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/resume</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2023/06/23/comments-in-code</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2020/03/21/stark-native-compiler</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2020/03/06/stark-language-frontend-compiler</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2020/03/05/stark-melody-dotnet-sel4</loc>
+    <loc>https://xoofx.com/blog/2017/11/13/implementing-a-text-templating-language-and-engine-for-dotnet</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -49,27 +13,19 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2018/04/12/writing-managed-jit-in-csharp-with-coreclr</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2018/04/06/porting-unity-to-coreclr</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2018/03/09/productivity-with-resharper</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2017/11/13/implementing-a-text-templating-language-and-engine-for-dotnet</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.com/blog/2017/02/14/stark-language-design-part-2-packages-and_modules</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
     <loc>https://xoofx.com/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2018/04/12/writing-managed-jit-in-csharp-with-coreclr</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2018/04/06/porting-unity-to-coreclr</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -85,10 +41,6 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2009/10/12/welcome-to-code4k</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
@@ -101,11 +53,7 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2009/10/12/potatro-and-raymarching-story-of</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2009/10/13/coding-4k-or-64k-intro-need-tools</loc>
+    <loc>https://xoofx.com/404</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -113,15 +61,11 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2009/10/18/adding-asm-x86-syntax-highlighting-to</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2009/10/19/asmhighlighter-part-ii-automatic-x86</loc>
+    <loc>https://xoofx.com/blog/2018/03/09/productivity-with-resharper</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -133,11 +77,71 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2009/10/25/random-float-number-using-x86-asm-code</loc>
+    <loc>https://xoofx.com/blog/2020/03/05/stark-melody-dotnet-sel4</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/projects</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2020/03/06/stark-language-frontend-compiler</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/about</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/resume</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2023/06/23/comments-in-code</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2020/03/21/stark-native-compiler</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
     <loc>https://xoofx.com/blog/2014/09/14/why-windows-ui-matters-part-2</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2009/10/12/welcome-to-code4k</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2014/09/12/why-windows-ui-matters-part-1</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2009/10/13/coding-4k-or-64k-intro-need-tools</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2009/10/18/adding-asm-x86-syntax-highlighting-to</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2014/08/13/packages-vnext-power-up-our-net-builds</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2009/10/19/asmhighlighter-part-ii-automatic-x86</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2009/10/25/random-float-number-using-x86-asm-code</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -149,7 +153,7 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2014/09/12/why-windows-ui-matters-part-1</loc>
+    <loc>https://xoofx.com/blog/2014/06/15/micro-benchmarking-net-native-and-ryujit</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -157,15 +161,7 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2014/08/13/packages-vnext-power-up-our-net-builds</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.com/blog/2010/02/12/coding-4k-intro-for-breakpoint-2010</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2014/06/15/micro-benchmarking-net-native-and-ryujit</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -173,15 +169,11 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2013/04/19/advanced-hlsl-ii-shader-compound</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.com/blog/2010/03/08/work-in-progress-4k-intro-for</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2012/08/08/going-native-20-future-of-winrt</loc>
+    <loc>https://xoofx.com/blog/2013/04/19/advanced-hlsl-ii-shader-compound</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -189,7 +181,7 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2011/11/24/advanced-hlsl-using-closures-and</loc>
+    <loc>https://xoofx.com/blog/2012/08/08/going-native-20-future-of-winrt</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -197,11 +189,11 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/08/12/democoding-tools-coding-and-coding</loc>
+    <loc>https://xoofx.com/blog/2011/11/24/advanced-hlsl-using-closures-and</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2011/11/17/direct3d11-multithreading-micro</loc>
+    <loc>https://xoofx.com/blog/2010/08/12/democoding-tools-coding-and-coding</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -209,7 +201,7 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2011/10/02/managed-directx-with-win8-metro-style</loc>
+    <loc>https://xoofx.com/blog/2011/11/17/direct3d11-multithreading-micro</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -217,15 +209,19 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
+    <loc>https://xoofx.com/blog/2011/10/02/managed-directx-with-win8-metro-style</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
     <loc>https://xoofx.com/blog/2011/03/14/benchmarking-cnet-direct3d-11-apis-vs</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/12/28/crinkler-secrets-4k-intro-executable</loc>
+    <loc>https://xoofx.com/blog/2010/10/19/managed-netc-direct3d-11-api-generated</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/10/19/managed-netc-direct3d-11-api-generated</loc>
+    <loc>https://xoofx.com/blog/2010/12/28/crinkler-secrets-4k-intro-executable</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
@@ -237,15 +233,19 @@
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/11/02/hacking-direct2d-to-use-directly</loc>
-    <lastmod>2023-06-23</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.com/blog/2010/10/23/high-performance-memcpy-gotchas-in-c</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
   <url>
     <loc>https://xoofx.com/blog/2010/10/25/implementing-unmanaged-c-interface</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2010/11/02/hacking-direct2d-to-use-directly</loc>
+    <lastmod>2023-06-23</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2009/10/12/potatro-and-raymarching-story-of</loc>
     <lastmod>2023-06-23</lastmod>
   </url>
 </urlset>

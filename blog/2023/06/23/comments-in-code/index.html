@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="lunet 0.4.2.0">
-    <title>Dynamic audio synthesis with Silverlight 3 | xoofx</title>
+    <title>Comments in Code | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@xoofx">
-    <meta name="twitter:title" content="Dynamic audio synthesis with Silverlight 3 | xoofx">
-    <meta name="twitter:description" content="While WebGL is going to be something really cool for some online demomaking (although i would be happy to have an equivalent under Silverlight), it seems that audio is going to be a bit more limited.Few months ago, Iwas very excited about a new feature in Silverlight 3.0 : dynamic raw audio access. That was something I was asking (with others) to the XNA team, but they sadly rejected totally...">
+    <meta name="twitter:title" content="Comments in Code | xoofx">
+    <meta name="twitter:description" content="I haven't been blogging for a while, and this post is not going to be a real blog post! But I wanted to share an old presentation I made a few years ago at my company about Comments in code, as I think that it is worth sharing beyond an inner circle. The reason I made originally this presentation is that I started to realize that every time I was...">
     <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
-    <meta name="twitter:image:alt" content="Dynamic audio synthesis with Silverlight 3 | xoofx">    
+    <meta name="twitter:image:alt" content="Comments in Code | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
   </head>
@@ -46,21 +46,30 @@
   <p id="lunet-results"></p>
   <article class="page">
     <div class="title">
-		  <h1 class="title"><a href="/blog/2009/12/23/dynamic-audio-synthesis-with/">Dynamic audio synthesis with Silverlight 3</a></h1>
-		
+		  <h1 class="title"><a href="/blog/2023/06/23/comments-in-code/">Comments in Code</a></h1>
+		<span class="subtitle">Wait, I thought it was about quality?</span>
     </div>
     <div class="entry-content">
     <div class="blog-post-meta">
       <span class="fa fa-calendar"></span>
-      <span class="date"><time datetime="2009-12-23" itemprop="datePublished">December 23, 2009</time></span>
+      <span class="date"><time datetime="2023-06-23" itemprop="datePublished">June 23, 2023</time></span>
       
-  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-12-24-dynamic-audio-synthesis-with.html">edit</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2023-06-23-comments-in-code.md">edit</a>
     </div>
-      
+      <p>I haven't been blogging for a while, and this post is not going to be a real blog post! But I wanted to share an old presentation I made a few years ago at my company about Comments in code, as I think that it is worth sharing beyond an inner circle.</p>
+<p>The reason I made originally this presentation is that I started to realize that every time I was bringing the topic to some developers about commenting the code we write, I was often getting the same kind of objections, that were ultimately made to legitimate that, in the end, no comment at all are needed.</p>
+<p>So, let me explain why this is so wrong and harmful.</p>
+<iframe src="https://onedrive.live.com/embed?cid=9ECC7012112E02DA&resid=9ECC7012112E02DA%2167695&authkey=AKatuZhp-iBChps&em=2" width="402" height="327" frameborder="0" scrolling="no"></iframe>
+<p>Happy Coding... and Commenting! 🤗</p>
 
-While WebGL is going to be something really cool for some online demomaking (although i would be happy to have an equivalent under Silverlight), it seems that audio is going to be a bit more limited.<br />Few months ago, Iwas very excited about a new feature in Silverlight 3.0 : dynamic raw audio access. That was something I was <a href="http://forums.xna.com/forums/t/4076.aspx">asking (with others) </a>to the XNA team, but they sadly rejected totally such a feature request. Hopefully, Silverlight was more listening to its community and they brought this feature. Notice that this is the first time we have such an access under .NET. You don't have this under the normal .NET Framework, what a shame!<br />At that time, the dynamic raw audio access in the <a href="http://forums.silverlight.net/forums/p/82270/192781.aspx">Silverlight beta had a bad latency</a>... but they solved this issue and believe it or not, it's working GREAT.<br /><br />It's now possible to achieve a latency as low as 20 to 30ms, although that might not be sufficient for a professional audio system, that's already really cool to have it on a browser.<br /><br />I did a very small experiment with just a plain cosinus to output some dynamic sound and the result is quite cool, under 7ko in xap archive (push the button and move the slider)<br /><iframe src="http://rmasm.net/code4k/SilverSynth/index.html" frameborder="0" width="400" height="300" scrolling="no"></iframe><br /><br />You can download the <a href="http://rmasm.net/code4k/SilverSynth/SilverSynth.7z">Visual Studio C# Project here</a>.
     </div>
   </article>
+
+<div id="gh-comments" data-ghcommentid=11>
+  <h2>Comments</h2>
+  <div id="gh-comments-list" ></div>
+  <a href="javascript:void(0)" id="gh-load-comments" class="btn" style="display:none">Load more comments</a>
+</div>
 </div>
 <div class="col-sm-3">
   <nav class="js-toc toc sticky-top"></nav>

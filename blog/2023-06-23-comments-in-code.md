@@ -11,6 +11,6 @@ The reason I made originally this presentation is that I started to realize that
 
 So, let me explain why this is so wrong and harmful.
 
-<iframe src="https://onedrive.live.com/embed?cid=9ECC7012112E02DA&resid=9ECC7012112E02DA%2167695&authkey=AKatuZhp-iBChps&em=2" width="402" height="327" frameborder="0" scrolling="no"></iframe>
+<iframe src="https://onedrive.live.com/embed?cid=9ECC7012112E02DA&resid=9ECC7012112E02DA%2167695&authkey=AKatuZhp-iBChps&em=2" width="804" height="654" frameborder="0" scrolling="no"></iframe>
 
 Happy Coding... and Commenting! 🤗

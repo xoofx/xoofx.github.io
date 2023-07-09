@@ -50,6 +50,7 @@ with bundle
     js prismjs "/components/prism-c.min.js"
     js prismjs "/components/prism-cpp.min.js"
     js prismjs "/components/prism-csharp.min.js"
+    js prismjs "/components/prism-nasm.min.js"
     js "/js/prism-stark.js"
     js "/js/github-comments.js"
     js "/js/xoofx.js"

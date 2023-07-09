@@ -5,6 +5,8 @@ ghcommentid: 12
 tags:
  - C#
  - .NET
+ - x86
+ - assembler
 comments: true
 ---
 

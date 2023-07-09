@@ -161,6 +161,9 @@ static int Find_Generic_256_(ReadOnlySpan<int> data, int value)
 
 The results of the benchmark are:
 
+<div class="table-responsive">
+
+{ .table }
 |                  Method |    N |         Mean |      Error |     StdDev |       Median | Ratio | RatioSD |
 |------------------------ |----- |-------------:|-----------:|-----------:|-------------:|------:|--------:|
 |             **Find_Simple** |   **32** |     **9.497 ns** |  **0.2087 ns** |  **0.2993 ns** |     **9.555 ns** |  **1.00** |    **0.00** |
@@ -194,6 +197,8 @@ The results of the benchmark are:
 |             **Find_Simple** | **8192** | **1,796.290 ns** | **13.4828 ns** | **12.6118 ns** | **1,792.636 ns** |  **1.00** |    **0.00** |
 |            Find_Generic_128 | 8192 |   901.999 ns |  1.8796 ns |  1.7582 ns |   902.707 ns |  0.50 |    0.00 |
 |           Find_Generic_256 | 8192 |   465.352 ns |  5.0166 ns |  4.6925 ns |   462.971 ns |  0.26 |    0.00 |
+
+</div>
 
 The `Vector128.Equals(vInts[i], compareValue)` and `Vector256.Equals(vInts[i], compareValue)` generates a mask (int `-1`/`0xFFFF_FFFF`) when the value is equal, or zero otherwise.
 
@@ -765,6 +770,9 @@ Similarly, the loop processing `1` x `Vector256<int>` is using the `Avx2.MoveMas
 
 And the results of the benchmark is giving a significant boost for the optimized version, **from 4x to 10x** performance boost!
 
+<div class="table-responsive">
+
+{ .table }
 |                  Method |    N |         Mean |      Error |     StdDev |       Median | Ratio | RatioSD |
 |------------------------ |----- |-------------:|-----------:|-----------:|-------------:|------:|--------:|
 |             **Find_Simple** |   **32** |     **9.497 ns** |  **0.2087 ns** |  **0.2993 ns** |     **9.555 ns** |  **1.00** |    **0.00** |
@@ -806,6 +814,8 @@ And the results of the benchmark is giving a significant boost for the optimized
 |            Find_Generic_128 | 8192 |   901.999 ns |  1.8796 ns |  1.7582 ns |   902.707 ns |  0.50 |    0.00 |
 |           Find_Generic_256 | 8192 |   465.352 ns |  5.0166 ns |  4.6925 ns |   462.971 ns |  0.26 |    0.00 |
 | Find_AVX2_256_Optimized | 8192 |   183.790 ns |  0.8620 ns |  0.8063 ns |   183.384 ns |  0.10 |    0.00 |
+
+</div>
 
 ## Final words
 

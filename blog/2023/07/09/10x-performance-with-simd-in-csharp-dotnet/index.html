@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.2.0">
+    <title>10x Performance with SIMD Vectorized Code in C#/.NET | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="10x Performance with SIMD Vectorized Code in C#/.NET | xoofx">
+    <meta name="twitter:description" content="In the middle of my holidays, I was browsing my Mastodon feed and found an interesting challenge, small enough that I don't have to spend days to figure this out, but also interesting because even such small problem is leading to some "tricky" usages of Intel SSE/AVX instructions - that I keep rediscovering (When getting older, I tend to forget these details! 😅 ). The bulk of the challenge can...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="10x Performance with SIMD Vectorized Code in C#/.NET | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2023/07/09/10x-performance-with-simd-in-csharp-dotnet/">10x Performance with SIMD Vectorized Code in C#/.NET</a></h1>
+		<span class="subtitle">Use your CPU at its full width!</span>
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="2023-07-09" itemprop="datePublished">July  9, 2023</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.NET</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2023-07-09-10x-performance-with-simd-in-csharp-dotnet.md">edit</a>
+    </div>
+      <p>In the middle of my holidays, I was browsing my Mastodon feed and found an <a href="https://mastodon.social/@denisio@dotnet.social/110644302160625267">interesting challenge</a>, small enough that I don't have to spend days to figure this out, but also interesting because even such small problem is leading to some &quot;tricky&quot; usages of Intel SSE/AVX instructions - that I keep rediscovering (When getting older, I tend to forget these details! 😅 ).</p>
+<p>The bulk of the challenge can be summarized as:</p>
+<blockquote>
+<p>How to find efficiently a specified <code>int</code> from an <code>int[]</code> using x86-64 SIMD instructions ?</p>
+</blockquote>
+<p>I won't claim that the version described in this blog post is the fastest on earth, and so the goal of this blog post is more educational and about SIMD empowering: if you are not familiar with SIMD code or you feel intimidated about using them, please don't! They are fun to use and they can often give this satisfaction of the 10x performance benefit!</p>
+<p>So let's look at the challenge...</p>
+<h2 id="the-scalar-version">The Scalar version</h2>
+<p>The scalar code of this version is pretty simple:</p>
+<pre><code class="language-C#">static int FindSimple(ReadOnlySpan&lt;int&gt; data, int value)
+{
+    for (var i = 0; i &lt; data.Length; i++)
+        if (data[i] == value)
+            return i;
+    return -1;
+}
+</code></pre>
+<p>I'm using the excellent <a href="https://github.com/EgorBo/Disasmo/">Disasmo</a> Visual Studio Extension from Egor Bogatov to quickly grab the output assembly for such functions, just a <code>ALT+SHIFT+D</code> keyboard away, and boom! 😎</p>
+<pre><code class="language-nasm">; Assembly listing for method BenchFind.BenchmarkFinder:FindSimple_(System.ReadOnlySpan`1[int],int):int
+; Emitting BLENDED_CODE for X64 CPU with AVX - Windows
+; optimized code
+; rsp based frame
+; fully interruptible
+; No PGO data
+; 0 inlinees with PGO data; 1 single block inlinees; 0 inlinees without PGO data
+
+G_M000_IG01:                ;; offset=0000H
+ 
+G_M000_IG02:                ;; offset=0000H
+       488B01               mov      rax, bword ptr [rcx]
+       8B4908               mov      ecx, dword ptr [rcx+08H]
+       4533C0               xor      r8d, r8d
+       85C9                 test     ecx, ecx
+       7E11                 jle      SHORT G_M000_IG04
+                            align    [0 bytes for IG03]
+
+; &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; Loop - Starts here
+G_M000_IG03:                ;; offset=000DH
+       458BC8               mov      r9d, r8d
+       42391488             cmp      dword ptr [rax+4*r9], edx
+       740E                 je       SHORT G_M000_IG06
+       41FFC0               inc      r8d
+       443BC1               cmp      r8d, ecx
+       7CEF                 jl       SHORT G_M000_IG03
+; &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; Loop - Ends here
+
+G_M000_IG04:                ;; offset=001EH
+       B8FFFFFFFF           mov      eax, -1
+ 
+G_M000_IG05:                ;; offset=0023H
+       C3                   ret      
+ 
+G_M000_IG06:                ;; offset=0024H
+       418BC0               mov      eax, r8d
+ 
+G_M000_IG07:                ;; offset=0027H
+       C3                   ret      
+ 
+; Total bytes of code 40
+</code></pre>
+<p>Firstly, you will notice that I have slightly change the challenge from an <code>int[]</code> to use instead a <code>ReadOnlySpan&lt;int&gt;</code>. This is mainly to make the method usable with any runtime data layout: native buffer, managed buffer or stackalloc.</p>
+<blockquote>
+<p><strong>Rule 1</strong>: All .NET compute intensive code these days should use <code>ReadOnlySpan</code>/<code>Span</code> instead of arrays in order to allow more data input layout scenarios.</p>
+</blockquote>
+<p>Secondly, you can also see that the generated ASM code above by the .NET JIT (<code>net7.0</code> version) is quite good enough, almost identical to the <a href="https://godbolt.org/z/njWKK33Gq">generated C++ version</a>. It is expected, as the .NET JIT is nowadays generating competitive code as long as inlining of critical functions is well performed and the register pressure is low (e.g you don't see registers being spilled out on the stack via the <code>rsp</code> register in critical loops)..</p>
+<p>Thirdly, a cautious reader would suggest that this loop could be slightly more optimized with scalar CPU instructions by testing e.g 4 elements instead of only 1 per loop items, and that would be correct! But let's keep the scalar version as simple as it is, we will have more fun with the SIMD version. 🙂</p>
+<h2 id="generic-simd-version">Generic SIMD Version</h2>
+<p>One of the cool addition to .NET 7 are generic SIMD code through via the namespace <code>System.Runtime.Intrinsics</code> that allows you to write SIMD code without dealing with specific CPU instructions, as long as the code stays simple and you can use the <a href="https://learn.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector256?view=net-7.0#methods">various existing methods available</a>.</p>
+<p>This is pretty cool because we can translate the previous scalar loop to a vectorized/SIMD loop with a generic SIMD code that is very simple and easy to follow.</p>
+<p>Here is the generic <code>Vector128&lt;int&gt;</code> version that is able to process 4 ints per loop:</p>
+<pre><code class="language-c#">static int Find_Generic_128_(ReadOnlySpan&lt;int&gt; data, int value)
+{
+    // In theory we should check for Vector128.IsHardwareAccelerated and dispatch
+    // accordingly, in practice here we don't to keep the code simple.
+    var vInts = MemoryMarshal.Cast&lt;int, Vector128&lt;int&gt;&gt;(data);
+
+    var compareValue = Vector128.Create(value);
+    var vectorLength = Vector128&lt;int&gt;.Count;
+
+    // Batch &lt;4 x int&gt; per loop
+    for (var i = 0; i &lt; vInts.Length; i++)
+    {
+        var result = Vector128.Equals(vInts[i], compareValue);
+        if (result == Vector128&lt;int&gt;.Zero) continue;
+
+        for (var k = 0; k &lt; vectorLength; k++)
+            if (result.GetElement(k) != 0)
+                return i * vectorLength + k;
+    }
+
+    // Scalar process of the remaining
+    for (var i = vInts.Length * vectorLength; i &lt; data.Length; i++)
+        if (data[i] == value)
+            return i;
+
+    return -1;
+}
+</code></pre>
+<p>And the generic <code>Vector256&lt;int&gt;</code> version that is able to process 8 ints per loop:</p>
+<pre><code class="language-c#">static int Find_Generic_256_(ReadOnlySpan&lt;int&gt; data, int value)
+{
+    // In theory we should check for Vector256.IsHardwareAccelerated and dispatch
+    // accordingly, in practice here we don't to keep the code simple.
+    var vInts = MemoryMarshal.Cast&lt;int, Vector256&lt;int&gt;&gt;(data);
+
+    var compareValue = Vector256.Create(value);
+    var vectorLength = Vector256&lt;int&gt;.Count;
+
+    // Batch &lt;8 x int&gt; per loop
+    for (var i = 0; i &lt; vInts.Length; i++)
+    {
+        var result = Vector256.Equals(vInts[i], compareValue);
+        if (result == Vector256&lt;int&gt;.Zero) continue;
+
+        for (var k = 0; k &lt; vectorLength; k++)
+            if (result.GetElement(k) != 0)
+                return i * vectorLength + k;
+    }
+
+    // Scalar process of the remaining
+    for (var i = vInts.Length * vectorLength; i &lt; data.Length; i++)
+        if (data[i] == value)
+            return i;
+
+    return -1;
+}
+</code></pre>
+<p>The results of the benchmark are:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>N</th>
+<th style="text-align: right;">Mean</th>
+<th style="text-align: right;">Error</th>
+<th style="text-align: right;">StdDev</th>
+<th style="text-align: right;">Median</th>
+<th style="text-align: right;">Ratio</th>
+<th style="text-align: right;">RatioSD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>32</strong></td>
+<td style="text-align: right;"><strong>9.497 ns</strong></td>
+<td style="text-align: right;"><strong>0.2087 ns</strong></td>
+<td style="text-align: right;"><strong>0.2993 ns</strong></td>
+<td style="text-align: right;"><strong>9.555 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>32</td>
+<td style="text-align: right;">4.572 ns</td>
+<td style="text-align: right;">0.0025 ns</td>
+<td style="text-align: right;">0.0020 ns</td>
+<td style="text-align: right;">4.572 ns</td>
+<td style="text-align: right;">0.48</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>32</td>
+<td style="text-align: right;">7.308 ns</td>
+<td style="text-align: right;">0.5040 ns</td>
+<td style="text-align: right;">1.4861 ns</td>
+<td style="text-align: right;">7.455 ns</td>
+<td style="text-align: right;">0.78</td>
+<td style="text-align: right;">0.17</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>64</strong></td>
+<td style="text-align: right;"><strong>16.557 ns</strong></td>
+<td style="text-align: right;"><strong>0.3431 ns</strong></td>
+<td style="text-align: right;"><strong>0.4580 ns</strong></td>
+<td style="text-align: right;"><strong>16.622 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>64</td>
+<td style="text-align: right;">8.531 ns</td>
+<td style="text-align: right;">0.0269 ns</td>
+<td style="text-align: right;">0.0238 ns</td>
+<td style="text-align: right;">8.543 ns</td>
+<td style="text-align: right;">0.52</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>64</td>
+<td style="text-align: right;">6.626 ns</td>
+<td style="text-align: right;">0.0900 ns</td>
+<td style="text-align: right;">0.0752 ns</td>
+<td style="text-align: right;">6.589 ns</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>128</strong></td>
+<td style="text-align: right;"><strong>35.024 ns</strong></td>
+<td style="text-align: right;"><strong>0.3709 ns</strong></td>
+<td style="text-align: right;"><strong>0.3097 ns</strong></td>
+<td style="text-align: right;"><strong>35.064 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>128</td>
+<td style="text-align: right;">15.533 ns</td>
+<td style="text-align: right;">0.0437 ns</td>
+<td style="text-align: right;">0.0341 ns</td>
+<td style="text-align: right;">15.546 ns</td>
+<td style="text-align: right;">0.44</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>128</td>
+<td style="text-align: right;">10.098 ns</td>
+<td style="text-align: right;">0.0235 ns</td>
+<td style="text-align: right;">0.0208 ns</td>
+<td style="text-align: right;">10.096 ns</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>256</strong></td>
+<td style="text-align: right;"><strong>64.626 ns</strong></td>
+<td style="text-align: right;"><strong>1.1894 ns</strong></td>
+<td style="text-align: right;"><strong>1.1126 ns</strong></td>
+<td style="text-align: right;"><strong>64.496 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>256</td>
+<td style="text-align: right;">35.388 ns</td>
+<td style="text-align: right;">0.0965 ns</td>
+<td style="text-align: right;">0.0855 ns</td>
+<td style="text-align: right;">35.392 ns</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>256</td>
+<td style="text-align: right;">16.866 ns</td>
+<td style="text-align: right;">0.0433 ns</td>
+<td style="text-align: right;">0.0384 ns</td>
+<td style="text-align: right;">16.881 ns</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>512</strong></td>
+<td style="text-align: right;"><strong>120.302 ns</strong></td>
+<td style="text-align: right;"><strong>1.6310 ns</strong></td>
+<td style="text-align: right;"><strong>1.5256 ns</strong></td>
+<td style="text-align: right;"><strong>119.891 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>512</td>
+<td style="text-align: right;">63.086 ns</td>
+<td style="text-align: right;">0.1117 ns</td>
+<td style="text-align: right;">0.1044 ns</td>
+<td style="text-align: right;">63.058 ns</td>
+<td style="text-align: right;">0.52</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>512</td>
+<td style="text-align: right;">39.328 ns</td>
+<td style="text-align: right;">0.8087 ns</td>
+<td style="text-align: right;">2.3845 ns</td>
+<td style="text-align: right;">38.056 ns</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">0.02</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>1024</strong></td>
+<td style="text-align: right;"><strong>232.160 ns</strong></td>
+<td style="text-align: right;"><strong>1.9791 ns</strong></td>
+<td style="text-align: right;"><strong>1.8512 ns</strong></td>
+<td style="text-align: right;"><strong>232.436 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>1024</td>
+<td style="text-align: right;">119.290 ns</td>
+<td style="text-align: right;">0.2275 ns</td>
+<td style="text-align: right;">0.2017 ns</td>
+<td style="text-align: right;">119.350 ns</td>
+<td style="text-align: right;">0.51</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>1024</td>
+<td style="text-align: right;">65.283 ns</td>
+<td style="text-align: right;">0.1176 ns</td>
+<td style="text-align: right;">0.1100 ns</td>
+<td style="text-align: right;">65.236 ns</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>4096</strong></td>
+<td style="text-align: right;"><strong>894.287 ns</strong></td>
+<td style="text-align: right;"><strong>3.6022 ns</strong></td>
+<td style="text-align: right;"><strong>3.0080 ns</strong></td>
+<td style="text-align: right;"><strong>894.541 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>4096</td>
+<td style="text-align: right;">454.083 ns</td>
+<td style="text-align: right;">0.3423 ns</td>
+<td style="text-align: right;">0.3035 ns</td>
+<td style="text-align: right;">454.020 ns</td>
+<td style="text-align: right;">0.51</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>4096</td>
+<td style="text-align: right;">234.391 ns</td>
+<td style="text-align: right;">2.5310 ns</td>
+<td style="text-align: right;">2.1135 ns</td>
+<td style="text-align: right;">234.057 ns</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>8192</strong></td>
+<td style="text-align: right;"><strong>1,796.290 ns</strong></td>
+<td style="text-align: right;"><strong>13.4828 ns</strong></td>
+<td style="text-align: right;"><strong>12.6118 ns</strong></td>
+<td style="text-align: right;"><strong>1,792.636 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>8192</td>
+<td style="text-align: right;">901.999 ns</td>
+<td style="text-align: right;">1.8796 ns</td>
+<td style="text-align: right;">1.7582 ns</td>
+<td style="text-align: right;">902.707 ns</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>8192</td>
+<td style="text-align: right;">465.352 ns</td>
+<td style="text-align: right;">5.0166 ns</td>
+<td style="text-align: right;">4.6925 ns</td>
+<td style="text-align: right;">462.971 ns</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>Vector128.Equals(vInts[i], compareValue)</code> and <code>Vector256.Equals(vInts[i], compareValue)</code> generates a mask (int <code>-1</code>/<code>0xFFFF_FFFF</code>) when the value is equal, or zero otherwise.</p>
+<p>We haven't optimized more than using just plain generic SIMD instructions, and this is already giving a <strong>nice performance boost from 2x to 4x</strong>. 😎</p>
+<h2 id="cpu-simd-optimized-version">CPU SIMD Optimized version</h2>
+<p>That's great, but if you are looking for performance, we can still go a bit further by using CPU specific SIMD intrinsics instructions with Intel x86-64. Let's have a look!</p>
+<p>But first, what is wrong with the previous generic SIMD versions? If we look at the generated assembly for the SIMD 128 bit version, we will quickly find something suspicious:</p>
+<pre><code class="language-nasm">; Assembly listing for method BenchFind.BenchmarkFinder:Find_Generic_128_(System.ReadOnlySpan`1[int],int):int
+; Emitting BLENDED_CODE for X64 CPU with AVX - Windows
+; optimized code
+; rsp based frame
+; fully interruptible
+; No PGO data
+; 0 inlinees with PGO data; 8 single block inlinees; 1 inlinees without PGO data
+
+G_M000_IG01:                ;; offset=0000H
+       4883EC38             sub      rsp, 56
+       C5F877               vzeroupper 
+       33C0                 xor      eax, eax
+       4889442428           mov      qword ptr [rsp+28H], rax
+       4889442430           mov      qword ptr [rsp+30H], rax
+ 
+G_M000_IG02:                ;; offset=0013H
+       488B01               mov      rax, bword ptr [rcx]
+       8B4908               mov      ecx, dword ptr [rcx+08H]
+       448BC1               mov      r8d, ecx
+       49C1E002             shl      r8, 2
+       49C1E804             shr      r8, 4
+       4981F8FFFFFF7F       cmp      r8, 0x7FFFFFFF
+       0F8790000000         ja       G_M000_IG15
+       C4E1796EC2           vmovd    xmm0, edx
+       C4E27958C0           vpbroadcastd xmm0, xmm0
+       4533C9               xor      r9d, r9d
+       4585C0               test     r8d, r8d
+       7E3F                 jle      SHORT G_M000_IG07
+ 
+G_M000_IG03:                ;; offset=0043H
+       458BD1               mov      r10d, r9d
+       49C1E204             shl      r10, 4
+       C4A179760C10         vpcmpeqd xmm1, xmm0, xmmword ptr [rax+r10]
+       C4E27917C9           vptest   xmm1, xmm1
+       7423                 je       SHORT G_M000_IG06
+ 
+G_M000_IG04:                ;; offset=0057H
+       4533D2               xor      r10d, r10d
+       660F1F440000         align    [6 bytes for IG05]
+ 
+G_M000_IG05:                ;; offset=0060H
+       C4E179114C2428       vmovupd  xmmword ptr [rsp+28H], xmm1
+       468B5C9428           mov      r11d, dword ptr [rsp+4*r10+28H]
+       4585DB               test     r11d, r11d
+       7547                 jne      SHORT G_M000_IG13
+       41FFC2               inc      r10d
+       4183FA04             cmp      r10d, 4
+       7CE6                 jl       SHORT G_M000_IG05
+ 
+G_M000_IG06:                ;; offset=007AH
+       41FFC1               inc      r9d
+       453BC8               cmp      r9d, r8d
+       7CC1                 jl       SHORT G_M000_IG03
+ 
+G_M000_IG07:                ;; offset=0082H
+       41C1E002             shl      r8d, 2
+       443BC1               cmp      r8d, ecx
+       7D1B                 jge      SHORT G_M000_IG09
+       0F1F440000           align    [5 bytes for IG08]
+ 
+G_M000_IG08:                ;; offset=0090H
+       443BC1               cmp      r8d, ecx
+       7332                 jae      SHORT G_M000_IG16
+       458BC8               mov      r9d, r8d
+       42391488             cmp      dword ptr [rax+4*r9], edx
+       7412                 je       SHORT G_M000_IG11
+       41FFC0               inc      r8d
+       443BC1               cmp      r8d, ecx
+       7CEA                 jl       SHORT G_M000_IG08
+ 
+G_M000_IG09:                ;; offset=00A6H
+       B8FFFFFFFF           mov      eax, -1
+ 
+G_M000_IG10:                ;; offset=00ABH
+       4883C438             add      rsp, 56
+       C3                   ret      
+ 
+G_M000_IG11:                ;; offset=00B0H
+       418BC0               mov      eax, r8d
+ 
+G_M000_IG12:                ;; offset=00B3H
+       4883C438             add      rsp, 56
+       C3                   ret      
+ 
+G_M000_IG13:                ;; offset=00B8H
+       438D048A             lea      eax, [r10+4*r9]
+ 
+G_M000_IG14:                ;; offset=00BCH
+       4883C438             add      rsp, 56
+       C3                   ret      
+ 
+G_M000_IG15:                ;; offset=00C1H
+       E8AA7BC35F           call     CORINFO_HELP_OVERFLOW
+       CC                   int3     
+ 
+G_M000_IG16:                ;; offset=00C7H
+       E81480C35F           call     CORINFO_HELP_RNGCHKFAIL
+       CC                   int3     
+ 
+; Total bytes of code 205
+</code></pre>
+<p>The ASM code starts with <code>sub rsp, 56</code> which indicates that there is some stack spilling going on. It's not always a bad thing for long method, but for such a short compute intensive code, it might start to be a red flag, especially if the stack spilling occurs within a tight loop.</p>
+<p>What is requiring this stack spill?</p>
+<p>We can see it in the middle of the ASM code:</p>
+<pre><code class="language-nasm">G_M000_IG05:                ;; offset=0060H
+       C4E179114C2428       vmovupd  xmmword ptr [rsp+28H], xmm1
+       468B5C9428           mov      r11d, dword ptr [rsp+4*r10+28H]
+       4585DB               test     r11d, r11d
+       7547                 jne      SHORT G_M000_IG13
+       41FFC2               inc      r10d
+       4183FA04             cmp      r10d, 4
+       7CE6                 jl       SHORT G_M000_IG05
+</code></pre>
+<p>and this code is actually associated with the following C# code:</p>
+<pre><code class="language-c#">        // Will generate stack spilling!
+        for (var k = 0; k &lt; vectorLength; k++)
+            if (result.GetElement(k) != 0)
+                return i * vectorLength + k;
+</code></pre>
+<p>D'oh! So this very inoffensive code is generating a back and forth from memory in order to check which int component in the <code>Vector128&lt;int&gt;</code> is actually matching! 😱</p>
+<p>The stack spilling is not that terrible because this code only runs once we have a match, but for small input, it might adds up.</p>
+<p>Ok, so let's optimize the SIMD version with some unsafe tricks, MOAR SIMD per loop and CPU specific intrinsics:</p>
+<pre><code class="language-C#">public static int Find_AVX_256_Optimized(ReadOnlySpan&lt;int&gt; data, int value)
+{
+    // Our data cursor
+    ref var pv = ref MemoryMarshal.GetReference(data);
+
+    var compareValue = Vector256.Create(value);
+    nint length = data.Length;
+
+    // Process 32 int (8 * 4) per loop (128 bytes)
+    nint bound1024 = length &amp; ~(Vector256&lt;int&gt;.Count * 4 - 1);
+    nint i = 0;
+    for (; i &lt; bound1024; i += Vector256&lt;int&gt;.Count * 4)
+    {
+        var r1 = Vector256.Equals(Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i)), compareValue);
+        var r2 = Vector256.Equals(Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i + Vector256&lt;int&gt;.Count)), compareValue);
+        var r3 = Vector256.Equals(Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i + Vector256&lt;int&gt;.Count * 2)), compareValue);
+        var r4 = Vector256.Equals(Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i + Vector256&lt;int&gt;.Count * 3)), compareValue);
+
+        var r5 = r1 | r2 | r3 | r4;
+        if (r5 != Vector256&lt;int&gt;.Zero)
+        {
+            // r12 = pack 32 to 16 of r1/r2
+            var t = Avx2.Permute2x128(r1, r2, 0b_0010_0000);
+            r2 = Avx2.Permute2x128(r1, r2, 0b_0011_0001);
+            r1 = t;
+            Vector256&lt;short&gt; r12 = Avx2.PackSignedSaturate(r1, r2).AsInt16();
+
+            // r34 = pack 32 to 16 of r3/r4
+            t = Avx2.Permute2x128(r3, r4, 0b_0010_0000);
+            r4 = Avx2.Permute2x128(r3, r4, 0b_0011_0001);
+            r3 = t;
+            Vector256&lt;short&gt; r34 = Avx2.PackSignedSaturate(r3, r4).AsInt16();
+
+            // pack 16 to 8 of r12/r34
+            var t1 = Avx2.Permute2x128(r12, r34, 0b_0010_0000);
+            r34 = Avx2.Permute2x128(r12, r34, 0b_0011_0001);
+            r12 = t1;
+            Vector256&lt;sbyte&gt; r = Avx2.PackSignedSaturate(r12, r34);
+
+            // Get the mask from &lt;8 x byte&gt;
+            var idx = Avx2.MoveMask(r);
+            return (int)(i + BitOperations.TrailingZeroCount(idx));
+        }
+    }
+
+    // Process 8 int per loop (32 bytes)
+    nint bound256 = length &amp; ~(Vector256&lt;int&gt;.Count - 1);
+    for (; i &lt; bound256; i += Vector256&lt;int&gt;.Count)
+    {
+        var r1 = Vector256.Equals(Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i)), compareValue);
+        if (r1 != Vector256&lt;int&gt;.Zero)
+        {
+            // Get the mask from &lt;8 x int&gt; to byte
+            var rByte = Avx.MoveMask(r1.AsSingle());
+            // And get the local index
+            var idx = BitOperations.TrailingZeroCount((uint)rByte);
+            return (int)(i + idx);
+        }
+    }
+
+    // Process remaining
+    for (; i &lt; length; i++)
+    {
+        if (Unsafe.Add(ref pv, i) == value)
+            return (int)i;
+    }
+
+    return -1;
+}
+</code></pre>
+<p>And this code gets translated to the following optimized ASM code:</p>
+<pre><code class="language-nasm">; Assembly listing for method BenchFind.BatchFinder:Find_AVX2_256_Optimized(System.ReadOnlySpan`1[int],int):int
+; Emitting BLENDED_CODE for X64 CPU with AVX - Windows
+; optimized code
+; rsp based frame
+; fully interruptible
+; No PGO data
+; 2 inlinees with PGO data; 3 single block inlinees; 0 inlinees without PGO data
+
+G_M000_IG01:                ;; offset=0000H
+       C5F877               vzeroupper 
+ 
+G_M000_IG02:                ;; offset=0003H
+       488B01               mov      rax, bword ptr [rcx]
+       C4E1796EC2           vmovd    xmm0, edx
+       C4E27D58C0           vpbroadcastd ymm0, ymm0
+       8B4908               mov      ecx, dword ptr [rcx+08H]
+       4863C9               movsxd   rcx, ecx
+       4C8BC1               mov      r8, rcx
+       4983E0E0             and      r8, -32
+       4533C9               xor      r9d, r9d
+       4D85C0               test     r8, r8
+       7E45                 jle      SHORT G_M000_IG04
+                            align    [0 bytes for IG03]
+ 
+G_M000_IG03:                ;; offset=0025H
+       4D8BD1               mov      r10, r9
+       49C1E202             shl      r10, 2
+       C4A17D760C10         vpcmpeqd ymm1, ymm0, ymmword ptr[rax+r10]
+       C4A17D76541020       vpcmpeqd ymm2, ymm0, ymmword ptr[rax+r10+20H]
+       C4A17D765C1040       vpcmpeqd ymm3, ymm0, ymmword ptr[rax+r10+40H]
+       C4A17D76641060       vpcmpeqd ymm4, ymm0, ymmword ptr[rax+r10+60H]
+       C4E175EBEA           vpor     ymm5, ymm1, ymm2
+       C4E155EBEB           vpor     ymm5, ymm5, ymm3
+       C4E155EBEC           vpor     ymm5, ymm5, ymm4
+       C4E27D17ED           vptest   ymm5, ymm5
+       7571                 jne      SHORT G_M000_IG14
+       4983C120             add      r9, 32
+       4D3BC8               cmp      r9, r8
+       7CBB                 jl       SHORT G_M000_IG03
+ 
+G_M000_IG04:                ;; offset=006AH
+       4C8BC1               mov      r8, rcx
+       4983E0F8             and      r8, -8
+       4D3BC8               cmp      r9, r8
+       7D20                 jge      SHORT G_M000_IG06
+       66660F1F840000000000 align    [10 bytes for IG05]
+ 
+G_M000_IG05:                ;; offset=0080H
+       C4A17D760C88         vpcmpeqd ymm1, ymm0, ymmword ptr[rax+4*r9]
+       C4E27D17C9           vptest   ymm1, ymm1
+       7531                 jne      SHORT G_M000_IG12
+       4983C108             add      r9, 8
+       4D3BC8               cmp      r9, r8
+       7CEA                 jl       SHORT G_M000_IG05
+ 
+G_M000_IG06:                ;; offset=0096H
+       4C3BC9               cmp      r9, rcx
+       7D13                 jge      SHORT G_M000_IG08
+       0F1F440000           align    [5 bytes for IG07]
+ 
+G_M000_IG07:                ;; offset=00A0H
+       42391488             cmp      dword ptr [rax+4*r9], edx
+       7411                 je       SHORT G_M000_IG10
+       49FFC1               inc      r9
+       4C3BC9               cmp      r9, rcx
+       7CF2                 jl       SHORT G_M000_IG07
+ 
+G_M000_IG08:                ;; offset=00AEH
+       B8FFFFFFFF           mov      eax, -1
+ 
+G_M000_IG09:                ;; offset=00B3H
+       C5F877               vzeroupper 
+       C3                   ret      
+ 
+G_M000_IG10:                ;; offset=00B7H
+       418BC1               mov      eax, r9d
+ 
+G_M000_IG11:                ;; offset=00BAH
+       C5F877               vzeroupper 
+       C3                   ret      
+ 
+G_M000_IG12:                ;; offset=00BEH
+       C5FC50C1             vmovmskps yrax, ymm1
+       F30FBCC0             tzcnt    eax, eax
+       4103C1               add      eax, r9d
+ 
+G_M000_IG13:                ;; offset=00C9H
+       C5F877               vzeroupper 
+       C3                   ret      
+ 
+G_M000_IG14:                ;; offset=00CDH
+       C4E37546C220         vperm2i128 ymm0, ymm1, ymm2, 32
+       C4E37546D231         vperm2i128 ymm2, ymm1, ymm2, 49
+       C5FC28C8             vmovaps  ymm1, ymm0
+       C4E36546C420         vperm2i128 ymm0, ymm3, ymm4, 32
+       C4E36546E431         vperm2i128 ymm4, ymm3, ymm4, 49
+       C5FD6BC4             vpackssdw ymm0, ymm0, ymm4
+       C5F56BCA             vpackssdw ymm1, ymm1, ymm2
+       C4E37546D020         vperm2i128 ymm2, ymm1, ymm0, 32
+       C4E37546C031         vperm2i128 ymm0, ymm1, ymm0, 49
+       C5ED63C0             vpacksswb ymm0, ymm2, ymm0
+       C5FDD7C0             vpmovmskb eax, ymm0
+       F30FBCC0             tzcnt    eax, eax
+       4103C1               add      eax, r9d
+ 
+G_M000_IG15:                ;; offset=010CH
+       C5F877               vzeroupper 
+       C3                   ret      
+ 
+; Total bytes of code 272
+</code></pre>
+<p>So in order to further optimize our code, we have followed a few very simple rules and used some specific Intel instructions:</p>
+<ul>
+<li>Using a <code>ref</code> data cursor instead of <code>ReadOnlySpan</code>.</li>
+<li>Using <code>nint</code> instead of <code>int</code> indexer.</li>
+<li>Using more batches.</li>
+<li>Using specific Intel intrinsics tricks.</li>
+</ul>
+<p>Let's have a look at them.</p>
+<h3 id="using-ref">Using ref</h3>
+<p>Firstly, we are going to use a <code>ref</code> data cursor instead of accessing the <code>ReadOnlySpan&lt;int&gt;</code>, this is done with the first instruction:</p>
+<pre><code class="language-c#">    // Our data cursor
+    ref var pv = ref MemoryMarshal.GetReference(data);
+</code></pre>
+<p>The benefit of doing this is that it will remove all bounds checks that you can still see around in the generic version (because some patterns are not fully detected). We are using a <code>ref</code> instead of an unsafe <code>*</code> pointer for the reason that we still want our code to be GC friendly. Using a <code>ref</code> here allows the GC to update this pointer if necessary (if the pointed data is being moved by the GC) while a fixed/pinned statement would block the GC for moving this data around.</p>
+<h3 id="using-nint">Using nint</h3>
+<p>Secondly, we need to return an index to the data, so we are declaring the variable <code>nint i = 0;</code> at the beginning that we will keep between the different batch groups. Now you might wonder why using <code>nint</code> instead of a <code>int</code>? <code>nint</code> is a shorthand for <code>System.IntPtr</code> and matches the CPU register size. It helps the compiler to avoid generating many up-casting from int32 to int64 in various places (<code>movsxd</code> instructions). In the generic <code>ReadOnlySpan&lt;int&gt;</code> SIMD version, you won't see this <code>movsxd</code> instructions, because the compiler is able to detect such pattern, but because in our case we are keeping a single variable across the different batch groups (next section), the compiler won't notice this and will generate these spurious <code>movsxd</code>.</p>
+<h3 id="using-more-batches">Using more batches</h3>
+<p>Thirdly, we want to increase the batch, so that the cost of the loop is reduced compared to the code doing the actual computation. In the previous generic <code>Vector128&lt;int&gt;</code> version, the compute intensive loop is like this and there is almost as much code to run the loop than to perform the actual computation:</p>
+<pre><code class="language-nasm">G_M000_IG03:                ;; offset=0043H
+       458BD1               mov      r10d, r9d
+       49C1E204             shl      r10, 4
+       ; &lt;&lt;&lt;&lt;&lt;&lt;&lt; Actual computation code - starts
+       C4A179760C10         vpcmpeqd xmm1, xmm0, xmmword ptr [rax+r10]
+       C4E27917C9           vptest   xmm1, xmm1
+       7423                 je       SHORT G_M000_IG06
+       ; &gt;&gt;&gt;&gt;&gt;&gt;&gt; Actual computation code - ends
+
+; [...] skipping some lines
+
+G_M000_IG06:                ;; offset=007AH
+       41FFC1               inc      r9d
+       453BC8               cmp      r9d, r8d
+       7CC1                 jl       SHORT G_M000_IG03
+</code></pre>
+<p>So, we are breaking our code into 3 loops:</p>
+<ul>
+<li>A first loop that can process <code>4</code> x <code>Vector256&lt;int&gt;</code>, so 128 bytes per loop item</li>
+<li>A remaining loop that can process <code>1</code> x <code>Vector256&lt;int&gt;</code>, so 32 bytes per loop item</li>
+<li>And the remaining scalar loop</li>
+</ul>
+<p>Another trick is to minimize the computation when we haven't found an item, even in the case of the <code>4</code> x <code>Vector256&lt;int&gt;</code>. The trick here is to generate a single branch for checking if we have a match by <code>OR|</code>ing the <code>4</code> comparisons and only check the result of the <code>OR|</code>ing:</p>
+<pre><code class="language-c#">        var r1 = Vector256.Equals(Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i)), compareValue);
+        var r2 = Vector256.Equals(Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i + Vector256&lt;int&gt;.Count)), compareValue);
+        var r3 = Vector256.Equals(Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i + Vector256&lt;int&gt;.Count * 2)), compareValue);
+        var r4 = Vector256.Equals(Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i + Vector256&lt;int&gt;.Count * 3)), compareValue);
+
+        var r5 = r1 | r2 | r3 | r4;
+        if (r5 != Vector256&lt;int&gt;.Zero)
+        {
+            // .... We have found something!
+        }
+</code></pre>
+<p>And here is how our loop looks like now:</p>
+<pre><code class="language-nasm">G_M000_IG03:                ;; offset=0025H
+       4D8BD1               mov      r10, r9
+       49C1E202             shl      r10, 2
+       C4A17D760C10         vpcmpeqd ymm1, ymm0, ymmword ptr[rax+r10]
+       C4A17D76541020       vpcmpeqd ymm2, ymm0, ymmword ptr[rax+r10+20H]
+       C4A17D765C1040       vpcmpeqd ymm3, ymm0, ymmword ptr[rax+r10+40H]
+       C4A17D76641060       vpcmpeqd ymm4, ymm0, ymmword ptr[rax+r10+60H]
+       C4E175EBEA           vpor     ymm5, ymm1, ymm2
+       C4E155EBEB           vpor     ymm5, ymm5, ymm3
+       C4E155EBEC           vpor     ymm5, ymm5, ymm4
+       C4E27D17ED           vptest   ymm5, ymm5
+       7571                 jne      SHORT G_M000_IG14
+       4983C120             add      r9, 32
+       4D3BC8               cmp      r9, r8
+       7CBB                 jl       SHORT G_M000_IG03
+</code></pre>
+<p>It shows that we are doing more compute work than the loop machinery (<code>add r9, 32</code>, <code>cmp r9, r8</code>...etc.) and it helps to lower its cost. Compared to the generic version, we have now multiple instructions involved that are processing <strong>4 times more data per loop</strong>!</p>
+<h3 id="using-cpu-intrinsics">Using CPU intrinsics</h3>
+<p>Now, how can we avoid the stack spilling by not using <code>Vector256&lt;T&gt;.GetElement(index)</code>? By using specific SSE/AVX instructions!</p>
+<p>For the first <code>4</code> x <code>Vector256&lt;int&gt;</code> batch, we are using the following code to compute the index of the first element found without using any branches:</p>
+<pre><code>if (r5 != Vector256&lt;int&gt;.Zero)
+{
+    // r12 = pack 32 to 16 of r1/r2
+    var t = Avx2.Permute2x128(r1, r2, 0b_0010_0000);
+    r2 = Avx2.Permute2x128(r1, r2, 0b_0011_0001);
+    r1 = t;
+    Vector256&lt;short&gt; r12 = Avx2.PackSignedSaturate(r1, r2).AsInt16();
+
+    // r34 = pack 32 to 16 of r3/r4
+    t = Avx2.Permute2x128(r3, r4, 0b_0010_0000);
+    r4 = Avx2.Permute2x128(r3, r4, 0b_0011_0001);
+    r3 = t;
+    Vector256&lt;short&gt; r34 = Avx2.PackSignedSaturate(r3, r4).AsInt16();
+
+    // pack 16 to 8 of r12/r34
+    var t1 = Avx2.Permute2x128(r12, r34, 0b_0010_0000);
+    r34 = Avx2.Permute2x128(r12, r34, 0b_0011_0001);
+    r12 = t1;
+    Vector256&lt;sbyte&gt; r = Avx2.PackSignedSaturate(r12, r34);
+
+    // Get the mask from &lt;8 x byte&gt;
+    var idx = Avx2.MoveMask(r);
+    return (int)(i + BitOperations.TrailingZeroCount(idx));
+}
+</code></pre>
+<p>So we have <code>4</code> x <code>Vector256&lt;int&gt;</code> registers in <code>r1</code>, <code>r2</code>, <code>r3</code>, <code>r4</code>, and what we are going to do is to downcast these <code>32</code> x <code>int</code> to <code>32</code> x <code>byte</code>, so a single <code>Vector256&lt;byte&gt;</code> register, and from there, there is an instruction (<code>movemask</code>) from generating a mask for each byte.</p>
+<p>I'm always using the <a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html">Intel Intrinsics Guide</a> to look at these functions. If you look at the comment of the functions, you will see the CPU instruction name <code>VPERM2I128</code>:</p>
+<pre><code class="language-c#">    /// &lt;summary&gt;
+    ///   &lt;para&gt;__m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8)&lt;/para&gt;
+    ///   &lt;para&gt;VPERM2I128 ymm, ymm, ymm/m256, imm8&lt;/para&gt;
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;left&quot; /&gt;
+    /// &lt;param name=&quot;right&quot; /&gt;
+    /// &lt;param name=&quot;control&quot; /&gt;
+    public new static Vector256&lt;int&gt; Permute2x128(
+      Vector256&lt;int&gt; left,
+      Vector256&lt;int&gt; right,
+      byte control)
+</code></pre>
+<p>Which expands to this manual <a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=VPERM2I128&amp;ig_expand=4962">here</a>.</p>
+<p>It gives a description <code>Shuffle 128-bits (composed of integer data) selected by imm8 from a and b, and store the results in dst.</code> but this is too vague to really understand how this intruction works. But the good thing is that we have the details of the instructions defined via a pseudo microcode:</p>
+<pre><code>__m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8)
+
+DEFINE SELECT4(src1, src2, control) {
+	CASE(control[1:0]) OF
+	0:	tmp[127:0] := src1[127:0]
+	1:	tmp[127:0] := src1[255:128]
+	2:	tmp[127:0] := src2[127:0]
+	3:	tmp[127:0] := src2[255:128]
+	ESAC
+	IF control[3]
+		tmp[127:0] := 0
+	FI
+	RETURN tmp[127:0]
+}
+dst[127:0] := SELECT4(a[255:0], b[255:0], imm8[3:0])
+dst[255:128] := SELECT4(a[255:0], b[255:0], imm8[7:4])
+dst[MAX:256] := 0
+</code></pre>
+<p>So we are using it like this:</p>
+<pre><code class="language-c#">    var t = Avx2.Permute2x128(r1, r2, 0b_0010_0000);
+    r2 = Avx2.Permute2x128(r1, r2, 0b_0011_0001);
+    r1 = t;
+</code></pre>
+<p>The first <code>0b_0010_0000</code> is going to translate to:</p>
+<ul>
+<li><code>imm8[3:0] = 0</code></li>
+<li><code>imm8[7:4] = 2</code>
+while the second <code>0b_0011_0001</code> is translating to:</li>
+<li><code>imm8[3:0] = 1</code></li>
+<li><code>imm8[7:4] = 3</code></li>
+</ul>
+<p>And basically, this instruction with these control byte are packing the low and high 128 bits part together of the two r1/r2 registers:</p>
+<p><img src="/images/vperm2i128.drawio.svg" alt="vperm2i128" /></p>
+<p>Why are we performing such swap? Because most of the AVX2 SIMD instructions are working on interleaved SIMD 128 lanes, and the instruction <code>PackSignedSaturate(Vector256&lt;int&gt; left, Vector256&lt;int&gt; right)</code> which is the instrinsic <a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_packs_epi32&amp;ig_expand=4962,4892">VPACKSSDW/_mm256_packs_epi32</a> is defined like this:</p>
+<pre><code>__m256i _mm256_packs_epi32 (__m256i a, __m256i b)
+
+dst[15:0] := Saturate16(a[31:0])          ; a[127:0]
+dst[31:16] := Saturate16(a[63:32])
+dst[47:32] := Saturate16(a[95:64])
+dst[63:48] := Saturate16(a[127:96])
+
+dst[79:64] := Saturate16(b[31:0])         ; b[128:0]
+dst[95:80] := Saturate16(b[63:32])
+dst[111:96] := Saturate16(b[95:64])
+dst[127:112] := Saturate16(b[127:96])
+
+dst[143:128] := Saturate16(a[159:128])    ; a[255:128]
+dst[159:144] := Saturate16(a[191:160])
+dst[175:160] := Saturate16(a[223:192])
+dst[191:176] := Saturate16(a[255:224])
+
+dst[207:192] := Saturate16(b[159:128])    ; b[255:128]
+dst[223:208] := Saturate16(b[191:160])
+dst[239:224] := Saturate16(b[223:192])
+dst[255:240] := Saturate16(b[255:224])
+dst[MAX:256] := 0
+</code></pre>
+<p>Notice that the function is first processing <code>a[127:0]</code>, then <code>b[128:0]</code>, then <code>a[255:128]</code> and then <code>b[255:128]</code>!</p>
+<p>That's why we need to swap the 128 parts around in order to keep the order of the data.</p>
+<p>We further reduce from <code>int</code> to <code>short</code>, and from <code>short</code> to <code>byte</code>.</p>
+<p>The last SIMD instruction <code>Avx2.MoveMask(Vector256&lt;byte&gt;)</code> (intrinsic <a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_movemask_epi8&amp;ig_expand=4962,4635">_mm256_movemask_epi8</a>) is compressing the 32 bytes into 32 bits.</p>
+<pre><code>int _mm256_movemask_epi8 (__m256i a)
+
+FOR j := 0 to 31
+	i := j*8
+	dst[j] := a[i+7]
+ENDFOR
+</code></pre>
+<p>We can then extract the local position within these 32 bytes by using <code>BitOperations.TrailingZeroCount(int)</code>.</p>
+<p>Similarly, the loop processing <code>1</code> x <code>Vector256&lt;int&gt;</code> is using the <code>Avx2.MoveMask(Vector256&lt;float&gt;)</code> to compute this index per int directly from the <code>Vector256&lt;int&gt;</code> result of the comparison. As you can see, the signature is using a float (!) while it does work on a 32 int as well, which is super convenient. There are plenty of instructions like this in SSE/AVX that looks like they are only relevant for floating point while they do work also for integer types.</p>
+<h2 id="results">Results</h2>
+<p>And the results of the benchmark is giving a significant boost for the optimized version, <strong>from 4x to 10x</strong> performance boost!</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>N</th>
+<th style="text-align: right;">Mean</th>
+<th style="text-align: right;">Error</th>
+<th style="text-align: right;">StdDev</th>
+<th style="text-align: right;">Median</th>
+<th style="text-align: right;">Ratio</th>
+<th style="text-align: right;">RatioSD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>32</strong></td>
+<td style="text-align: right;"><strong>9.497 ns</strong></td>
+<td style="text-align: right;"><strong>0.2087 ns</strong></td>
+<td style="text-align: right;"><strong>0.2993 ns</strong></td>
+<td style="text-align: right;"><strong>9.555 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>32</td>
+<td style="text-align: right;">4.572 ns</td>
+<td style="text-align: right;">0.0025 ns</td>
+<td style="text-align: right;">0.0020 ns</td>
+<td style="text-align: right;">4.572 ns</td>
+<td style="text-align: right;">0.48</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>32</td>
+<td style="text-align: right;">7.308 ns</td>
+<td style="text-align: right;">0.5040 ns</td>
+<td style="text-align: right;">1.4861 ns</td>
+<td style="text-align: right;">7.455 ns</td>
+<td style="text-align: right;">0.78</td>
+<td style="text-align: right;">0.17</td>
+</tr>
+<tr>
+<td>Find_AVX2_256_Optimized</td>
+<td>32</td>
+<td style="text-align: right;">2.398 ns</td>
+<td style="text-align: right;">0.0085 ns</td>
+<td style="text-align: right;">0.0075 ns</td>
+<td style="text-align: right;">2.397 ns</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>64</strong></td>
+<td style="text-align: right;"><strong>16.557 ns</strong></td>
+<td style="text-align: right;"><strong>0.3431 ns</strong></td>
+<td style="text-align: right;"><strong>0.4580 ns</strong></td>
+<td style="text-align: right;"><strong>16.622 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>64</td>
+<td style="text-align: right;">8.531 ns</td>
+<td style="text-align: right;">0.0269 ns</td>
+<td style="text-align: right;">0.0238 ns</td>
+<td style="text-align: right;">8.543 ns</td>
+<td style="text-align: right;">0.52</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>64</td>
+<td style="text-align: right;">6.626 ns</td>
+<td style="text-align: right;">0.0900 ns</td>
+<td style="text-align: right;">0.0752 ns</td>
+<td style="text-align: right;">6.589 ns</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td>Find_AVX2_256_Optimized</td>
+<td>64</td>
+<td style="text-align: right;">2.936 ns</td>
+<td style="text-align: right;">0.0161 ns</td>
+<td style="text-align: right;">0.0143 ns</td>
+<td style="text-align: right;">2.935 ns</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>128</strong></td>
+<td style="text-align: right;"><strong>35.024 ns</strong></td>
+<td style="text-align: right;"><strong>0.3709 ns</strong></td>
+<td style="text-align: right;"><strong>0.3097 ns</strong></td>
+<td style="text-align: right;"><strong>35.064 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>128</td>
+<td style="text-align: right;">15.533 ns</td>
+<td style="text-align: right;">0.0437 ns</td>
+<td style="text-align: right;">0.0341 ns</td>
+<td style="text-align: right;">15.546 ns</td>
+<td style="text-align: right;">0.44</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>128</td>
+<td style="text-align: right;">10.098 ns</td>
+<td style="text-align: right;">0.0235 ns</td>
+<td style="text-align: right;">0.0208 ns</td>
+<td style="text-align: right;">10.096 ns</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_AVX2_256_Optimized</td>
+<td>128</td>
+<td style="text-align: right;">5.223 ns</td>
+<td style="text-align: right;">0.0132 ns</td>
+<td style="text-align: right;">0.0117 ns</td>
+<td style="text-align: right;">5.221 ns</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>256</strong></td>
+<td style="text-align: right;"><strong>64.626 ns</strong></td>
+<td style="text-align: right;"><strong>1.1894 ns</strong></td>
+<td style="text-align: right;"><strong>1.1126 ns</strong></td>
+<td style="text-align: right;"><strong>64.496 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>256</td>
+<td style="text-align: right;">35.388 ns</td>
+<td style="text-align: right;">0.0965 ns</td>
+<td style="text-align: right;">0.0855 ns</td>
+<td style="text-align: right;">35.392 ns</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>256</td>
+<td style="text-align: right;">16.866 ns</td>
+<td style="text-align: right;">0.0433 ns</td>
+<td style="text-align: right;">0.0384 ns</td>
+<td style="text-align: right;">16.881 ns</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_AVX2_256_Optimized</td>
+<td>256</td>
+<td style="text-align: right;">10.103 ns</td>
+<td style="text-align: right;">0.0524 ns</td>
+<td style="text-align: right;">0.0491 ns</td>
+<td style="text-align: right;">10.131 ns</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>512</strong></td>
+<td style="text-align: right;"><strong>120.302 ns</strong></td>
+<td style="text-align: right;"><strong>1.6310 ns</strong></td>
+<td style="text-align: right;"><strong>1.5256 ns</strong></td>
+<td style="text-align: right;"><strong>119.891 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>512</td>
+<td style="text-align: right;">63.086 ns</td>
+<td style="text-align: right;">0.1117 ns</td>
+<td style="text-align: right;">0.1044 ns</td>
+<td style="text-align: right;">63.058 ns</td>
+<td style="text-align: right;">0.52</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>512</td>
+<td style="text-align: right;">39.328 ns</td>
+<td style="text-align: right;">0.8087 ns</td>
+<td style="text-align: right;">2.3845 ns</td>
+<td style="text-align: right;">38.056 ns</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">0.02</td>
+</tr>
+<tr>
+<td>Find_AVX2_256_Optimized</td>
+<td>512</td>
+<td style="text-align: right;">15.840 ns</td>
+<td style="text-align: right;">0.0257 ns</td>
+<td style="text-align: right;">0.0215 ns</td>
+<td style="text-align: right;">15.842 ns</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>1024</strong></td>
+<td style="text-align: right;"><strong>232.160 ns</strong></td>
+<td style="text-align: right;"><strong>1.9791 ns</strong></td>
+<td style="text-align: right;"><strong>1.8512 ns</strong></td>
+<td style="text-align: right;"><strong>232.436 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>1024</td>
+<td style="text-align: right;">119.290 ns</td>
+<td style="text-align: right;">0.2275 ns</td>
+<td style="text-align: right;">0.2017 ns</td>
+<td style="text-align: right;">119.350 ns</td>
+<td style="text-align: right;">0.51</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>1024</td>
+<td style="text-align: right;">65.283 ns</td>
+<td style="text-align: right;">0.1176 ns</td>
+<td style="text-align: right;">0.1100 ns</td>
+<td style="text-align: right;">65.236 ns</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_AVX2_256_Optimized</td>
+<td>1024</td>
+<td style="text-align: right;">28.667 ns</td>
+<td style="text-align: right;">0.0405 ns</td>
+<td style="text-align: right;">0.0359 ns</td>
+<td style="text-align: right;">28.656 ns</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>4096</strong></td>
+<td style="text-align: right;"><strong>894.287 ns</strong></td>
+<td style="text-align: right;"><strong>3.6022 ns</strong></td>
+<td style="text-align: right;"><strong>3.0080 ns</strong></td>
+<td style="text-align: right;"><strong>894.541 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>4096</td>
+<td style="text-align: right;">454.083 ns</td>
+<td style="text-align: right;">0.3423 ns</td>
+<td style="text-align: right;">0.3035 ns</td>
+<td style="text-align: right;">454.020 ns</td>
+<td style="text-align: right;">0.51</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>4096</td>
+<td style="text-align: right;">234.391 ns</td>
+<td style="text-align: right;">2.5310 ns</td>
+<td style="text-align: right;">2.1135 ns</td>
+<td style="text-align: right;">234.057 ns</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_AVX2_256_Optimized</td>
+<td>4096</td>
+<td style="text-align: right;">113.839 ns</td>
+<td style="text-align: right;">0.5868 ns</td>
+<td style="text-align: right;">0.5489 ns</td>
+<td style="text-align: right;">113.575 ns</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Find_Simple</strong></td>
+<td><strong>8192</strong></td>
+<td style="text-align: right;"><strong>1,796.290 ns</strong></td>
+<td style="text-align: right;"><strong>13.4828 ns</strong></td>
+<td style="text-align: right;"><strong>12.6118 ns</strong></td>
+<td style="text-align: right;"><strong>1,792.636 ns</strong></td>
+<td style="text-align: right;"><strong>1.00</strong></td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr>
+<td>Find_Generic_128</td>
+<td>8192</td>
+<td style="text-align: right;">901.999 ns</td>
+<td style="text-align: right;">1.8796 ns</td>
+<td style="text-align: right;">1.7582 ns</td>
+<td style="text-align: right;">902.707 ns</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_Generic_256</td>
+<td>8192</td>
+<td style="text-align: right;">465.352 ns</td>
+<td style="text-align: right;">5.0166 ns</td>
+<td style="text-align: right;">4.6925 ns</td>
+<td style="text-align: right;">462.971 ns</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr>
+<td>Find_AVX2_256_Optimized</td>
+<td>8192</td>
+<td style="text-align: right;">183.790 ns</td>
+<td style="text-align: right;">0.8620 ns</td>
+<td style="text-align: right;">0.8063 ns</td>
+<td style="text-align: right;">183.384 ns</td>
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+</tbody>
+</table>
+<h2 id="final-words">Final words</h2>
+<p>Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/">.NET 5</a>, <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/">.NET 6</a> and <a href="https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/">.NET 7</a>), it will give you a - huge! - glimpse of what is happening there. Simple functions like <code>string.IndexOf(char)</code> are using these intrinsics under the hood and are able to be completely implemented in C# without the need to a fallback to C++.</p>
+<p>This simple case shows also that C++ compiler won't be able to optimize (here, auto-vectorize) such case without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, in that case, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.</p>
+<p>More specifically, Intel intrinsics can be involved in more algorithm tricks than their ARM counterparts, and that's the cool and fun part of this: Figuring out how to best use them!</p>
+<p>Happy coding! 🤗</p>
+
+    </div>
+  </article>
+
+<div id="gh-comments" data-ghcommentid=12>
+  <h2>Comments</h2>
+  <div id="gh-comments-list" ></div>
+  <a href="javascript:void(0)" id="gh-load-comments" class="btn" style="display:none">Load more comments</a>
+</div>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

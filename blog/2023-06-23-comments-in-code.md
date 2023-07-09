@@ -2,7 +2,7 @@
 title: Comments in Code
 subtitle: Wait, I thought it was about quality?
 ghcommentid: 11
-comments: false
+comments: true
 ---
 
 I haven't been blogging for a while, and this post is not going to be a real blog post! But I wanted to share an old presentation I made a few years ago at my company about Comments in code, as I think that it is worth sharing beyond an inner circle.

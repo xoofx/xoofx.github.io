@@ -184,7 +184,8 @@ G_M000_IG07:                ;; offset=0027H
 }
 </code></pre>
 <p>The results of the benchmark are:</p>
-<table>
+<div class="table-responsive">
+<table class="table">
 <thead>
 <tr>
 <th>Method</th>
@@ -510,6 +511,7 @@ G_M000_IG07:                ;; offset=0027H
 </tr>
 </tbody>
 </table>
+</div>
 <p>The <code>Vector128.Equals(vInts[i], compareValue)</code> and <code>Vector256.Equals(vInts[i], compareValue)</code> generates a mask (int <code>-1</code>/<code>0xFFFF_FFFF</code>) when the value is equal, or zero otherwise.</p>
 <p>We haven't optimized more than using just plain generic SIMD instructions, and this is already giving a <strong>nice performance boost from 2x to 4x</strong>. 😎</p>
 <h2 id="cpu-simd-optimized-version">CPU SIMD Optimized version</h2>
@@ -1005,7 +1007,8 @@ ENDFOR
 <p>Similarly, the loop processing <code>1</code> x <code>Vector256&lt;int&gt;</code> is using the <code>Avx2.MoveMask(Vector256&lt;float&gt;)</code> to compute this index per int directly from the <code>Vector256&lt;int&gt;</code> result of the comparison. As you can see, the signature is using a float (!) while it does work on a 32 int as well, which is super convenient. There are plenty of instructions like this in SSE/AVX that looks like they are only relevant for floating point while they do work also for integer types.</p>
 <h2 id="results">Results</h2>
 <p>And the results of the benchmark is giving a significant boost for the optimized version, <strong>from 4x to 10x</strong> performance boost!</p>
-<table>
+<div class="table-responsive">
+<table class="table">
 <thead>
 <tr>
 <th>Method</th>
@@ -1411,6 +1414,7 @@ ENDFOR
 </tr>
 </tbody>
 </table>
+</div>
 <h2 id="final-words">Final words</h2>
 <p>Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/">.NET 5</a>, <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/">.NET 6</a> and <a href="https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/">.NET 7</a>), it will give you a - huge! - glimpse of what is happening there. Simple functions like <code>string.IndexOf(char)</code> are using these intrinsics under the hood and are able to be completely implemented in C# without the need to a fallback to C++.</p>
 <p>This simple case shows also that C++ compiler won't be able to optimize (here, auto-vectorize) such case without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, in that case, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.</p>

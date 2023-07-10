@@ -61,8 +61,8 @@
 <blockquote>
 <p>How to find efficiently a specified <code>int</code> from an <code>int[]</code> using x86-64 SIMD instructions ?</p>
 </blockquote>
-<p>I won't claim that the version described in this blog post is the fastest on earth, and so the goal of this blog post is more educational and about SIMD empowering: if you are not familiar with SIMD code or you feel intimidated about using them, please don't! They are fun to use and they can often give this satisfaction of the 10x performance benefit!</p>
-<p>So let's look at the challenge...</p>
+<p>I won't claim that the version described in this blog post is the fastest on earth, and so the goal is more educational and about SIMD empowering: if you are not familiar with SIMD code or you feel intimidated about using them, please don't! They are fun to use and they can often give this satisfaction of the 10x performance benefit!</p>
+<p>So let's have a look at the challenge...</p>
 <h2 id="the-scalar-version">The Scalar version</h2>
 <p>The scalar code of this version is pretty simple:</p>
 <pre><code class="language-C#">static int FindSimple(ReadOnlySpan&lt;int&gt; data, int value)
@@ -1004,7 +1004,7 @@ FOR j := 0 to 31
 ENDFOR
 </code></pre>
 <p>We can then extract the local position within these 32 bytes by using <code>BitOperations.TrailingZeroCount(int)</code>.</p>
-<p>But as suggested by Nietras <a href="https://mastodon.social/@nietras/110686107948948524">here</a>, instead of performing the permutation before the <code>PackSignedSaturate</code> we could do it after and save 1 permutation per pack, which is quite nice1:</p>
+<p>But as suggested by Nietras <a href="https://mastodon.social/@nietras/110686107948948524">here</a>, instead of performing the permutation before the <code>PackSignedSaturate</code> we could do it after and save 1 permutation per pack, which is quite nice!:</p>
 <pre><code class="language-c#">if (r5 != Vector256&lt;int&gt;.Zero)
 {
     // r12 = pack 32 to 16 of r1/r2
@@ -1452,10 +1452,10 @@ ENDFOR
 </table>
 </div>
 <h2 id="final-words">Final words</h2>
-<p>Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/">.NET 5</a>, <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/">.NET 6</a> and <a href="https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/">.NET 7</a>), it will give you a - huge! - glimpse of what is happening there. Simple functions like <code>string.IndexOf(char)</code> are using these intrinsics under the hood and are able to be completely implemented in C# without the need to a fallback to C++.</p>
+<p>Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/">.NET 5</a>, <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/">.NET 6</a> and <a href="https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/">.NET 7</a>, it will give you a - huge! - glimpse of what is happening there. Simple functions like <code>string.IndexOf(char)</code> are using these intrinsics under the hood and are implemented entirely in C# without the need for a C++ fallback.</p>
 <p>Not only the BCL is benefiting from the usage of such intrinsics, but the whole .NET ecosystem with plenty of OSS projects that are joining the effort: for example, <a href="https://nietras.com/">Nietras</a> shared recently a cool library <a href="https://nietras.com/2023/06/05/introducing-sep/">Sep - Possibly the World's Fastest .NET CSV Parser</a> which is extensively using such intrinsics to dramatically boost CSV parsing speed.</p>
-<p>This initial simple implementation in this post also shows that the C++ compiler won't be able to optimize (here, auto-vectorize) such case without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.</p>
-<p>More specifically, Intel intrinsics can be involved in more algorithm tricks than their ARM counterparts, and that's the cool and fun part of this: Figuring out how to best use them!</p>
+<p>This initial simple implementation in this post also shows that the C++ compiler won't be able to optimize (here, auto-vectorize) without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.</p>
+<p>More specifically, the zoo of Intel SIMD intrinsics can be involved in more algorithm tricks than their ARM counterparts, and that's the cool and fun part of this: Figuring out how to best use them!</p>
 <p>Happy coding! 🤗</p>
 <p>PS: The code is available as a gist <a href="https://gist.github.com/xoofx/b6c569d83678f85ac87a436f8e241917">here</a></p>
 

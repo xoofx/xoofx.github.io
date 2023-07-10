@@ -874,7 +874,7 @@ Nowadays, large and small processing of data is requiring going full width on th
 
 Not only the BCL is benefiting from the usage of such intrinsics, but the whole .NET ecosystem, with plenty of OSS projects, are joining the effort: for example, [Nietras](https://nietras.com/) shared recently a cool library [Sep - Possibly the World's Fastest .NET CSV Parser](https://nietras.com/2023/06/05/introducing-sep/) which is extensively using SIMD intrinsics to dramatically boost CSV parsing speed.
 
-This initial simple implementation in this post also shows that the C++ compiler won't be able to optimize (here, auto-vectorize) without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.
+The initial simple implementation in this post also shows that the C++ compiler won't be able to optimize (here, auto-vectorize) without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.
 
 More specifically, the zoo of Intel SIMD intrinsics can be involved in more algorithm tricks than their ARM counterparts, and that's the cool and fun part of this: Figuring out how to best use them!
 

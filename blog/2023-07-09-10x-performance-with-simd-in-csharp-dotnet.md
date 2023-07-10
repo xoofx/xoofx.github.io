@@ -81,11 +81,11 @@ G_M000_IG07:                ;; offset=0027H
 ; Total bytes of code 40
 ```
 
-Firstly, you will notice that I have slightly change the challenge from an `int[]` to use instead a `ReadOnlySpan<int>`. This is mainly to make the method usable with any runtime data layout: native buffer, managed buffer or stackalloc. 
+Firstly, you will notice that I have slightly changed the challenge from an `int[]` to use instead a `ReadOnlySpan<int>`. This is mainly to make the method usable with any runtime data layout: native buffer, managed buffer or stackalloc. 
 
-> **Rule 1**: All .NET compute intensive code these days should use `ReadOnlySpan`/`Span` instead of arrays in order to allow more data input layout scenarios.
+> All .NET compute intensive code these days should use `ReadOnlySpan`/`Span` instead of arrays in order to allow more data input layout scenarios.
 
-Secondly, you can also see that the generated ASM code above by the .NET JIT (`net7.0` version) is quite good enough, almost identical to the [generated C++ version](https://godbolt.org/z/njWKK33Gq). It is expected, as the .NET JIT is nowadays generating competitive code as long as inlining of critical functions is well performed and the register pressure is low (e.g you don't see registers being spilled out on the stack via the `rsp` register in critical loops)..
+Secondly, you can also see that the generated ASM code above by the .NET JIT (`net7.0` version) is quite good enough, almost identical to the [generated C++ version](https://godbolt.org/z/njWKK33Gq). It is expected, as the .NET JIT is nowadays generating competitive code as long as 1) inlining of critical functions is well performed and 2) the register pressure is low (e.g you don't see registers being spilled out on the stack via the `rsp` register in critical loops)..
 
 Thirdly, a cautious reader would suggest that this loop could be slightly more optimized with scalar CPU instructions by testing e.g 4 elements instead of only 1 per loop items, and that would be correct! But let's keep the scalar version as simple as it is, we will have more fun with the SIMD version. 🙂
 
@@ -93,7 +93,7 @@ Thirdly, a cautious reader would suggest that this loop could be slightly more o
 
 One of the cool addition to .NET 7 are generic SIMD code via the namespace `System.Runtime.Intrinsics` that allows you to write SIMD code without dealing with specific CPU instructions, as long as the code stays simple and you can use the [various existing methods available](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector256?view=net-7.0#methods).
 
-This is pretty cool because we can translate the previous scalar loop to a vectorized/SIMD loop with a generic SIMD code that is very simple and easy to follow.
+This is pretty cool because we can translate the previous scalar loop to a vectorized/SIMD loop with a generic SIMD code that is fairly simple and easy to follow.
 
 Here is the generic `Vector128<int>` version that is able to process 4 ints per loop:
 
@@ -206,7 +206,7 @@ We haven't optimized more than using just plain generic SIMD instructions, and t
 
 ## CPU SIMD Optimized version
 
-That's great, but if you are looking for performance, we can still go a bit further by using CPU specific SIMD intrinsics instructions with Intel x86-64. Let's have a look!
+That's great, but if you are looking for more performance, we can still go a bit further by using CPU specific SIMD intrinsics instructions with Intel x86-64. Let's have a look!
 
 But first, what is wrong with the previous generic SIMD versions? If we look at the generated assembly for the SIMD 128 bit version, we will quickly find something suspicious:
 
@@ -315,7 +315,7 @@ G_M000_IG16:                ;; offset=00C7H
 
 The ASM code starts with `sub rsp, 56` which indicates that there is some stack spilling going on. It's not always a bad thing for long method, but for such a short compute intensive code, it might start to be a red flag, especially if the stack spilling occurs within a tight loop.
 
-What is requiring this stack spill?
+What is generating this stack spill?
 
 We can see it in the middle of the ASM code:
 
@@ -342,7 +342,7 @@ and this code is actually associated with the following C# code:
 
 D'oh! So this very inoffensive code is generating a back and forth from memory in order to check which int component in the `Vector128<int>` is actually matching! 😱
 
-The stack spilling is not that terrible because this code only runs once we have a match, but for small input, it might adds up.
+The stack spilling is not that terrible because this code only runs once we have a match, but for a small input, it might adds up.
 
 Ok, so let's optimize the SIMD version with some unsafe tricks, MOAR SIMD per loop and CPU specific intrinsics:
 
@@ -533,7 +533,9 @@ G_M000_IG15:                ;; offset=010CH
 ; Total bytes of code 272
 ```
 
-So in order to further optimize our code, we have followed a few very simple rules and used some specific Intel instructions:
+As you can see, the generated code is now heavily optimized, very compact, using only registers. I wouldn't have been able to write much better ASM code If I had to write it by hand!
+
+So in order to further optimize our code, we have followed a few very simple princples and used some specific Intel instructions:
 
 * Using a `ref` data cursor instead of `ReadOnlySpan`.
 * Using `nint` instead of `int` indexer.
@@ -588,11 +590,11 @@ G_M000_IG06:                ;; offset=007AH
        7CC1                 jl       SHORT G_M000_IG03
 ```
 
-So, we are breaking our code into 3 loops:
+So, we are breaking our code into 3 loops, from a coarser batch to a scalar loop:
 
 * A first loop that can process `4` x `Vector256<int>`, so 128 bytes per loop item
 * A remaining loop that can process `1` x `Vector256<int>`, so 32 bytes per loop item
-* And the remaining scalar loop
+* And the remaining scalar loop, so 4 bytes per loop.
 
 Another trick is to minimize the computation when we haven't found an item, even in the case of the `4` x `Vector256<int>`. The trick here is to generate a single branch for checking if we have a match by `OR|`ing the `4` comparisons and only check the result of the `OR|`ing:
 
@@ -686,7 +688,7 @@ I'm always using the [Intel Intrinsics Guide](https://www.intel.com/content/www/
  
 Which expands to this manual [here](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=VPERM2I128&ig_expand=4962). 
 
-It gives a description `Shuffle 128-bits (composed of integer data) selected by imm8 from a and b, and store the results in dst.` but this is too vague to really understand how this intruction works. But the good thing is that we have the details of the instructions defined via a pseudo microcode:
+It gives a description `Shuffle 128-bits (composed of integer data) selected by imm8 from a and b, and store the results in dst.` but this is too vague to help really understand how this intruction works. But the good thing is that we have the details of the instructions defined via a pseudo microcode just below the description, and that's super useful to understand such functions! 😎
 
 ```nasm
 __m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8)
@@ -773,7 +775,7 @@ ENDFOR
 
 We can then extract the local position within these 32 bytes by using `BitOperations.TrailingZeroCount(int)`.
 
-But as suggested by Nietras [here](https://mastodon.social/@nietras/110686107948948524), instead of performing the permutation before the `PackSignedSaturate` we could do it after and save 1 permutation per pack, which is quite nice!:
+But as suggested by Nietras [here](https://mastodon.social/@nietras/110686107948948524), instead of performing the permutation before the `PackSignedSaturate` we could do it after the packing and save 1 permutation per pack, which is quite nice!:
 
 ```c#
 if (r5 != Vector256<int>.Zero)
@@ -870,13 +872,15 @@ And the results of the benchmark is giving a significant boost for the optimized
 
 ## Final words
 
-Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for [.NET 5](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/), [.NET 6](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/) and [.NET 7](https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/), it will give you a - huge! - glimpse of what is happening there. Simple functions like `string.IndexOf(char)` are using these intrinsics under the hood and are implemented entirely in C# without the need for a C++ fallback.
+Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years now with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for [.NET 5](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/), [.NET 6](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/) and [.NET 7](https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/), they will give you a - huge! - glimpse of what is happening there. Simple functions like `string.IndexOf(char)` are using these SIMD intrinsics under the hood and are implemented entirely and super efficiently in C# without the need for a C++ fallback.
 
 Not only the BCL is benefiting from the usage of such intrinsics, but the whole .NET ecosystem, with plenty of OSS projects, are joining the effort: for example, [Nietras](https://nietras.com/) shared recently a cool library [Sep - Possibly the World's Fastest .NET CSV Parser](https://nietras.com/2023/06/05/introducing-sep/) which is extensively using SIMD intrinsics to dramatically boost CSV parsing speed.
 
-The initial simple implementation in this post also shows that the C++ compiler won't be able to optimize (here, auto-vectorize) without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.
+The initial simple implementation in this post also shows that the C++ compiler won't be able to optimize it better (no auto-vectorization) without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes it relevant to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.
 
 More specifically, the zoo of Intel SIMD intrinsics can be involved in more algorithm tricks than their ARM counterparts, and that's the cool and fun part of this: Figuring out how to best use them!
+
+Finally, if you need to micro-optimize such functions, one rule of thumb: never guess! Always profile, benchmark and check the generated output ASM to find out and understand optimization opportunities. 🧪
 
 Happy coding! 🤗
 

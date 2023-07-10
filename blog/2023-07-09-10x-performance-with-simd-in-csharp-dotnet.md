@@ -16,7 +16,7 @@ The bulk of the challenge can be summarized as:
 
 > How to find efficiently a specified `int` from an `int[]` using x86-64 SIMD instructions ?
 
-I won't claim that the version described in this blog post is the fastest on earth, and so the goal is more educational and about SIMD empowering: if you are not familiar with SIMD code or you feel intimidated about using them, please don't! They are fun to use and they can often give this satisfaction of the 10x performance benefit!
+I won't claim that the version described in this blog post is the fastest on earth, and so the goal is more educational and about SIMD empowering: if you are not familiar with SIMD code or you feel intimidated about using them, please don't! They are fun to use and they can often give this satisfaction of a 10x performance boost!
 
 So let's have a look at the challenge...
 
@@ -551,7 +551,16 @@ Firstly, we are going to use a `ref` data cursor instead of accessing the `ReadO
     ref var pv = ref MemoryMarshal.GetReference(data);
 ```
 
-The benefit of doing this is that it will remove all bounds checks that you can still see around in the generic version (because some patterns are not fully detected). We are using a `ref` instead of an unsafe `*` pointer for the reason that we still want our code to be GC friendly. Using a `ref` here allows the GC to update this pointer if necessary (if the pointed data is being moved by the GC) while a fixed/pinned statement would block the GC for moving this data around.
+The benefit of doing this is that it will remove all bounds checks that you can still see around in the generic version (because some patterns are not fully detected). We are using a `ref` instead of an unsafe `*` pointer for the reason that we still want our code to be GC friendly. Using a `ref` here allows the GC to update this pointer if necessary (if the pointed data is being moved by the GC) while a fixed/pinned statement would block the GC for moving this data around and might cause GC fragmentation.
+
+You might then wonder how do we advance a `ref`? Simply by using the [`Unsafe.Add<T>(ref T, nint elementOffset)`](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.unsafe.add?view=net-7.0#system-runtime-compilerservices-unsafe-add-1(-0@-system-intptr)) method! (and other related methods):
+
+```c#
+// Load a Vector256<int> from a ref int at the index i + Vector256<int>.Count * 3
+// equivalent of:
+// Unsafe.As<int, Vector256<int>>(ref data[i + Vector256<int>.Count * 3])
+Unsafe.As<int, Vector256<int>>(ref Unsafe.Add(ref pv, i + Vector256<int>.Count * 3))
+```
 
 ### Using nint
 
@@ -810,7 +819,7 @@ Similarly, the loop processing `1` x `Vector256<int>` is using the `Avx2.MoveMas
 
 ## Results
 
-And the results of the benchmark is giving a significant boost for the optimized version, **from 4x to 10x** performance boost!
+And the results of the benchmark is giving a significant boost for the optimized version, **from 4x to 10x** performance boost! (Oops, actually, it looks like closer to x8, but let's keep 10x for the marketing 😁)
 
 <div class="table-responsive">
 
@@ -863,7 +872,7 @@ And the results of the benchmark is giving a significant boost for the optimized
 
 Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for [.NET 5](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/), [.NET 6](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/) and [.NET 7](https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/), it will give you a - huge! - glimpse of what is happening there. Simple functions like `string.IndexOf(char)` are using these intrinsics under the hood and are implemented entirely in C# without the need for a C++ fallback.
 
-Not only the BCL is benefiting from the usage of such intrinsics, but the whole .NET ecosystem with plenty of OSS projects that are joining the effort: for example, [Nietras](https://nietras.com/) shared recently a cool library [Sep - Possibly the World's Fastest .NET CSV Parser](https://nietras.com/2023/06/05/introducing-sep/) which is extensively using such intrinsics to dramatically boost CSV parsing speed.
+Not only the BCL is benefiting from the usage of such intrinsics, but the whole .NET ecosystem, with plenty of OSS projects, are joining the effort: for example, [Nietras](https://nietras.com/) shared recently a cool library [Sep - Possibly the World's Fastest .NET CSV Parser](https://nietras.com/2023/06/05/introducing-sep/) which is extensively using SIMD intrinsics to dramatically boost CSV parsing speed.
 
 This initial simple implementation in this post also shows that the C++ compiler won't be able to optimize (here, auto-vectorize) without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.
 

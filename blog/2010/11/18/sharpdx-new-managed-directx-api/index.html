@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.2.0">
+    <title>SharpDX, a new managed .Net DirectX API available | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="SharpDX, a new managed .Net DirectX API available | xoofx">
+    <meta name="twitter:description" content="If you have followed my previous work on a new .NET API for Direct3D 11, I proposed SlimDX team this solution for the v2 of their framework, joined their team around one month ago, and I was actively working to widen the coverage of the DirectX API. I have been able to extend the API coverage almost up to the whole API, being able to develop Direct2D samples, as well...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="SharpDX, a new managed .Net DirectX API available | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2010/11/18/sharpdx-new-managed-directx-api/">SharpDX, a new managed .Net DirectX API available</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="2010-11-18" itemprop="datePublished">November 18, 2010</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/d3d10/">D3D10</a>, <a href="/blog/tag/sharpdx/">SharpDX</a>, <a href="/blog/tag/slimdx/">SlimDX</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/d3d11/">D3D11</a>, <a href="/blog/tag/direct2d/">Direct2D</a>, <a href="/blog/tag/directx/">DirectX</a>, <a href="/blog/tag/net/">.Net</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2010/2010-11-18-sharpdx-new-managed-directx-api.html">edit</a>
+    </div>
+      
+
+
+
+If you have followed my previous work on <a href="/blog/2010/10/19/managed-netc-direct3d-11-api-generated">a new .NET API for Direct3D 11</a>,&nbsp; I proposed SlimDX team this solution for the v2 of their framework, joined their team around one month ago, and I was actively working to widen the coverage of the DirectX API. I have been able to extend the API coverage almost up to the whole API, being able to develop Direct2D samples, as well as XAudio2 and XAPO samples using it. But due to some incompatible directions that the SlimDX team wanted to follow, I have decided to release also my work under a separate project called <a href="http://code.google.com/p/sharpdx/">SharpDX</a>. Now, you may wonder why I'm releasing this new API under a separate project from SlimDX?<br /><br />Well, I have been working really hard on this from the beginning of September, and I explained why in my previous post about Direct3D 11. I have checked-in lots of code under the v2 branch on SlimDX, while having lots of discussion with the team (mostly Josh which is mostly responsible for v2) on their devel mailing list. The reason I'm leaving SlimDX team is that It was in fact not clear for me that I was not enrolled as part of the decision for the v2 directions, although&nbsp; I was bringing a whole solution (by "whole", I mean a large proof of concept, not something robust, finished). At some point, Josh told me that Promit, Mike and himself, co-founders of SlimDX, were the technical leaders of this project and they would have the last word on the direction as well as for decisions on the v2 API.<br /><br />Unfortunately, I was not expecting to work in such terms with them, considering that I had already made 100% of the whole engineering prototype for the next API. From the last few days, we had lots of -small- technical discussions, but for some of them, I clearly didn't agree about the decisions that were taken, whatever the arguments I was trying to give to them. This is a bit of disappointment for me, but well, that's life of open source projects. This is their project and they have other plans for it. So, I have decided to release the project on my own with <a href="http://code.google.com/p/sharpdx/">SharpDX </a>although you will see that the code is also currently exactly the same on the v2 branch of SlimDX (of course, because until yesterday, I was working on the SlimDX v2 branch).<br /><br />But things are going to change for both projects : SlimDX is taking the robust way (for which I agree) but with some decisions that I don't agree (in terms of implementation and direction). Although, as It may sound weird, SharpDX is not intended to compete with SlimDX v2 : They have clearly a different scope (supporting for example Direct3D 9, which I don't really care in fact), different target and also different view on exposing the API and a large existing community already on SlimDX. So SharpDX is primarily&nbsp; intended for my own work on demomaking. Nothing more. I'm releasing it, because SlimDX v2 is not going to be available soon, even for an alpha version. On my side, I'm considering that the current state (although far to be as clean as It should be) of the SharpDX API is usable and I'm going to use it on my own, while improving the generator and parser, to make the code safer and more robust.<br /><br />So, I did lots of work to bring new API into this system, including :<br />
+<ul>
+   <li>Direct3D 10</li>
+   <li>Direct3D 10.1</li>
+   <li>Direct3D 11</li>
+   <li>Direct2D 1</li>
+   <li>DirectWrite</li>
+   <li>DXGI</li>
+   <li>DXGI 1.1</li>
+   <li>D3DCompiler</li>
+   <li>DirectSound</li>
+   <li>XAudio2</li>
+   <li>XAPO</li>
+</ul>
+And I have been working also on some nice samples, for example using Direct2D and Direct3D 10, including the usage of the tessellate Direct2D API, in order to see how well It works compared to the gluTessellation methods that are most commonly used. You will find that the code is extremely simple in SharpDX to do such a thing :<br />
+<pre class="language-csharp"><code>using System;
+using System.Drawing;
+using SharpDX.Direct2D1;
+using SharpDX.Samples;
+
+namespace TessellateApp
+{
+    /// &lt;summary>
+    /// Direct2D1 Tessellate Demo.
+    /// &lt;/summary>
+    public class Program : Direct2D1DemoApp, TessellationSink
+    {
+        EllipseGeometry Ellipse { get; set; }
+        PathGeometry TesselatedGeometry{ get; set; }
+        GeometrySink GeometrySink { get; set; }
+
+        protected override void Initialize(DemoConfiguration demoConfiguration)
+        {
+            base.Initialize(demoConfiguration);
+
+            // Create an ellipse
+            Ellipse = new EllipseGeometry(Factory2D,
+                                          new Ellipse(new PointF(demoConfiguration.Width/2, demoConfiguration.Height/2), demoConfiguration.Width/2 - 100,
+                                                      demoConfiguration.Height/2 - 100));
+
+            // Populate a PathGeometry from Ellipse tessellation 
+            TesselatedGeometry = new PathGeometry(Factory2D);
+            GeometrySink = TesselatedGeometry.Open();
+            // Force RoundLineJoin otherwise the tesselated looks buggy at line joins
+            GeometrySink.SetSegmentFlags(PathSegment.ForceRoundLineJoin); 
+
+            // Tesselate the ellipse to our TessellationSink
+            Ellipse.Tessellate(1, this);
+
+            // Close the GeometrySink
+            GeometrySink.Close();
+        }
+
+
+        protected override void Draw(DemoTime time)
+        {
+            base.Draw(time);
+
+            // Draw the TextLayout
+            RenderTarget2D.DrawGeometry(TesselatedGeometry, SceneColorBrush, 1, null);
+        }
+
+        void TessellationSink.AddTriangles(Triangle[] triangles)
+        {
+            // Add Tessellated triangles to the opened GeometrySink
+            foreach (var triangle in triangles)
+            {
+                GeometrySink.BeginFigure(triangle.Point1, FigureBegin.Filled);
+                GeometrySink.AddLine(triangle.Point2);
+                GeometrySink.AddLine(triangle.Point3);
+                GeometrySink.EndFigure(FigureEnd.Closed);                
+            }
+        }
+
+        void TessellationSink.Close()
+        {            
+        }
+
+        [STAThread]
+        static void Main(string[] args)
+        {
+            Program program = new Program();
+            program.Run(new DemoConfiguration("SharpDX Direct2D1 Tessellate Demo"));
+        }
+    }
+}
+</code></pre>
+<br />This simple example is producing the following ouput :<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/_dv_YkYWn3HA/TOT5oLyMhHI/AAAAAAAADSw/WljLRQQdzEE/s1600/SharpDXDirect2DTessellate.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" height="250" src="http://4.bp.blogspot.com/_dv_YkYWn3HA/TOT5oLyMhHI/AAAAAAAADSw/WljLRQQdzEE/s320/SharpDXDirect2DTessellate.png" width="320" /></a></div>
+<br />which is pretty cool, considering the amount of code (although the Direct3D 10 and D2D initialization part would give a larger code), I found this to be much simpler than the gluTessellation API.<br /><br />You will find also some other samples, like the XAudio2 ones, generating a synthesized sound with the usage of the reverb, and even some custom XAPO sound processors!<br /><br />You can <a href="http://code.google.com/p/sharpdx/">grab those samples on SharpDX </a>code repository (there is a SharpDXBinAndSamples.zip with a working solutions with all the samples I have been developing so far, with also MiniTris sample from SlimDX).
+
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

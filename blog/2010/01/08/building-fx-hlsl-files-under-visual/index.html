@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.2.0">
+    <title>Building .fx hlsl files with a Custom Build Rule under Visual Studio 2008 | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Building .fx hlsl files with a Custom Build Rule under Visual Studio 2008 | xoofx">
+    <meta name="twitter:description" content="It's sometimes convenient to be able to compile directly a .fx file under a VS C++ project. NShader provides a nice way to highlight your code, but it's not able (yet, not sure I will update it up to this feature) to compile anything or to display syntax errors.Hopefully, there is a simple workaround, avoiding to develop your own custom building task : using a custom build rule...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Building .fx hlsl files with a Custom Build Rule under Visual Studio 2008 | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2010/01/08/building-fx-hlsl-files-under-visual/">Building .fx hlsl files with a Custom Build Rule under Visual Studio 2008</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="2010-01-08" itemprop="datePublished">January  8, 2010</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/tools/">Tools</a>, <a href="/blog/tag/shader/">shader</a>, <a href="/blog/tag/hlsl/">hlsl</a>, <a href="/blog/tag/visual-studio/">Visual Studio</a>, <a href="/blog/tag/nshader/">nshader</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2010/2010-01-08-building-fx-hlsl-files-under-visual.html">edit</a>
+    </div>
+      
+
+It's sometimes convenient to be able to compile directly a .fx file under a VS C++ project. <a href="http://nshader.codeplex.com/">NShader </a>provides a nice way to highlight your code, but it's not able (yet, not sure I will update it up to this feature) to compile anything or to display syntax errors.<br /><br />Hopefully, there is a simple workaround, avoiding to develop your own custom building task : using a <b>custom build rule</b>. Unfortunately, I was able to find one a while ago on Internet, but I lost it, and if I remember, it was lacking some features (like showing all available profiles)... So I decided yesterday to implement my own building rules files, leveraging on the existing .asm rules files that is shipped with Visual Studio, and It was surprisingly easy to write it.<br /><br />To add this custom building rules to VS, follow these instructions:<br /><br /><a name='more'></a><br /><ol><li>Download the<a href="http://rmasm.net/code4k/fxrules/fx.rules"> fx.rules custom build rules files</a>.</li><li>Put the fx.rules files under in the following path (according to the installation path of your VS) : <code>C:\Program Files\Microsoft Visual Studio 9.0\VC\VCProjectDefaults</code></li><li>Allow the use of the fx custom build rules under your project. For this, go to the solution explorer, right click on your project and select the menu "Custom Build Rules..." <br /><a href="http://3.bp.blogspot.com/_dv_YkYWn3HA/S0b2eDHq2kI/AAAAAAAACuQ/-IPQ0nbqUUI/s1600-h/fxrules_vs1.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="http://3.bp.blogspot.com/_dv_YkYWn3HA/S0b2eDHq2kI/AAAAAAAACuQ/-IPQ0nbqUUI/s320/fxrules_vs1.png" /></a><br /></li><li>Then enable the fx rules in the "Visual C++ Custom Build Rules" window : <br /><a href="http://2.bp.blogspot.com/_dv_YkYWn3HA/S0b3HopLD7I/AAAAAAAACuY/x_3fy6pZiWg/s1600-h/fxrules_vs2.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="http://2.bp.blogspot.com/_dv_YkYWn3HA/S0b3HopLD7I/AAAAAAAACuY/x_3fy6pZiWg/s320/fxrules_vs2.png" /></a><br /></li><li>Then you need to have the fxc.exe compiler in the Visual C++ path. You could add it to your system path although i prefer to add it inside VS itself. For this, go to the <code>Tools/Options</code> menu. Then go to the subtree : "Projects and Solutions/VC++ Directories". On the right pane, in "Show Directories for: " select&nbsp; "Executable files", and add below the path to the directory containing the fxc.exe tool.</li><li>The nice thing is that you can customize the compilation per file. Just click on the property of your ".fx" file and you will see all the fxc options :<br /><a href="http://4.bp.blogspot.com/_dv_YkYWn3HA/S0b4o-QctMI/AAAAAAAACug/5jSR6TAiizw/s1600-h/fxrules_vs3.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="http://4.bp.blogspot.com/_dv_YkYWn3HA/S0b4o-QctMI/AAAAAAAACug/5jSR6TAiizw/s320/fxrules_vs3.png" /></a> </li><li>And you are done!</li><li>The only drawback is that it's only working with a VC++ project, so it makes it harder to use it for a C# XNA Project, but you can create an almost empty VC++ project, add it to your solution, this c++ project would only contains links to your fx files in your C# Project (assuming that you have VS 2008 C++ and C# integrated together).<br /></li></ol>I will also publish this month an update of NShader to address some issues. If I had more time for this kind of thing, It would be great to add a real Shader IDE inside VS 2008 (in the way the still-long awaited NVidia's nexus beta.is done). Actually, It's not so hard to do such thing... but it would take a huge time, and I have to seriously code some demo instead of working on satellite projects and... before I'm getting too old for that! ;)<br /><ol>&nbsp;</ol><ol>&nbsp;</ol><ol></ol>
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

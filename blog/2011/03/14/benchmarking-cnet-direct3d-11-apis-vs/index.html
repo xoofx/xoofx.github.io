@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.2.0">
+    <title>Benchmarking C#/.Net Direct3D 11 APIs vs native C++ | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Benchmarking C#/.Net Direct3D 11 APIs vs native C++ | xoofx">
+    <meta name="twitter:description" content=" [Update 2012/05/15: Note that the original code was fine tuned to a particular config and may not give you the same results. I have rewritten this sample to give more accurate and predictible results. Comparison with XNA was also not fair and inaccurate, you should have something like x4 slower instead of x9. SharpDX latest version 2.1.0 is also x1.35 slower than C++ now. An update of this article...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Benchmarking C#/.Net Direct3D 11 APIs vs native C++ | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2011/03/14/benchmarking-cnet-direct3d-11-apis-vs/">Benchmarking C#/.Net Direct3D 11 APIs vs native C++</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="2011-03-14" itemprop="datePublished">March 14, 2011</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/sharpdx/">SharpDX</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/d3d11/">D3D11</a>, <a href="/blog/tag/directx/">DirectX</a>, <a href="/blog/tag/net/">.Net</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2011/2011-03-14-benchmarking-cnet-direct3d-11-apis-vs.html">edit</a>
+    </div>
+      
+
+
+
+<div class="separator" style="clear: both; text-align: center;"></div>
+<span style="font-size: x-small;">[<b>Update 2012/05/15</b>: Note that the original code was fine tuned to a particular config and may not give you the same results. I have rewritten this sample to give more accurate and predictible results. Comparison with XNA was also not fair and inaccurate, you should have something like x4 slower instead of x9. SharpDX latest version 2.1.0 is also x1.35 slower than C++ now. An update of this article will follow on new <a href="http://sharpdx.org/">sharpdx.org</a> website]</span><br /><span style="font-size: x-small;">[<b>Update 2014/06/17</b>: Remove XNA comparison, as it is not fair and relevant] </span><br /><br />If you are working with a managed language like C# and you are concerned by performance, you probably know that, even if the Microsoft JIT CLR is quite efficient, It has a significant cost over a pure C++ implementation. If you don't know much about this cost, you have probably heard about a mean cost for managed languages around 15-20%. If you are really concern by this, and depending on the cases, you know that the reality of a calculation-intensive managed application is more often around x2 or even x3 slower than its C++ counterpart. In this post, I'm going to present a micro-benchmark that measure the cost of calling a native Direct3D 11 API from a C# application, using various API, ranging from <a href="http://code.google.com/p/sharpdx/">SharpDX</a>, SlimDX, WindowsCodecPack.<br /><br />Why this benchmark is important? Well, if you intend like me to build some serious 3D games with a C# managed API (don't troll me on this! ;) ), you need to know exactly what is the cost of calling intensively a native Direct3D API (mainly, the cost of the interop between a managed language and a native API) from a managed language. If your game is GPU bounded, you are unlikely to see any differences here. But if you want to apply lots of effects, with various models, particles, materials, playing with several rendering targets and a heavy deferred rendering technique, you are likely to perform lots of draw calls to the Direct3D API. For a AAA game, those calls could be as high as 3000-7000 draw submissions in instancing scenarios (look at <a href="http://publications.dice.se/">latest great DICE publications </a>in "DirectX 11 Rendering in Battlefield 3" from Johan Andersson). If you are running at 60fps (or lower 30fps), you just have 17ms (or 34ms) per frame to perform your whole rendering. In this short time range, drawing calls can take a significant amount of time, and this is a main reason why multi-threading batching command were introduced in DirectX11. We won't use such a technique here, as we want to evaluate raw calls.<br /><br />As you are going to see, results are pretty interesting for someone that is concerned by performance and writing C# games (or even efficient tools for a 3D Middleware)<br /><br /><a name='more'></a><br />
+<h3>   The Managed (C#) to Native (C++) interop cost</h3>
+<br />When a managed application needs to call a native API, it needs to:<br />
+<ul>
+   <li>Marshal method/function arguments from the managed world to the unmanaged world</li>
+   <li>The CLR has to switch from a managed execution to an unmanaged environment (change exception handling, stacktrace state...etc.)</li>
+   <li>The native methods is effectively called</li>
+   <li>Than you have to marshal output arguments and results from unmanaged world to managed one.</li>
+</ul>
+To perform a native call from a managed language, there is currently 3 solutions: <br />
+<ul>
+   <li><b>Using the default interop mechanism provided under C# is P/Invoke</b>, which is in charge of performing all the previous steps. But P/Invoke comes at a huge cost when you have to pass some structures, arrays by values, strings...etc. </li>
+   <li><b>Using a C++/CLI </b>assembly that will perform a marshaling written by hand to the native C++ methods. This is used by SlimDX, WindowsCodePack and XNA.</li>
+   <li><b>Using SharpDX technique </b>that is generating all the marshaling and interop at compile time, in a structured and consistent way, using some missing CLR bytecode inside C# that is usually only available in C++/CLI</li>
+</ul>
+The marshal cost is in fact the most expensive one. Usually, calling directly a native function without performing any marshaling has a cost of 10% which is fine. But if you take for example a slightly more complex functions, like <a href="http://msdn.microsoft.com/en-us/library/ff476464%28v=vs.85%29.aspx"><code>ID3D11DeviceContext::SetRenderTargets</code></a>, you can see that marshaling takes a significant amount of code:<br /><br />
+<pre class="language-csharp"><code>/// &lt;unmanaged&gt;void ID3D11DeviceContext::OMSetRenderTargets([In] int NumViews,[In, Buffer, Optional] const ID3D11RenderTargetView** ppRenderTargetViews,[In, Optional] ID3D11DepthStencilView* pDepthStencilView)&lt;/unmanaged&gt;
+public void SetRenderTargets(int numViews, SharpDX.Direct3D11.RenderTargetView[] renderTargetViewsRef, SharpDX.Direct3D11.DepthStencilView depthStencilViewRef) {
+    unsafe {
+        IntPtr* renderTargetViewsRef_ = (IntPtr*)0;
+        if ( renderTargetViewsRef != null ) {
+            IntPtr* renderTargetViewsRef__ = stackalloc IntPtr[renderTargetViewsRef.Length];
+            renderTargetViewsRef_ = renderTargetViewsRef__;
+            for (int i = 0; i &lt; renderTargetViewsRef.Length; i++)                        
+                renderTargetViewsRef_[i] =  (renderTargetViewsRef[i] == null)? IntPtr.Zero : renderTargetViewsRef[i].NativePointer;
+        }
+        SharpDX.Direct3D11.LocalInterop.Callivoid(_nativePointer, numViews, renderTargetViewsRef_, (void*)((depthStencilViewRef == null)?IntPtr.Zero:depthStencilViewRef.NativePointer),((void**)(*(void**)_nativePointer))[33]);
+    }
+}
+</code></pre>
+In the previous sample, there is no structure marshaling involved (that are even more costly than pure method arguments marshaling), and as you can see, the marshaling code is pretty heavy: It has to handles null parameters, transform an array of managed DirectX interfaces to a respective array of native COM pointer...etc.<br /><br />Hopefully, in SharpDX unlike any other DirectX .NET APIs, this code has been written to be consistent over the whole generated code, and was carefully designed to be quite efficient... but still, It has obviously a cost, and we need to know it!<br /><br />
+<h3>   Protocol used for this micro-benchmark</h3>
+<br />Writing a benchmark is error prone, often subject to caution and relatively "narrow minded". Of course, this benchmark is not perfect, I just hope that It doesn't contain any mistake that would give false results trend!<br /><br />In order for this test to be closer to a real 3D application usage, I made the choice to perform a very basic test on a sequence of draw calls that are usually involved in common drawing calls scenarios. This test consist of drawing triangles using 10 successive effects (Vertex Shaders/Pixel Shaders), with their own vertex buffers, setting the viewport and render target to the backbuffer. This loop is then ran thousand of times in order to get a correct average.<br /><br />The SharpDX main loop is coded like this:<br />
+<pre class="language-csharp"><code>var clock = new Stopwatch();
+clock.Start();
+for (int j = 0; j &lt; (CommonBench.NbTests + 1); j++)
+{
+    for (int i = 0; i &lt; CommonBench.NbEffects; i++)
+    {
+        context.InputAssembler.SetInputLayout(layout);
+        context.InputAssembler.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
+        context.InputAssembler.SetVertexBuffers(0, vertexBufferBindings[i]);
+        context.VertexShader.Set(vertexShaders[i]);
+        context.Rasterizer.SetViewports(viewPort);
+        context.PixelShader.Set(pixelShaders[i]);
+        context.OutputMerger.SetTargets(renderView);
+        context.ClearRenderTargetView(renderView, blackColor);
+        context.Draw(3, 0);
+    }
+    if (j &gt; 0 &amp;&amp; (j % CommonBench.FlushLimit) == 0)
+    {
+        clock.Stop();
+        Console.Write("{0} ({3}) - Time per pass {1:0.000000}ms - {2:000}%\r", programName, (double)clock.ElapsedMilliseconds / (j * CommonBench.NbEffects), j * 100 / (CommonBench.NbTests), arch);
+        context.Flush();
+        clock.Start();
+    }
+}
+</code></pre>
+The VertexShader/PixelShaders involved is basic (just color passing between VS and PS, no WorldProjectionTransform applied), the context.Flush is used to avoid measuring flush of commands to the GPU. The <code>CommonBench.FlushLimit</code> value was selected to avoid any stalls from the GPU.<br /><br />I have ported this benchmark under:<br />
+<ul>
+   <li><b>C++</b>, using raw native calls and Direct3D11 API</li>
+   <li><b>SharpDX</b>, using Direct3D11 running under Microsoft .NET CLR 4.0 and with Mono 2.10 (both trying llvm on/off). SharpDX is the only managed API to be able to run under Mono.</li>
+   <li><b>SlimDX </b>using Direct3D11 running under Microsoft .NET CLR 4.0. SlimDX is "NGENed" meaning that it is compiled to native code when you install it.</li>
+   <li><b>WindowsCodePack </b>1.1 using Direct3D11 running under Microsoft .NET CLR 4.0</li>
+</ul>
+It has been tested on a Win7-64bit, i5-750 2.6Ghz, Gfx AMD HD6950. All tests were done both in x86 and x64 mode, in order to measure the platform impact of the calling conventions. Tests were ran 4 times for each API, taking the average of the 3 lowest one.<br /><br />
+<h3>   Results</h3>
+<br />You can see the raw results in the following table. Time is measured for the simple drawing sequence (inside the loop for(i) nbEffects). Lower is better. The ratio on the right indicates how much is slower the tested API compare to the C++ one. For example, SharpDX in x86 mode is running 1,52 slower than its pure C++ counterpart.<br /><br /><br />
+<table border="0" cellpadding="0" cellspacing="0" style="width: 541px;">
+   <colgroup>
+      <col style="mso-width-alt: 8740; mso-width-source: userset; width: 179pt;" width="239">
+        
+      <col span="2" style="mso-width-alt: 2706; mso-width-source: userset; width: 56pt;" width="74">
+        
+      <col span="2" style="mso-width-alt: 2816; mso-width-source: userset; width: 58pt;" width="77">
+        
+   </colgroup>
+   <tbody>
+      <tr height="20" style="height: 15.0pt;">
+         <td class="xl63" height="20" style="background: #4F81BD; border-bottom: none; border-left: .5pt solid #4F81BD; border-right: none; border-top: .5pt solid #4F81BD; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 700; height: 15.0pt; mso-pattern: #4F81BD none; text-decoration: none; text-line-through: none; text-underline-style: none; width: 179pt;" width="239">Direct3D11 Simple Bench</td>
+         <td class="xl63" style="background: #4F81BD; border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 700; mso-pattern: #4F81BD none; text-decoration: none; text-line-through: none; text-underline-style: none; width: 56pt;" width="74">x86   (ms)</td>
+         <td class="xl63" style="background: #4F81BD; border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 700; mso-pattern: #4F81BD none; text-decoration: none; text-line-through: none; text-underline-style: none; width: 56pt;" width="74">x64   (ms)</td>
+         <td class="xl63" style="background: #4F81BD; border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 700; mso-pattern: #4F81BD none; text-decoration: none; text-line-through: none; text-underline-style: none; width: 58pt;" width="77">x86-ratio</td>
+         <td class="xl63" style="background: #4F81BD; border-bottom: none; border-left: none; border-right: .5pt solid #4F81BD; border-top: .5pt solid #4F81BD; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 700; mso-pattern: #4F81BD none; text-decoration: none; text-line-through: none; text-underline-style: none; width: 58pt;" width="77">x64-ratio</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border-bottom: none; border-left: .5pt solid #4F81BD; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; height: 15.0pt; text-decoration: none; text-line-through: none; text-underline-style: none;">Native C++ (MSVC VS2010)</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.000386</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.000262</td>
+         <td class="xl64" style="background: #63BE7B; border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x1.00</td>
+         <td class="xl64" style="background: #63BE7B; border-bottom: none; border-left: none; border-right: .5pt solid #4F81BD; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x1.00</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border-bottom: none; border-left: .5pt solid #4F81BD; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; height: 15.0pt; text-decoration: none; text-line-through: none; text-underline-style: none;">Managed SharpDX (1.3 MS   .Net CLR)</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.000585</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.000607</td>
+         <td class="xl64" style="background: #84C77C; border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x1.52</td>
+         <td class="xl64" style="background: #B9D67F; border-bottom: none; border-left: none; border-right: .5pt solid #4F81BD; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x2.32</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border-bottom: none; border-left: .5pt solid #4F81BD; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; height: 15.0pt; text-decoration: none; text-line-through: none; text-underline-style: none;">Managed SlimDX (June 2010   - Ngen)</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.000945</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.000886</td>
+         <td class="xl64" style="background: #C1D980; border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x2.45</td>
+         <td class="xl64" style="background: #FFEB84; border-bottom: none; border-left: none; border-right: .5pt solid #4F81BD; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x3.38</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border-bottom: none; border-left: .5pt solid #4F81BD; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; height: 15.0pt; text-decoration: none; text-line-through: none; text-underline-style: none;">Managed SharpDX (1.3   Mono-2.10)</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.002404</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.001872</td>
+         <td class="xl64" style="background: #FDC27D; border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x6.23</td>
+         <td class="xl64" style="background: #FDB57A; border-bottom: none; border-left: none; border-right: .5pt solid #4F81BD; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x7.15</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border-bottom: none; border-left: .5pt solid #4F81BD; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; height: 15.0pt; text-decoration: none; text-line-through: none; text-underline-style: none;">Managed Windows API   CodePack 1.1</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.002551</td>
+         <td class="xl63" style="border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;">0.003219</td>
+         <td class="xl64" style="background: #FDBC7B; border-bottom: none; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x6.61</td>
+         <td class="xl64" style="background: #F8696B; border-bottom: none; border-left: none; border-right: .5pt solid #4F81BD; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">x12.29</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border-bottom: .5pt solid #4F81BD; border-left: .5pt solid #4F81BD; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; height: 15.0pt; text-decoration: none; text-line-through: none; text-underline-style: none;"><br /></td>
+         <td class="xl63" style="border-bottom: .5pt solid #4F81BD; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;"><br /></td>
+         <td class="xl63" style="border-bottom: .5pt solid #4F81BD; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;"><br /></td>
+         <td class="xl64" style="background: #FB8F73; border-bottom: .5pt solid #4F81BD; border-left: none; border-right: none; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;"><br /></td>
+         <td class="xl64" style="border-bottom: .5pt solid #4F81BD; border-left: none; border-right: .5pt solid #4F81BD; border-top: .5pt solid #4F81BD; color: black; font-family: Calibri; font-size: 11.0pt; font-weight: 400; text-decoration: none; text-line-through: none; text-underline-style: none;"><br /></td>
+      </tr>
+   </tbody>
+</table>
+<br />And the associated graphs comparison both for x86 and x64 platforms:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a href="https://lh6.googleusercontent.com/-4pY_GozCPvU/TX4LWeiaokI/AAAAAAAADg8/D-klaeDsaj0/s1600/Resultsx86.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="https://lh6.googleusercontent.com/-4pY_GozCPvU/TX4LWeiaokI/AAAAAAAADg8/D-klaeDsaj0/s1600/Resultsx86.png" /></a></div>
+<br />
+<div class="separator" style="clear: both; text-align: center;"><a href="https://lh3.googleusercontent.com/-54O6_4uccGQ/TX4LeUL7PoI/AAAAAAAADhA/GPh3K-aHn_g/s1600/Resultsx64.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="https://lh3.googleusercontent.com/-54O6_4uccGQ/TX4LeUL7PoI/AAAAAAAADhA/GPh3K-aHn_g/s1600/Resultsx64.png" /></a></div>
+<br />Results are pretty self explanatory. Although we can highlight some interesting facts:<br />
+<ul>
+   <li><b>Managed Direct3D API calls are much slower than native API calls</b>, ranging from x1.52 to x10 depending on the API you are using.</li>
+   <li><b>SharpDX is providing the fastest Direct3D managed API</b>, which is ranging only from x1.52 to x2.32 slower than C++, at least 50% faster than any other managed APIs.</li>
+   <li><b>All other Direct3D managed API are significantly slower</b>, ranging from x2.45 to x12.29</li>
+   <li><b>Running this benchmark with SharpDX and Mono 2.10 is x6 to x7 times slower than SharpDX with Microsoft JIT </b>(!)</li>
+</ul>
+Ok, so if you are a .NET programmer and are not aware about performance penalty using a managed language, you are probably surprised by these results that could be... scary!&nbsp; Although, we can balance things here, as your 3D engine is unlikely to be CPU bounded on drawing calls, but 3000-7000 calls could lead to a 4ms impact in the better case, which is something we need to know when we design a game.<br /><br />This test could be also extrapolated to other parts of a 3D engine, as It will probably slower by a factor of x2 compare to a brute force C++ engine. For AAA game, this would be of course an unacceptable performance penalty, but If you are a small/independent studio, this cost is relatively low compare to the cost of efficiently developing a game in C#, and in the end, that's a trade-off.<br /><br />In case you are using SharpDX API, you can still run at a reasonable performance. And if you really want to circumvent this interop cost for chatty API scenarios, you can design your engine to call a native function that will batch calls to the Direct3D native API. <br /><br />
+<hr />
+You can download this benchmark <a href="http://xoofx.com/upload/Sharp3DBench.7z">Sharp3DBench.7z</a>.
+
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.2.0">
+    <title>Implementing an unmanaged C++ interface callback in C#/.Net | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Implementing an unmanaged C++ interface callback in C#/.Net | xoofx">
+    <meta name="twitter:description" content="Ever wanted to implement a C++ interface callback in a managed C# application? Well, although that's not so hard, this is a solution that you will probably hardly find over the Internet... the most common answer you will get is that it's not possible to do it or you should use C++/CLI in order to achieve it... In fact, in C#, you can only implement a C function delegate through...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Implementing an unmanaged C++ interface callback in C#/.Net | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2010/10/25/implementing-unmanaged-c-interface/">Implementing an unmanaged C++ interface callback in C#/.Net</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="2010-10-25" itemprop="datePublished">October 25, 2010</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.Net</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2010/2010-10-26-implementing-unmanaged-c-interface.html">edit</a>
+    </div>
+      
+
+
+
+Ever wanted to implement a C++ interface callback in a managed C# application? Well, although that's not so hard, this is a solution that you will probably hardly find over the Internet... the most common answer you will get is that it's not possible to do it or you should use C++/CLI in order to achieve it...&nbsp; In fact, in C#, you can only implement a C function delegate through the use of <a href="http://msdn.microsoft.com/en-US/library/system.runtime.interopservices.marshal.getfunctionpointerfordelegate.aspx"><code>Marshal.GetFunctionPointerForDelegate</code></a> but you won't find anything like <code>Marshal.GetInterfacePointerFromInterface</code>. You may wonder why do I need such a thing? <br /><br />In my previous post about implementing <a href="/blog/2010/10/19/managed-netc-direct3d-11-api-generated">a new DirectX fully managed API</a>, I forgot to mention the case of interfaces callbacks. There are not so many cases in Direct3D 11 API where you need to implement a callback. You will more likely find more use-cases in audio APIs like XAudio2, but in Direct3D 11, afaik, you will only find 3 interfaces that are used for callback:<br />
+<ul>
+   <li><a href="http://msdn.microsoft.com/en-us/library/ff728746%28VS.85%29.aspx">ID3DInclude</a> which is used by D3DCompiler API in order to provide a callback for includes while using preprocessor or compiler API (see for example <a href="http://msdn.microsoft.com/en-us/library/dd607324%28VS.85%29.aspx">D3DCompile</a>).</li>
+   <li><a href="http://msdn.microsoft.com/en-us/library/ff476644%28v=VS.85%29.aspx">ID3DX11DataLoader </a>and <a href="http://msdn.microsoft.com/en-us/library/ff476648%28v=VS.85%29.aspx">ID3DX11DataProcessor</a>, which are used by some D3DX functions in order to perform asynchronous loading/processing of texture resources. The nice thing about C# is that those interfaces are useless, as it is <i>much </i>easier and trivial to directly implement them in C# instead</li>
+</ul>
+So I'm going to take the example of ID3DInclude, and how It has been successfully implemented for the <a href="http://code.google.com/p/sharpdx">SharpDX</a>.<br /><a name='more'></a><br />
+<h3>Memory layout of a C++ object implementing pure virtual methods</h3>
+<br />If you know how a C++ interface with pure methods is layout in memory, that's fairly easy to imagine how to hack C# to provide such a thing, but if you don't, here is a quick summary:<br /><br />For example, the ID3DInclude C++ interface is declared like this :<br />
+<pre class="language-cpp"><code>// Interface declaration
+DECLARE_INTERFACE(ID3DInclude)
+{
+    STDMETHOD(Open)(THIS_ D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes) PURE;
+    STDMETHOD(Close)(THIS_ LPCVOID pData) PURE;
+};
+</code></pre>
+<br />DECLARE_INTERFACE is a Windows macro that is defined in ObjBase.h and will expand the previous declaration in C++ like this:<br /><br />
+<pre class="language-cpp"><code>struct ID3DInclude {
+ virtual HRESULT __stdcall Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes) = 0;
+
+ virtual HRESULT __stdcall Close(LPCVOID pData) = 0;
+}; 
+</code></pre>
+<br />Implementing and using this interface in C++ is straightforward:<br />
+<pre class="language-cpp"><code>struct MyIncludeCallback : public ID3DInclude {
+ virtual HRESULT __stdcall Open(D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes) {
+     /// code for Open callback
+ }
+
+ virtual HRESULT __stdcall Close(LPCVOID pData) {
+     /// code for Close callback
+ }
+}; 
+
+// Usage
+ID3DInclude* include = new MyIncludeCallback();
+
+// Compile a shader and use our Include provider
+D3DCompile(..., include, ...);
+</code></pre>
+<br />The hack here is to clearly understand how is layout in memory an instance of ID3DInclude through the <a href="http://en.wikipedia.org/wiki/Virtual_method_table">Virtual Method Table (VTBL)</a>... Oh, it's really funny to see that the Wikipedia article doesn't use any visual table to represent a virtual table... ok, let's remedy it. If you look at the memory address of an instanciated object, you will find an indirect pointer:<br /><br />
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;">
+   <tbody>
+      <tr>
+         <td style="text-align: center;"><img border="0" src="http://4.bp.blogspot.com/_dv_YkYWn3HA/TMWYkqBFjJI/AAAAAAAADOY/WW70IE3o-GA/s1600/VTBL.png" style="margin-left: auto; margin-right: auto;" /></td>
+      </tr>
+      <tr>
+         <td class="tr-caption" style="text-align: center;">Fig 1. Virtual Method Table layout in memory</td>
+      </tr>
+   </tbody>
+</table>
+<div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/_dv_YkYWn3HA/TMWYkqBFjJI/AAAAAAAADOY/WW70IE3o-GA/s1600/VTBL.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"></a></div>
+So from the pointer to a C++ object implementing pure virtual methods, you will find that the first value is a pointer to a VTBL which is shared among the same type of object (here <code>MyIncludeCallback</code>).<br /><br />Then in the VTBL, the first value is a pointer to the Open() method implementation in memory. The second to the Close() method.<br /><br />According to the calling convention, how does look the declaration of this Open() function, if we had to impleement it in pure C?<br />
+<pre class="language-cpp"><code>HRESULT __stdcall MyOpenCallbackFunction(void* thisObject, D3D_INCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID *ppData, UINT *pBytes) {
+     /// code for Open callback
+ }
+</code></pre>
+Simply add a "this object" as the 1st parameter of the callback function (which represents a pointer to the MyIncludeCallback instance in memory) and you have a callback at the function level!<br /><br />You should understand now how we can easily hack this to provide a C++ interface callback in C#<br /><br />
+<h3>Translation to the C#/.Net world</h3>
+<br />The solution is fairly simple. In order to be able to pass a C++ Interface callback implemented in C# to an unmanaged function, we need to replicate how the unmanaged world is going to call the unmanaged functions and how It does expect to have an interface layout in memory.<br /><br />First, we need to define the ID3DInclude interface in pure C#:<br />
+<pre class="language-csharp"><code>public partial interface Include
+{
+    /// &lt;summary&gt; 
+    /// A user-implemented method for opening and reading the contents of a shader #include file. 
+    /// &lt;/summary&gt; 
+    /// &lt;param name="type"&gt;A &lt;see cref="SlimDX2.D3DCompiler.IncludeType"/&gt;-typed value that indicates the location of the #include file. &lt;/param&gt;
+    /// &lt;param name="fileName"&gt;Name of the #include file.&lt;/param&gt;
+    /// &lt;param name="parentStream"&gt;Pointer to the container that includes the #include file.&lt;/param&gt;
+    /// &lt;param name="stream"&gt;Stream that is associated with fileName to be read. This reference remains valid until &lt;see cref="SlimDX2.D3DCompiler.Include.Close"/&gt; is called.&lt;/param&gt;
+    /// &lt;unmanaged&gt;HRESULT Open([None] D3D_INCLUDE_TYPE IncludeType,[None] const char* pFileName,[None] LPCVOID pParentData,[None] LPCVOID* ppData,[None] UINT* pBytes)&lt;/unmanaged&gt;
+    //SlimDX2.Result Open(SlimDX2.D3DCompiler.IncludeType includeType, string fileNameRef, IntPtr pParentData, IntPtr dataRef, IntPtr bytesRef);
+    void Open(IncludeType type, string fileName, Stream parentStream, out Stream stream);
+
+    /// &lt;summary&gt; 
+    /// A user-implemented method for closing a shader #include file. 
+    /// &lt;/summary&gt; 
+    /// &lt;remarks&gt; 
+    /// If &lt;see cref="SlimDX2.D3DCompiler.Include.Open"/&gt; was successful, Close is guaranteed to be called before the API using the &lt;see cref="SlimDX2.D3DCompiler.Include"/&gt; interface returns. 
+    /// &lt;/remarks&gt; 
+    /// &lt;param name="stream"&gt;This is a reference that was returned by the corresponding &lt;see cref="SlimDX2.D3DCompiler.Include.Open"/&gt; call.&lt;/param&gt;
+    /// &lt;unmanaged&gt;HRESULT Close([None] LPCVOID pData)&lt;/unmanaged&gt;
+    void Close(Stream stream);
+}
+</code></pre>
+<br />Clearly, this is not exactly what we have in C++... but this is how we would use it... through the usage of Stream. An implementation of this interface would provide a Stream for a particular file to include (most of a time, that could be as simple as <code>stream = new FileStream(fileName)</code>).<br /><br />This interface is public in the C#/.Net API... but internally we are going to use a wrapper of this interface that is going to create manually the object layout in memory as well as the VTBL. This is done in this simple constructor:<br /><br />
+<pre class="language-csharp"><code>/// &lt;summary&gt;
+/// Internal Include Callback
+/// &lt;/summary&gt;
+internal class IncludeCallback
+{
+    public IntPtr NativePointer;
+    private Include _callback;
+    private OpenCallBack _openCallBack;
+    private CloseCallBack _closeCallback;
+
+    public IncludeCallback(Include callback)
+    {
+        _callback = callback;
+        // Allocate object layout in memory 
+        // - 1 pointer to VTBL table
+        // - following that the VTBL itself - with 2 function pointers for Open and Close methods
+        _nativePointer = Marshal.AllocHGlobal(IntPtr.Size * 3);
+
+        // Write pointer to vtbl
+        IntPtr vtblPtr = IntPtr.Add(_NativePointer, IntPtr.Size);
+        Marshal.WriteIntPtr(_NativePointer, vtblPtr);
+        _openCallBack = new OpenCallBack(Open);
+        Marshal.WriteIntPtr(vtblPtr, Marshal.GetFunctionPointerForDelegate(_openCallBack ));
+        _closeCallBack = new CloseCallBack(Close);
+        Marshal.WriteIntPtr(IntPtr.Add(vtblPtr, IntPtr.Size), Marshal.GetFunctionPointerForDelegate(_closeCallBack));
+    }
+</code></pre>
+<br />You can clearly see from the previous code that we are allocating a an unmanaged memory that will hold the object VTBL pointer and the VTBL itself... Because we don't need to make 2 allocation (one for the object's vtbl_ptr/data, one for the vtbl), we are laying out the VTBL just after the object itself, like this:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/_dv_YkYWn3HA/TMWe2HhMGnI/AAAAAAAADOc/t3nNrr5FxVU/s1600/VTBL2.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="http://4.bp.blogspot.com/_dv_YkYWn3HA/TMWe2HhMGnI/AAAAAAAADOc/t3nNrr5FxVU/s1600/VTBL2.png" /></a></div>
+<br />The declaration of the C# delegates are then straightforward from the C++ declaration:<br />
+<pre class="language-csharp"><code>[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+private delegate SlimDX2.Result OpenCallBack(IntPtr thisPtr, SlimDX2.D3DCompiler.IncludeType includeType, IntPtr fileNameRef, IntPtr pParentData, ref IntPtr dataRef, ref int bytesRef);
+
+[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+private delegate SlimDX2.Result CloseCallBack(IntPtr thisPtr, IntPtr pData);
+</code></pre>
+You just have to implement the Open and Close method in the wrapper and redirect the calls to the managed Include callback, <i>et voila</i>!<br /><br />Then after, when calling an unmanaged function that required this callback, you just have to wrap an Include instance with the callback like this:<br />
+<pre class="language-csharp"><code>Include myIncludeInstance = ... new ...;
+
+IncludeCallback callback = new IncludeCallback(callback);
+
+// callback.NativePointer is a pointer to the object/vtbl allocated structure
+D3D.Compile(..., callback.NativePointer, ...);
+</code></pre>
+<br />Of course, the IncludeCallback is not visible from the public API but is used internally. From a public interface POV, here is how you would use it:<br />
+<pre class="language-csharp"><code>using System;
+using System.IO;
+using SlimDX2.D3DCompiler;
+
+namespace TestCallback
+{
+    class Program
+    {
+        class MyIncludeCallBack : Include
+        {
+            public void Open(IncludeType type, string fileName, Stream parentStream, out Stream stream)
+            {
+                stream = new FileStream(fileName, FileMode.Open);
+            }
+
+            public void Close(Stream stream)
+            {
+                stream.Close();
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            var include = new MyIncludeCallBack();
+            string value = ShaderBytecode.PreprocessFromFile("test.fx", null, include); 
+            Console.WriteLine(value);
+        }
+    }
+}
+</code></pre>
+<br />You can have a look at the complete source code <a href="https://github.com/sharpdx/SharpDX/tree/master/Source/SharpDX/ComObjectCallback.cs">here</a>.
+
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.2.0">
+    <title>Direct3D11 multithreading micro-benchmark in C# with SharpDX | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Direct3D11 multithreading micro-benchmark in C# with SharpDX | xoofx">
+    <meta name="twitter:description" content=" Multi-threading is an important feature added to Direct3D11 two years ago and has been increasingly used on recent game engine in order to achieve better performance on PC. You can have a look at "DirectX 11 Rendering in Battlefield 3" from Johan Anderson/DICE which gives a great insight about how it was effectively used in practice in their game engine. Usage of the Direct3D11 multithreading API is pretty straightforward,...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Direct3D11 multithreading micro-benchmark in C# with SharpDX | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2011/11/17/direct3d11-multithreading-micro/">Direct3D11 multithreading micro-benchmark in C# with SharpDX</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="2011-11-17" itemprop="datePublished">November 17, 2011</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/sharpdx/">SharpDX</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/d3d11/">D3D11</a>, <a href="/blog/tag/directx/">DirectX</a>, <a href="/blog/tag/net/">.Net</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2011/2011-11-17-direct3d11-multithreading-micro.html">edit</a>
+    </div>
+      
+
+
+
+<div class="separator" style="clear: both; text-align: center;"><a href="http://1.bp.blogspot.com/-_aW7bbB3eBQ/TsUpgF1iDPI/AAAAAAAADxU/lPm2HGVBtS8/s1600/MultiCube.png" imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img border="0" height="200" src="http://1.bp.blogspot.com/-_aW7bbB3eBQ/TsUpgF1iDPI/AAAAAAAADxU/lPm2HGVBtS8/s200/MultiCube.png" width="195" /></a></div>
+Multi-threading is an important feature added to Direct3D11 two years ago and has been increasingly used on recent game engine in order to achieve better performance on PC. You can have a look at "<a href="http://www.slideshare.net/DICEStudio/directx-11-rendering-in-battlefield-3?from=ss_embed">DirectX 11 Rendering in Battlefield 3</a>" from Johan Anderson/DICE which gives a great insight about how it was effectively used in practice in their game engine. Usage of the Direct3D11 multithreading API is pretty straightforward, and while we are also using it successfully at our work in our R&amp;D 3D Engine, I didn't take the time to sit down with this feature and check how to get the best of it.<br /><br />I recently came across a question on the gamedev forum about "<a href="http://www.gamedev.net/topic/614998-dx11-command-lists-on-a-single-threaded-renderer/">[DX11] Command Lists on a Single Threaded Renderer</a>": If command lists are an efficient way to store replayable drawing commands, would it be efficient to use them even in a single threaded scenario where lots of drawing commands are repeatable?<br /><br />In order to verify this, among other things, I did a simple micro-benchmark using <a href="http://code.google.com/p/sharpdx/">C#/SharpDX</a>, but while the results are somehow expectable, there are a couple of gotchas that deserve a more in-depth look...<br /><br /><a name='more'></a><br />
+<h3>    Direct3D11 Multi-threading : The basics</h3>
+<br />I assume that general multi-threading concepts and advantages are already understood to focus on Direct3D11 multi-threading API.<br /><br />There is already a nice "<a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476891%28v=vs.85%29.aspx">Introduction to Multithreading in Direct3D11</a>" on msdn that is worth reading if you are already a little bit familiar with the Direct3D11 API.<br /><br />In Direct3D10, we had only a class <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/bb173528%28v=VS.85%29.aspx">ID3D10Device</a> to perform object/resource creation and draw calls, the API was not thread safe, but It was possible to emulate some kind of deferred rendering by using mutexes and a simplified command buffers to access safely the device.<br /><br />In Direct3D11, preparation of the draw calls are now "parralelizable" while object/resource creation is thread safe. The API is now split between:<br />
+<ul>
+   <li><a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476379%28v=VS.85%29.aspx">ID3D11Device</a> which is responsible to create object/resources/shaders and device contexts.</li>
+   <li><a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476385%28v=VS.85%29.aspx">ID3D11DeviceContext</a> which holds all commands to setup shaders pipeline and perform all draw calls (including constant buffer update, setup of shader resource views, samplers, blendstate...etc.)</li>
+</ul>
+<br />When a Direct3D11 device is created, it provides a default ID3D11DeviceContext called an <b>immediate context</b> that is effectively used for immediate rendering. There is only one immediate context available per device.<br /><br />In order to use deferred rendering, we need to create new ID3D11DeviceContext called <b>deferred context</b>. One context for each thread responsible for preparing a set of draw calls.<br /><br />Then the sequence of multithreaded draw calls are executed like this:<br />
+<div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/-7Hd94okxJ6c/TsUjumwvSwI/AAAAAAAADxM/AnPh91xJAIg/s1600/Direct3D11Multithreading.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" height="443" src="http://4.bp.blogspot.com/-7Hd94okxJ6c/TsUjumwvSwI/AAAAAAAADxM/AnPh91xJAIg/s640/Direct3D11Multithreading.png" width="640" /></a></div>
+Each secondary threads are responsible to prepare draw calls in a set of <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476361%28v=vs.85%29.aspx">ID3D11CommandList</a> that will effectively be executed by the immediate context (in order to push them to the driver).<br /><br />The simplified version of the code to write is fairly easy:<br /><br />
+<pre class="language-csharp"><code>// Thread-1
+context[threadIdn].InputAssembler.InputLayout = layout1;
+context[threadIdn].InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+context[threadIdn].InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertices1, Utilities.SizeOf&lt;Vector4&gt;() * 2, 0));
+[...]
+context[threadId1].Draw(...)
+commandLists[threadId1] = context[ThreadId1].FinishCommandList(false);
+[...]
+// Thread-n
+context[threadIdn].InputAssembler.InputLayout = layoutn;
+context[threadIdn].InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+context[threadIdn].InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(verticesn, Utilities.SizeOf&lt;Vector4&gt;() * 2, 0));
+[...]
+context[threadIdn].Draw(...)
+commandLists[threadIdn] = context[ThreadIdn].FinishCommandList(false);
+
+// Rendering Thread
+for (int i = 0; i &lt; threadCount; i++)
+{
+ var commandList = commandLists[i];
+ // Execute the deferred command list on the immediate context
+ immediateContext.ExecuteCommandList(commandList, false);
+ commandList.Dispose();
+}
+</code></pre>
+<br />The API provides several key advantages:<br />
+<ul>
+   <li>We can <b>easily switch the code between immediate context and deferred context</b>. Thus using the multi-threading part of the Direct3D11 API doesn't hurt our code.</li>
+   <li>The <b>API is supported on downlevel hardware </b>(from Direct3D11 down to Direct3D9)</li>
+   <li>The underlying driver can take advantages when calling <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476424%28v=vs.85%29.aspx"><code>FinishCommandList</code></a> to perform some native layout that will help the deferred <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476423%28v=VS.85%29.aspx"><code>ExecuteCommandList</code></a> command to run faster.</li>
+</ul>
+About the "native support from driver", It can be checked by using <code>CheckFeatureSupport</code> (or directly in SharpDX using <code>CheckThreadingSupport</code>) but it seems that almost only NVIDIA (and quite recently, around this year), is supporting this feature natively. On my previous ATI 6850 and now on my 6900M are not supporting it. Is this bad? We will see that the default Direct3D11 runtime is performing just fine for this, but doesn't provide any extra boost.<br /><br />We will also see that there is an interesting issue with the usage of <code><a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476457%28v=VS.85%29.aspx">Map</a>/<a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476485%28v=VS.85%29.aspx">Unmap</a></code> or <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476486%28v=VS.85%29.aspx"><code>UpdateSubresource</code></a>  in order to update constant buffers, and their respective usage under a multithreading scenario could hurt performances. <br /><br />
+<h3>       MultiCube, a Direct3D11 Multi-threading micro-benchmark</h3>
+<br />In order to stress-test multi-threading using Direct3D11, I have developed a simple application called MultiCube (available as part of SharpDX samples: See <a href="http://code.google.com/p/sharpdx/source/browse/Samples/Direct3D11/MultiCube/Program.cs">Program.cs</a>)<br /><br /><br />This application is performing the following benchmark: It renders n x n cubes on the screen, each cube has its own matrix rotation. You can modify the number of cubes from 1 (1x1) to 65536 (256x256). The title bar is including some benchmark measurement (FPS/ time per frame) and you can change the behavior of the application with following keys:<br />
+<ul>
+   <li><b>F1</b>: Switch between Immediate Test (no threading), Deferred Test (Threading), and Frozen-Deferred Test (execute a pre-prepared CommandList on the ImmediateContext)</li>
+   <li><b>F2</b>: Switch between Map/Unmap mode and UpdateSubresource mode to update constant buffers.</li>
+   <li><b>F3</b>: Burn the CPU on/off. This is were multithreading usage is making the difference and we are going to analyse the results a little bit more. When this option is on, It simulates lots of CPU calculation on the deferred threads. If this is off, It will just batch the draw calls (which are simple, its just Cubes!)</li>
+   <li><b>Left-Right arrows</b>: Decrease/Increase the number of cubes to display (default 64x64)</li>
+   <li><b>Down-Up arrows</b>: Decrease/Increase the number of threads used (only for Deferred Test mode)</li>
+</ul>
+When the deffered mode is selected, each threads are rendering a set of rows in batch. If you have for example 100x100 cubes to render, and 5 threads, each thread will draw 20x100 cubes.<br /><br />If your graphics driver doesn't support&nbsp; natively multithreading, you will see a "*" just after Deferred node.<br /><br /><b>You can download the application </b><a href="http://sharpdx.org/sample/SharpDX-MultiCube.zip">here</a>. It is a single exe that doesn't need anykind of install (apart the DirectX June 2010 runtime). Also, being able to pack this application into a single exe is a unique feature of SharpDX: <b>static linking of a .NET exe with SharpDX Dlls</b>.<br /><br /><br />
+<h3>     Results</h3>
+<br />I ran 2 type of tests:<br />
+<ol>
+   <li>Draw 65536 cubes with the Burn-Cpu option ON and OFF, and comparing Immediate and Deferred rendering (ranging from 1 thread to 6 threads). </li>
+   <li>Draw 1024 cubes switching between Map/Unmap and UpdateSubresource, and comparing the results between Immediate and Deferred rendering.</li>
+</ol>
+Two machines with the same main processor Intel i7-2600K, 8Go RAM were used, one with NVIDIA GTX 570 and the other one with a ATI 6900M graphics card.<br /><br /><br />
+<table border="0" cellpadding="0" cellspacing="0" style="margin: 0px auto; width: 558px;">
+   <colgroup>
+      <col style="mso-width-alt: 8192; mso-width-source: userset; width: 168pt;" width="224">
+       
+      <col style="mso-width-alt: 2560; mso-width-source: userset; width: 53pt;" width="70">
+       
+      <col style="mso-width-alt: 2633; mso-width-source: userset; width: 54pt;" width="72">
+       
+      <col span="3" style="width: 48pt;" width="64">
+       
+   </colgroup>
+   <tbody>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="height: 15.0pt; width: 168pt;" width="224">65536 Drawcalls -   BurnCpu: On</td>
+         <td class="xl64" colspan="5" style="width: 251pt;" width="334">Threads</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; height: 15.0pt; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">Type</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">1</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">2</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">3</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">4</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">6</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">Nvidia-GTX   570 Deferred</td>
+         <td align="right" class="xl63" style="background: #F8696B; border: .5pt solid windowtext; mso-pattern: black none;">232ms</td>
+         <td align="right" class="xl63" style="background: #99CD7E; border: .5pt solid windowtext; mso-pattern: black none;">130ms</td>
+         <td align="right" class="xl63" style="background: #75C37C; border: .5pt solid windowtext; mso-pattern: black none;">98ms</td>
+         <td align="right" class="xl63" style="background: #6EC17B; border: .5pt solid windowtext; mso-pattern: black none;">92ms</td>
+         <td align="right" class="xl63" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">82ms</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">Nvidia-GTX   570 Immediate</td>
+         <td align="right" class="xl63" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">220ms</td>
+         <td align="right" class="xl63" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">220ms</td>
+         <td align="right" class="xl63" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">220ms</td>
+         <td align="right" class="xl63" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">220ms</td>
+         <td align="right" class="xl63" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">220ms</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">ATI 6900M   Deferred</td>
+         <td align="right" class="xl63" style="background: #F9746E; border: .5pt solid windowtext; mso-pattern: black none;">231ms</td>
+         <td align="right" class="xl63" style="background: #9ACD7E; border: .5pt solid windowtext; mso-pattern: black none;">131ms</td>
+         <td align="right" class="xl63" style="background: #75C37C; border: .5pt solid windowtext; mso-pattern: black none;">98ms</td>
+         <td align="right" class="xl63" style="background: #6FC17B; border: .5pt solid windowtext; mso-pattern: black none;">93ms</td>
+         <td align="right" class="xl63" style="background: #65BE7B; border: .5pt solid windowtext; mso-pattern: black none;">84ms</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">ATI 6900M   Immediate</td>
+         <td align="right" class="xl63" style="background: #FB9574; border: .5pt solid windowtext; mso-pattern: black none;">228ms</td>
+         <td align="right" class="xl63" style="background: #FB9574; border: .5pt solid windowtext; mso-pattern: black none;">228ms</td>
+         <td align="right" class="xl63" style="background: #FB9574; border: .5pt solid windowtext; mso-pattern: black none;">228ms</td>
+         <td align="right" class="xl63" style="background: #FB9574; border: .5pt solid windowtext; mso-pattern: black none;">228ms</td>
+         <td align="right" class="xl63" style="background: #FB9574; border: .5pt solid windowtext; mso-pattern: black none;">228ms</td>
+      </tr>
+   </tbody>
+</table>
+<br />
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;">
+   <tbody>
+      <tr>
+         <td style="text-align: center;"><a href="http://3.bp.blogspot.com/-eYjvUzdCaFc/TsiimCPKoFI/AAAAAAAADxg/jLaG-5JrJIY/s1600/MultiCube-BurnCpuOn.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="320" src="http://3.bp.blogspot.com/-eYjvUzdCaFc/TsiimCPKoFI/AAAAAAAADxg/jLaG-5JrJIY/s640/MultiCube-BurnCpuOn.png" width="640" /></a></td>
+      </tr>
+      <tr>
+         <td class="tr-caption" style="text-align: center;">Fig2. 65536 draw calls with <b>CPU intensive </b>threads, comparison between Immediate and Deferred rendering</td>
+      </tr>
+   </tbody>
+</table>
+<br /><br />
+<table border="0" cellpadding="0" cellspacing="0" style="margin: 0px auto; width: 558px;">
+   <colgroup>
+      <col style="mso-width-alt: 8192; mso-width-source: userset; width: 168pt;" width="224">
+       
+      <col style="mso-width-alt: 2560; mso-width-source: userset; width: 53pt;" width="70">
+       
+      <col style="mso-width-alt: 2633; mso-width-source: userset; width: 54pt;" width="72">
+       
+      <col span="3" style="width: 48pt;" width="64">
+       
+   </colgroup>
+   <tbody>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="height: 15.0pt; width: 168pt;" width="224">65536 Drawcalls -   BurnCpu: Off</td>
+         <td class="xl66" colspan="5" style="width: 251pt;" width="334">Threads</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; height: 15.0pt; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">Type</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">1</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">2</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">3</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">4</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none;">6</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">Nvidia-GTX   570 Deferred</td>
+         <td align="right" class="xl65" style="background: #FA8A72; border: .5pt solid windowtext; mso-pattern: black none;">31ms</td>
+         <td align="right" class="xl65" style="background: #B9D780; border: .5pt solid windowtext; mso-pattern: black none;">24ms</td>
+         <td align="right" class="xl65" style="background: #85C87D; border: .5pt solid windowtext; mso-pattern: black none;">21ms</td>
+         <td align="right" class="xl65" style="background: #74C37C; border: .5pt solid windowtext; mso-pattern: black none;">20ms</td>
+         <td align="right" class="xl65" style="background: #74C37C; border: .5pt solid windowtext; mso-pattern: black none;">20ms</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">Nvidia-GTX   570 Immediate</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">19ms</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">19ms</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">19ms</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">19ms</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">19ms</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">ATI 6900M   Deferred</td>
+         <td align="right" class="xl65" style="background: #F8696B; border: .5pt solid windowtext; mso-pattern: black none;">32ms</td>
+         <td align="right" class="xl65" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">28ms</td>
+         <td align="right" class="xl65" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">28ms</td>
+         <td align="right" class="xl65" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">28ms</td>
+         <td align="right" class="xl65" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">28ms</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">ATI 6900M   Immediate</td>
+         <td align="right" class="xl65" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">28ms</td>
+         <td align="right" class="xl65" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">28ms</td>
+         <td align="right" class="xl65" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">28ms</td>
+         <td align="right" class="xl65" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">28ms</td>
+         <td align="right" class="xl65" style="background: #FFEB84; border: .5pt solid windowtext; mso-pattern: black none;">28ms</td>
+      </tr>
+   </tbody>
+</table>
+<br />
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin: 0px auto;">
+   <tbody>
+      <tr>
+         <td style="text-align: center;"><a href="http://4.bp.blogspot.com/-dQ-8-I6iMoc/Tsii6E0BoaI/AAAAAAAADxo/zZ-89ubewEo/s1600/MultiCube-BurnCpuOff.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="320" src="http://4.bp.blogspot.com/-dQ-8-I6iMoc/Tsii6E0BoaI/AAAAAAAADxo/zZ-89ubewEo/s640/MultiCube-BurnCpuOff.png" width="640" /></a></td>
+      </tr>
+      <tr>
+         <td class="tr-caption" style="text-align: center;">Fig2. 65536 draw calls with <b>CPU ligh </b>threads, comparison between Immediate and Deferred rendering</td>
+      </tr>
+   </tbody>
+</table>
+<br />And finally the Map/Unmap and UpdateSubresource test:<br /><br />
+<table border="0" cellpadding="0" cellspacing="0" style="width: 366px;">
+   <colgroup>
+      <col style="mso-width-alt: 8192; mso-width-source: userset; width: 168pt;" width="224">
+       
+      <col style="mso-width-alt: 2560; mso-width-source: userset; width: 53pt;" width="70">
+       
+      <col style="mso-width-alt: 2633; mso-width-source: userset; width: 54pt;" width="72">
+       
+   </colgroup>
+   <tbody>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; height: 15.0pt; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none; width: 168pt;" width="224">65536 Drawcalls - Type</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none; width: 53pt;" width="70">Map</td>
+         <td style="background: #1F497D; border: .5pt solid windowtext; color: white; font-family: Calibri; font-size: 11.0pt; font-weight: 400; mso-pattern: black none; text-decoration: none; text-line-through: none; text-underline-style: none; width: 54pt;" width="72">Update</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">Nvidia-GTX   570&nbsp; Immediate - 1024</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">0.6ms</td>
+         <td align="right" class="xl65" style="background: #FFE283; border: .5pt solid windowtext; mso-pattern: black none;">1.1ms</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">Nvidia-GTX   570&nbsp; Deferred - 1024</td>
+         <td align="right" class="xl65" style="background: #FFE583; border: .5pt solid windowtext; mso-pattern: black none;">0.92ms</td>
+         <td align="right" class="xl65" style="background: #F8696B; border: .5pt solid windowtext; mso-pattern: black none;">7.32ms</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">ATI 6900M   Immediate - 1024</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">0.6ms</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">0.6ms</td>
+      </tr>
+      <tr height="20" style="height: 15.0pt;">
+         <td height="20" style="border: .5pt solid windowtext; height: 15.0pt;">ATI 6900M   Deferred - 1024</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">0.6ms</td>
+         <td align="right" class="xl65" style="background: #63BE7B; border: .5pt solid windowtext; mso-pattern: black none;">0.6ms</td>
+      </tr>
+   </tbody>
+</table>
+<br /><br />
+<h3>     Analysis</h3>
+<br />If we examine the results a little more carefully, there are a couple of interesting things to highlight:<br /><br />
+<ul>
+   <li> <b>Using multithreading and deferred context rendering is only relevant when the CPU is effectively used on each threads </b>(that sounds obvious, but It is at least clear!). When we are not using the CPU, Immediate rendering is in fact faster!</li>
+   <li><b>Multithreading rendering with CPU intensive application can perform 3-4x times faster </b>than a single threaded application (at the condition that we have enough CPU core to dispatch rendering jobs)</li>
+   <li><b>The "native support from driver" of Direct3D11 multithreading doesn't seem to change so much</b>, compare to the NVIDIA graphics card that is supporting it, we don't see a huge difference with AMD.</li>
+   <li><b>Usage of UpdateSubresource on a NVIDIA card is 8x times slower in a multithreading situation </b>and is hurting a lot the performance of the application: <b>Use Map/Unmap instead</b>! </li>
+</ul>
+Of course, as usual, this is a synthetic, micro-benchmark test that should be taken with caution and can not reflect every test cases, so you need to perform your own benchmark if you have to make the decision of using multithreading rendering!<br /><br />Finally, to respond to the original gamedev question, I provided a "Frozen Deferred" test in MultiCube to test if rendering a pre-prepared CommandList is actually faster then executing it with an immediate context: It seems that It doesn't make currently any differences (but for this to be sure, I would have to run this benchmark on several different machines/CPU/graphics card/drivers configs in order to fully verify it).
+
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

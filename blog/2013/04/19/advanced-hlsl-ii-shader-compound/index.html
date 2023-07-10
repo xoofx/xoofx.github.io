@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.2.0">
+    <title>Advanced HLSL II: Shader compound parameters | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Advanced HLSL II: Shader compound parameters | xoofx">
+    <meta name="twitter:description" content="A very short post in the sequel of my previous post "Advanced HLSL using closures and function pointers", there is again a little neat trick by using the "class" keyword in HLSL: It is possible to use a class to regroup a set of parameters (shader resources as well as constant buffers) and their associate methods, into what is called a compound parameter. This feature of the language is absolutely...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Advanced HLSL II: Shader compound parameters | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2013/04/19/advanced-hlsl-ii-shader-compound/">Advanced HLSL II: Shader compound parameters</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="2013-04-19" itemprop="datePublished">April 19, 2013</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/shader/">shader</a>, <a href="/blog/tag/hlsl/">hlsl</a>, <a href="/blog/tag/d3d11/">D3D11</a>, <a href="/blog/tag/directx/">DirectX</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2013/2013-04-20-advanced-hlsl-ii-shader-compound.html">edit</a>
+    </div>
+      
+
+
+
+A very short post in the sequel of my previous post "<a href="/blog/2011/11/24/advanced-hlsl-using-closures-and" target="_blank">Advanced HLSL using closures and function pointers</a>", there is again a little neat trick by using the "class" keyword in HLSL: It is possible to use a class to regroup a set of parameters (shader resources as well as constant buffers) and their associate methods, into what is called a <b>compound parameter</b>. This feature of the language is absolutely not documented, I discovered the name "compound parameter" while trying to hack this technique, as the HLSL compiler was complaining about a restriction about this "compound parameter". So at least, It seems to be implemented up to the point that it is quite usable. Let's see how we can use this...<br /><a name='more'></a><br />
+<h3>Group of input parameters in shaders, the usual way</h3>
+Suppose the following code (not really useful): <br /><br />
+<pre class="language-hlsl"><code>// Shader Resources
+SamplerState PointClamp;
+
+// First set of parameters
+// -----------------------
+Texture2D&lt;float&gt; DepthBuffer;
+float2 TexelSize;
+
+// Associated methods with these parameters
+float SampleDepthBuffer(float2 texCoord, int2 offsets = 0)
+{
+  return DepthBuffer.SampleLevel(PointClamp, texCoord + offsets * TexelSize, 0.0);
+}
+
+// Second set of parameters
+// ------------------------
+Texture2D&lt;float&gt; DepthBuffer1;
+float2 TexelSize1;
+
+// Associated methods with these parameters
+float SampleDepthBuffer1(float2 texCoord, int2 offsets = 0)
+{
+  return DepthBuffer1.SampleLevel(PointClamp, texCoord + offsets * TexelSize1, 0.0);
+}
+
+float4 PSMain(float2 texCoord: TEXCOORD) : SV_TARGET
+{
+   return float4(SampleDepthBuffer(texCoord, int2(1, 0)), SampleDepthBuffer1(texCoord, int2(1, 0)), 0, 1);
+}
+</code></pre>
+<br />What we have is some parameters that are grouped, for example  <br />
+<ul>
+   <li>A resource DepthBuffer</li>
+   <li>A TexelSize that gives the size of a texel in uv coordinates for the previous textures (float2(1/width, 1/height))</li>
+   <li>A method "SampleDepthBuffer" that will sample the depth buffer.</li>
+</ul>
+And this set of parameters is duplicate with another set with just the postfix number "1".  We need to duplicate the code here. Though of course, as usual there are some workaround <br />
+<ul>
+   <li>Either by using the preprocessor and token pasting: this approach is often used, but It means that you have a code that is sometimes less readable, especially if you have to embed a function in a #define.</li>
+   <li>For the methods SampleDepthBuffer, It could be possible to rewrite the signature to accept a Texture2D as well as a TexelSize as a parameter. Of course, if this function was using more textures, more parameters, we would have to pass them all by parameters...</li>
+</ul>
+The generated code produced by fxc.exe HLSL compiler is like this: <br />
+<pre style="color: green; font-size: 10px;"><code>//
+// Generated by Microsoft (R) HLSL Shader Compiler 9.29.952.3111
+//
+//
+//   fxc /Tps_5_0 /EPSMain test.fx
+//
+//
+// Buffer Definitions:
+//
+// cbuffer $Globals
+// {
+//
+//   float2 TexelSize;                  // Offset:    0 Size:     8
+//   float2 TexelSize1;                 // Offset:    8 Size:     8
+//
+// }
+//
+//
+// Resource Bindings:
+//
+// Name                                 Type  Format         Dim Slot Elements
+// ------------------------------ ---------- ------- ----------- ---- --------
+// PointClamp                        sampler      NA          NA    0        1
+// DepthBuffer                       texture   float          2d    0        1
+// DepthBuffer1                      texture   float          2d    1        1
+// $Globals                          cbuffer      NA          NA    0        1
+//
+//
+//
+// Input signature:
+//
+// Name                 Index   Mask Register SysValue Format   Used
+// -------------------- ----- ------ -------- -------- ------ ------
+// TEXCOORD                 0   xy          0     NONE  float   xy
+//
+//
+// Output signature:
+//
+// Name                 Index   Mask Register SysValue Format   Used
+// -------------------- ----- ------ -------- -------- ------ ------
+// SV_TARGET                0   xyzw        0   TARGET  float   xyzw
+//
+</code></pre>
+<pre style="font-size: 10px;"><code>ps_5_0
+dcl_globalFlags refactoringAllowed
+dcl_constantbuffer cb0[1], immediateIndexed
+dcl_sampler s0, mode_default
+dcl_resource_texture2d (float,float,float,float) t0
+dcl_resource_texture2d (float,float,float,float) t1
+dcl_input_ps linear v0.xy
+dcl_output o0.xyzw
+dcl_temps 1
+mad r0.xyzw, cb0[0].xyzw, l(1.000000, 0.000000, 1.000000, 0.000000), v0.xyxy
+sample_l_indexable(texture2d)(float,float,float,float) r0.x, r0.xyxx, t0.xyzw, s0, l(0.000000)
+sample_l_indexable(texture2d)(float,float,float,float) r0.y, r0.zwzz, t1.yxzw, s0, l(0.000000)
+mov o0.xy, r0.xyxx
+mov o0.zw, l(0,0,0,1.000000)
+ret
+// Approximately 6 instruction slots used
+</code></pre>
+<br />When we have to deal with lots of parameters that are grouped, and these groups need to be duplicated with their associated methods, It becomes almost impossible to maintain a clean and reusable HLSL code. Fortunately, the "class" keyword is here to the rescue! <br /><br />
+<h3>Shader input compound parameters container, the neat way</h3>
+Let's rewrite the previous code using the keyword "class":<br /><br />
+<pre class="language-hlsl"><code>SamplerState PointClamp;
+
+// Declare a container for our set of parameters
+class TextureSet
+{
+    Texture2D&lt;float&gt; DepthBuffer;
+    float2 TexelSize;
+
+    float SampleDepthBuffer(float2 texCoord, int2 offsets = 0)
+    {
+        return DepthBuffer.SampleLevel(PointClamp, texCoord + offsets * TexelSize, 0.0);
+    }
+};
+
+// Define two instance of compound parameters
+TextureSet Texture1;
+TextureSet Texture2;
+
+float4 PSMain2(float2 texCoord: TEXCOORD) : SV_TARGET
+{
+    return float4(Texture1.SampleDepthBuffer(texCoord, int2(1, 0)), Texture2.SampleDepthBuffer(texCoord, int2(1, 0)), 0, 1);
+}
+</code></pre>
+<br />And the resulting compiled HLSL is slightly equivalent:<br /><br />
+<pre style="color: green; font-size: 10px;"><code>//
+// Generated by Microsoft (R) HLSL Shader Compiler 9.29.952.3111
+//
+//
+//   fxc /Tps_5_0 /EPSMain2 test.fx
+//
+//
+// Buffer Definitions:
+//
+// cbuffer $Globals
+// {
+//
+//   struct TextureSet
+//   {
+//
+//       float2 TexelSize;              // Offset:    0
+//
+//   } Texture1;                        // Offset:    0 Size:     8
+                                        // Texture:   t0
+//
+//   struct TextureSet
+//   {
+//
+//       float2 TexelSize;              // Offset:   16
+//
+//   } Texture2;                        // Offset:   16 Size:     8
+                                        // Texture:   t1
+//
+// }
+//
+//
+// Resource Bindings:
+//
+// Name                                 Type  Format         Dim Slot Elements
+// ------------------------------ ---------- ------- ----------- ---- --------
+// PointClamp                        sampler      NA          NA    0        1
+// Texture1.DepthBuffer              texture   float          2d    0        1
+// Texture2.DepthBuffer              texture   float          2d    1        1
+// $Globals                          cbuffer      NA          NA    0        1
+//
+//
+//
+// Input signature:
+//
+// Name                 Index   Mask Register SysValue Format   Used
+// -------------------- ----- ------ -------- -------- ------ ------
+// TEXCOORD                 0   xy          0     NONE  float   xy
+//
+//
+// Output signature:
+//
+// Name                 Index   Mask Register SysValue Format   Used
+// -------------------- ----- ------ -------- -------- ------ ------
+// SV_TARGET                0   xyzw        0   TARGET  float   xyzw
+//
+</code></pre>
+<pre style="font-size: 10px;"><code>ps_5_0
+dcl_globalFlags refactoringAllowed
+dcl_constantbuffer cb0[2], immediateIndexed
+dcl_sampler s0, mode_default
+dcl_resource_texture2d (float,float,float,float) t0
+dcl_resource_texture2d (float,float,float,float) t1
+dcl_input_ps linear v0.xy
+dcl_output o0.xyzw
+dcl_temps 1
+mad r0.xy, cb0[0].xyxx, l(1.000000, 0.000000, 0.000000, 0.000000), v0.xyxx
+sample_l_indexable(texture2d)(float,float,float,float) r0.x, r0.xyxx, t0.xyzw, s0, l(0.000000)
+mov o0.x, r0.x
+mad r0.xy, cb0[1].xyxx, l(1.000000, 0.000000, 0.000000, 0.000000), v0.xyxx
+sample_l_indexable(texture2d)(float,float,float,float) r0.x, r0.xyxx, t1.xyzw, s0, l(0.000000)
+mov o0.y, r0.x
+mov o0.zw, l(0,0,0,1.000000)
+ret
+// Approximately 8 instruction slots used
+</code></pre>
+<br />There are a couple of things to highlight: <br />
+<ul>
+   <li>The main difference is the packing of constant buffer variable is done separately as they will be packed together - as a struct and aligned on a float4 boundary. So in this specific case, the two floats TexelSize cannot be swizzled/merged (if they were float4, the code would be strictly equivalent). So we need to be aware and careful about this behavior.</li>
+   <li>Input resources are nicely prefixed by their compound parameter name, like "Texture1.DepthBuffer" or "Texture2.DepthBuffer", so it is also really easy to access them when using named resource bindings in an effect. Note that a resource declared but unused inside a compound parameter will occupy a slot register without using it (This is not a big deal, as there is almost the same kind of behavior when using array of resources)</li>
+   <li>We can still enclose "TextureSet Texture1" into a constant buffer declaration, the variable defined inside TextureSet for the Texture1 instance will correctly end-up in the corresponding constant buffer.</li>
+   <li>Global variable are accessible from methods defined in a compound parameter (for example PointClamp SamplerState used by the SampleDepthBuffer method)</li>
+   <li><b>Compound parameters can only be compiled using SM5.0&nbsp;</b>(unlike the previous post about the closures).</li>
+</ul>
+This is really a handy feature that could help to better organize some of our shaders. It's always surprising to still discover this kind of syntax constructions accessible from the current HLSL compiler. Let me know if you find any issues using this trick!
+
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.2.0">
+    <title>Official release of SharpDX 1.0 | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Official release of SharpDX 1.0 | xoofx">
+    <meta name="twitter:description" content=" After three months of intense development, I'm really excited to announce the availability of SharpDX 1.0 , a new platform independent .Net managed DirectX API, directly generated from DirectX SDK headers.This first version can be considered as stable. The Direct3D10 / Direct3D10.1 API has been entirely tested on a large 3D engine that was using previously SlimDX (thanks patapom!). Migration was quite straightforward, with tiny minor changes to the...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Official release of SharpDX 1.0 | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2010/11/30/official-release-of-sharpdx-10/">Official release of SharpDX 1.0</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="2010-11-30" itemprop="datePublished">November 30, 2010</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/d3d10/">D3D10</a>, <a href="/blog/tag/sharpdx/">SharpDX</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/d3d11/">D3D11</a>, <a href="/blog/tag/direct2d/">Direct2D</a>, <a href="/blog/tag/directx/">DirectX</a>, <a href="/blog/tag/net/">.Net</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2010/2010-11-30-official-release-of-sharpdx-10.html">edit</a>
+    </div>
+      
+
+<div class="separator" style="clear: both; text-align: center;"></div>
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="https://lh4.googleusercontent.com/-WE3fr_R-6mM/TX9X-jnqE9I/AAAAAAAADhE/0fRpnTIl40s/s1600/sharpdx_logo.png"
+        imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img border="0"
+            height="200"
+            src="https://lh4.googleusercontent.com/-WE3fr_R-6mM/TX9X-jnqE9I/AAAAAAAADhE/0fRpnTIl40s/s200/sharpdx_logo.png"
+            width="200" /></a></div><a
+    href="http://3.bp.blogspot.com/_dv_YkYWn3HA/TPT4dLAd1jI/AAAAAAAADTQ/70n6ZRw6mzY/s1600/sharpdx_logo_large.png"
+    imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><br /></a><br />After
+three months of intense development, I'm really excited to announce the availability of <a
+    href="http://code.google.com/p/sharpdx/">SharpDX 1.0</a> , a new platform independent .Net managed DirectX API,
+directly generated from DirectX SDK headers.<br /><br />This first version can be considered as stable. The Direct3D10 /
+Direct3D10.1 API has been entirely tested on a large 3D engine that was using previously SlimDX (thanks patapom!). <a
+    href="http://code.google.com/p/sharpdx/wiki/MigrateFrom">Migration </a>was quite straightforward, with tiny minor
+changes to the engine's code.<br /><br /><br />The key features and benefits of this new API are: <br />
+<ul>
+    <li><b>API is generated from DirectX SDK headers</b> : meaning <b>a complete and reliable API</b> and <b>an easy
+            support for future API</b>. </li>
+    <li><b>Full support for the following DirectX API</b>: 
+        <ul>
+            <li>Direct3D10 </li>
+            <li>Direct3D10.1 </li>
+            <li>Direct3D11 </li>
+            <li>Direct2D1 (including custom rendering, tessellation callbacks) </li>
+            <li>DirectWrite (including custom client callbacks) </li>
+            <li>D3DCompiler </li>
+            <li>DXGI </li>
+            <li>DXGI 1.1 </li>
+            <li>DirectSound </li>
+            <li>XAudio2 </li>
+            <li>XAPO </li>
+            <li>An integrated math API directly ported from SlimMath </li>
+        </ul>
+    </li>
+    <li><b>Pure managed .NET API, platform independent</b> : assemblies are compiled with AnyCpu target. You can run
+        your code on a x64 or a x86 machine with the same assemblies, without recompiling your project. </li>
+    <li><b>Lightweight <a href="http://code.google.com/p/sharpdx/wiki/AssemblyDlls">individual assemblies</a></b> : a
+        core assembly - SharpDX - containing common classes and an assembly for each subgroup API (Direct3D10,
+        Direct3D11, DXGI, D3DCompiler...etc.). Assemblies are also lightweight. </li>
+    <li><b>C++/CLI Speed</b> : the framework is using a genuine way to avoid any C++/CLI while still achieving
+        comparable performance. </li>
+    <li><b>API naming convention mostly compatible with SlimDX API</b>. </li>
+    <li><b>Raw DirectX object life management</b> : No overhead of ObjectTable or RCW mechanism, the API is using direct
+        native management with classic COM method "Release". </li>
+    <li><b>Easily mergeable / obfuscatable</b> : If you need to obfuscate SharpDX assemblies, they are easily
+        obfusctable due to the fact the framework is not using any mixed assemblies. You can also merge SharpDX
+        assemblies into a single exe using with tool like <a
+            href="http://research.microsoft.com/en-us/people/mbarnett/ilmerge.aspx" rel="nofollow">ILMerge</a>. </li>
+</ul>You will also find a growing collection of samples in the <a
+    href="http://code.google.com/p/sharpdx/wiki/SamplesGallery">Samples Gallery</a> of SharpDX. Most notably with some
+additional support for Direct2D1 and DirectWrite client callbacks.<br /><br />Instead of providing a monolithic
+assembly, SharpDX is providing lightweight individual and interdependent assemblies. All SharpDX assemblies are
+dependent from the core SharpDX assembly. You just need to add the required assemblies to your project, without
+embedding the whole DirectX API stack. Here is a chart that explains SharpDX assembly dependencies:<br /><br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://sharpdx.googlecode.com/svn/trunk/Doc/SharpDXAssemblyDependencies.png" imageanchor="1"
+        style="margin-left: 1em; margin-right: 1em;"><img border="0" height="457"
+            src="http://sharpdx.googlecode.com/svn/trunk/Doc/SharpDXAssemblyDependencies.png" width="640" /></a></div>
+<br />Next versions will provide support for DirectInput, XInput, X3DAudio, XACT3.<br /><br />
+<h3>About performance</h3>Someone asked me how SharpDX compares to SlimDX in terms of performance. Here is a
+micro-benchmark on two methods, ID3D10Device1::GetFeatureLevel (alias Device.FeatureLevel) and
+ID3D10Device::CheckCounterInfo (alias Device.GetCounterCapabilities). <br /><br />The test consist of 100,000,000 calls
+on each methods (inside a for, with (10 calls to device.FeatureLevel) * 10,000,000 times) and is repeated 10 times and
+averaged. Repeated two times.<br />&nbsp;&nbsp; <br />
+<table border="0" cellpadding="0" cellspacing="0" style="width: 540px;">
+    <colgroup>
+        <col style="width: 159pt;" width="212">
+        <col style="width: 77pt;" width="103">
+        <col style="width: 63pt;" width="84">
+        <col style="width: 106pt;" width="141">
+    </colgroup>
+    <tbody>
+        <tr height="20" style="height: 15pt;">
+            <td height="20"
+                style="background: none repeat scroll 0% 0% rgb(75, 172, 198); border-color: -moz-use-text-color white white -moz-use-text-color; border-style: none solid solid none; border-width: medium 0.5pt 1.5pt medium; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; height: 15pt; text-align: center; text-decoration: none; width: 159pt;"
+                width="212">Method</td>
+            <td style="background: none repeat scroll 0% 0% rgb(75, 172, 198); border-color: -moz-use-text-color white white; border-style: none solid solid; border-width: medium 0.5pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-align: center; text-decoration: none; width: 77pt;"
+                width="103">SlimDX</td>
+            <td style="background: none repeat scroll 0% 0% rgb(75, 172, 198); border-color: -moz-use-text-color white white; border-style: none solid solid; border-width: medium 0.5pt 1.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-align: center; text-decoration: none; width: 63pt;"
+                width="84">SharpDX</td>
+            <td style="background: none repeat scroll 0% 0% rgb(75, 172, 198); border-color: -moz-use-text-color -moz-use-text-color white white; border-style: none none solid solid; border-width: medium medium 1.5pt 0.5pt; color: white; font-family: Calibri; font-size: 11pt; font-weight: 700; text-align: center; text-decoration: none; width: 106pt;"
+                width="141">SharpDX vs SlimDX</td>
+        </tr>
+        <tr height="20" style="height: 15pt;">
+            <td height="20"
+                style="background: none repeat scroll 0% 0% rgb(183, 222, 232); border-color: white white white -moz-use-text-color; border-style: solid solid solid none; border-width: 0.5pt 0.5pt 0.5pt medium; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">
+                device.FeatureLevel</td>
+            <td class="xl65"
+                style="background: none repeat scroll 0% 0% rgb(183, 222, 232); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-align: center; text-decoration: none;">
+                3700</td>
+            <td class="xl65"
+                style="background: none repeat scroll 0% 0% rgb(183, 222, 232); border: 0.5pt solid white; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-align: center; text-decoration: none;">
+                3650</td>
+            <td class="xl66"
+                style="background: none repeat scroll 0% 0% rgb(78, 222, 54); border-color: white -moz-use-text-color white white; border-style: solid none solid solid; border-width: 0.5pt medium 0.5pt 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-align: center; text-decoration: none;">
+                1,37%</td>
+        </tr>
+        <tr height="20" style="height: 15pt;">
+            <td height="20"
+                style="background: none repeat scroll 0% 0% rgb(218, 238, 243); border-color: white white -moz-use-text-color -moz-use-text-color; border-style: solid solid none none; border-width: 0.5pt 0.5pt medium medium; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; height: 15pt; text-decoration: none;">
+                device.GetCounterCapabilities()</td>
+            <td class="xl65"
+                style="background: none repeat scroll 0% 0% rgb(218, 238, 243); border-color: white white -moz-use-text-color; border-style: solid solid none; border-width: 0.5pt 0.5pt medium; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-align: center; text-decoration: none;">
+                4684</td>
+            <td class="xl65"
+                style="background: none repeat scroll 0% 0% rgb(218, 238, 243); border-color: white white -moz-use-text-color; border-style: solid solid none; border-width: 0.5pt 0.5pt medium; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-align: center; text-decoration: none;">
+                4259</td>
+            <td class="xl66"
+                style="background: none repeat scroll 0% 0% rgb(78, 222, 54); border-color: white -moz-use-text-color -moz-use-text-color white; border-style: solid none none solid; border-width: 0.5pt medium medium 0.5pt; color: black; font-family: Calibri; font-size: 11pt; font-weight: 400; text-align: center; text-decoration: none;">
+                9,98%</td>
+        </tr>
+    </tbody>
+</table><br />For FeatureLevel, the test was sometimes around +/-0.5%.<br />For GetCounterCapabilities(), the main
+difference between SharpDX and SlimDX implementation is that SlimDX perform a copy from the native struct to .Net struct
+while SharpDX is directly passing a pointer to the .Net struct.<br /><br />This test is of course a micro benchmark and
+doesn't reflect a real-world usage. Some part of the API could be in favor of SlimDX, but I'm pretty confident that
+SharpDX is much more consistent in the way structures are passed to the native functions, avoiding as much as possible
+marshaling structures that doesn't need any custom marshaling (unlike SlimDX that is performing most of a time a
+marshaling between .Net/Native structure, besides they are binary compatible).<br /><br />
+<h3>Next?</h3>Finally, I'm going to be able to use this project to make some demos with it! Next target is to develop a
+XNA like based framework based on SharpDX.Direct3D11.<br /><br />Stay tuned!
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.4.2.0">
+    <title>Efficient discriminated unions in C#7 | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Efficient discriminated unions in C#7 | xoofx">
+    <meta name="twitter:description" content="Also known as tagged unions, variant records, sum types or even enums (in Rust enums or Swift enums), they are versatile lightweight types commonly used in functional languages. F# has discriminated unions, but if you take the time to discover what kind of .NET code it generates, you will find that they are stored as classes, hence not particularly optimal. In this post, I would like to propose an implementation...">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Efficient discriminated unions in C#7 | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2016/10/28/efficient-discriminated-unions-in-csharp/">Efficient discriminated unions in C#7</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="fa fa-calendar"></span>
+      <span class="date"><time datetime="2016-10-28" itemprop="datePublished">October 28, 2016</time></span>
+      <i class="fa fa-tags"></i><a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.Net</a>
+  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2016/2016-10-28-efficient-discriminated-unions-in-csharp.md">edit</a>
+    </div>
+      <p>Also known as tagged unions, variant records, sum types or even enums (in <a href="https://doc.rust-lang.org/book/enums.html">Rust enums</a> or <a href="https://developer.apple.com/library/content/documentation/Swift/Conceptual/Swift_Programming_Language/Enumerations.html">Swift enums</a>), they are versatile lightweight types commonly used in functional languages. F# has discriminated unions, but if you take the time to discover what kind of .NET code it generates, you will find that they are stored as classes, hence not particularly optimal.</p>
+<p>In this post, I would like to propose an implementation of discriminated unions as valuetypes instead. I will try to cover some of the pitfalls and issues, but unlike my previous posts, I will not provide a full prototype this time (doh!), but it will try to reuse some of my previous adventure.</p>
+<h1 id="why">Why?</h1>
+<p>Using a managed hierarchy for unions classes is not ideal for many reasons:</p>
+<ul>
+<li><strong>Size memory cost</strong> of the reference indirection, object header: on a x64 runtime, an union would occupy at least: 8 bytes for the reference, 4 (object header) + 8 (vtbl pointer) + 4 (int id for the union), so in total 24 bytes</li>
+<li><strong>Bad cache locality</strong> due to the reference indirection</li>
+<li>Puts more <strong>pressure on the GC</strong> as it will have to visit each union instances</li>
+<li><strong>Inefficient pattern matching</strong>: If not carefully crafted, e.g when using RTTI/type information for example (as F#), the code will be resolved into a bunch of <code>if type is Union1 { ... }</code> instead of an efficient switch case. That could be solved by having an enum type field, but you would still pay the cost of the reference indirection.</li>
+</ul>
+<p>For example, if we take the following F# example:</p>
+<pre><code class="language-fsharp">type Shape =
+    | Rectangle of width : float * length : float
+    | Circle of radius : float
+    | Triangle of width : float * height : float
+</code></pre>
+<p>You can check the generated .NET code for it on <a href="https://gist.github.com/xoofx/8e9be7d027e2eb0c359da37f77a1bb8a">this gist</a></p>
+<p>While a F# pattern matching:</p>
+<pre><code class="language-fsharp">module Functions =
+ let getShapeSurface shape =
+    match shape with
+    | Rectangle(w,l) -&gt; w * l
+    | Circle(r) -&gt; 2. * r * 3.14159
+    | Triangle(w,h) -&gt; w * h / 2.
+</code></pre>
+<p>would generate the following .NET code:</p>
+<pre><code class="language-csharp">// TestSharp.Functions
+public static double getShapeSurface(Shape shape)
+{
+	if (shape is Shape.Circle)
+	{
+		Shape.Circle circle = (Shape.Circle)shape;
+		double r = circle._radius;
+		return 2.0 * r * 3.14159;
+	}
+	if (!(shape is Shape.Triangle))
+	{
+		Shape.Rectangle rectangle = (Shape.Rectangle)shape;
+		double w = rectangle._width;
+		double i = rectangle._length;
+		return w * i;
+	}
+	Shape.Triangle triangle = (Shape.Triangle)shape;
+	double w2 = triangle._width;
+	double h = triangle._height;
+	return w2 * h / 2.0;
+}
+</code></pre>
+<p>With discriminated unions as valuetypes, we could more efficiently represents and manipulates them.</p>
+<h1 id="syntax-in-c">Syntax in C#</h1>
+<p>I will introduce here just a simple syntax for the main purpose of describing after how it will be projected back to the implementation. So syntax is less critical here, though I will try to avoid introducing a new keyword to make it a bit more plausible.</p>
+<p>Let's assume that we could declare a discriminated union in C# like this:</p>
+<pre><code class="language-csharp">public struct enum Shape  // use the keywords struct enum to identify a structured enum
+{
+    Rectangle(float width, float length),  // inherits the visibility of the parent Shape declaration
+    Circle(float radius),
+    Triangle(float width, float height)
+}
+</code></pre>
+<p>And the pattern matching could be exposed like this:</p>
+<pre><code class="language-csharp">public static float CalculateArea(Shape shape)
+{
+    switch shape
+    {
+        Rectangle(w,l) =&gt;  return w * l;  // deconstruct the union to &quot;local variables&quot;
+        Circle b =&gt;  return 2.0f * Math.PI * b.radius;  // no deconstruct, simply use it via b
+        Triangle(w,h) =&gt;  return w * h / 2.0f;
+    }
+}
+</code></pre>
+<p>They would also support generics as well so it should be possible to declare such a type:</p>
+<pre><code class="language-csharp">public struct enum Option&lt;T&gt;
+{
+  None,
+  Some(T value)
+}
+</code></pre>
+<h1 id="projection-to.net">Projection to .NET</h1>
+<p>We would like to have a compact, lightweight valuetype to implement discriminated unions and this is where my previous post &quot;<a href="http://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/">Struct inheritance in C#</a>&quot; comes into play.</p>
+<p>The main idea of the implementation is to collapse/compact all fields of the union types (e.g <code>Rectangle(width,length)</code>) into the base union type (e.g <code>Shape</code>). This is similar to the way <a href="http://smallcultfollowing.com/babysteps/blog/2015/05/05/where-rusts-enum-shines/">Rust enum shines</a>.</p>
+<p>So internally, the <code>Shape</code> discriminated union would be represented like this:</p>
+<pre><code class="language-csharp">[Union]
+public struct Shape
+{
+    internal const int $RectangleType = 1;
+    internal const int $CircleType = 2;
+    internal const int $TriangleType = 3;
+    private Shape() {} // Note this is currently impossible for a struct
+    internal int $type;
+    internal float $a,$b,$c;
+}
+</code></pre>
+<p>and the <code>Rectangle</code> type could be mapped to this kind of code:</p>
+<pre><code class="language-csharp">[Union]
+public struct Rectangle : Shape
+{
+    public Rectangle(float width, float length)
+    {
+        $type = $RectangleType;
+        $a = width;
+        $b = length;
+    }    
+    
+    public width =&gt; $a;
+    public length =&gt; $b;
+}
+</code></pre>
+<p>It means that whatever the subtype is, you will always get the same size for a class of structured enum. So you could for example allocate an array of them and they would layout as a plain array of valuetypes. The subtypes (e.g <code>Rectangle</code>) would not contain any additional fields: This is where <strong>virtual structs are really shining</strong>.</p>
+<p>I have omitted all the other verbose code parts (<code>Equals</code>, <code>HashCode</code>, <code>ToString</code>...etc) that must be implemented for a full implem.</p>
+<p>Note that in order to make the size of the base class the most compact, we would need to <strong>reorder and collapse fields into compatible/blittable types</strong>. With a struct explicit layout, it would be straightforward. Typically, if two union types are using a managed object as part of their respective data, we should only store a single <code>object</code> reference to the base, so typically:</p>
+<pre><code class="language-csharp">public class MyClass1 {}
+public class MyClass2 {}
+
+public struct enum BaseType
+{
+   Type1(MyClass1 class1),
+   Type2(MyClass2 class1),
+}
+</code></pre>
+<p>would collapse internally to a single object field in the base <code>BaseType</code> storage implementation:</p>
+<pre><code class="language-csharp">[Union]
+public struct BaseType
+{
+    internal const int $Type1Type = 1;
+    internal const int $Type2Type = 2;
+    internal int $type;
+    internal object $a; // Class1 and Class2 collapsed into this
+}
+</code></pre>
+<p>This layout would be compatible with how the GC works to iterate on the reference types stored in the struct, so it would work just as-is.</p>
+<p>This field squashing process should be applied also to plain blittable types (primitives, struct...etc.). As you can imagine, there would be some corner cases where an optimal squash would not be entirely possible (like using an existing Struct containing its own field's layout used in a union type parameter)</p>
+<p>The pattern matching would then be implemented using a plain switch case:</p>
+<pre><code class="language-csharp">public static float CalculateArea(Shape shape)
+{
+    switch(shape.$type)
+    {
+        case Shape.$RectangleType:
+        {
+            ref var a = ref (Rectangle)shape;
+            return a.width * a.length;
+        }
+        case Shape.$CircleType:
+        {
+            ref var b = ref (Circle)shape;
+            return 2.0f * Math.PI * b.radius;
+        }
+        case Shape.$TriangleType:
+        {
+            ref var c = ref (Triangle)shape;
+            return c.width * c.height;
+        }
+        default: // note: more on this later
+            return 0.0f;
+    }
+}
+</code></pre>
+<p>In the example above, I have chosen to use an (unsupported?) syntax for <code>ref</code> locals that would allow to cast the type, without having to copy it again on the stack. This optimization would be critical in order to avoid any kind of stack copies when deconstructing a <code>Shape</code> base type into an inherited union type.</p>
+<p>As you can see, using valuetypes is giving a lot more opportunities for efficiency. With the Struct Inheritance, it would be fairly easy to prototype directly such a scenario.</p>
+<h1 id="the-dirty-details">The dirty details</h1>
+<p>While it sounds very straightforward to implement, there are many pitfalls and languages issues to consider.</p>
+<p>Most notably we can try to address/mitigate some of them:</p>
+<h3 id="default-value">Default value</h3>
+<p>In .NET, a struct is automatically initialized to zero. Thus, if you have a struct field, it would be automatically initialized ot zero and you would not have to worry about assigning a value to it.</p>
+<p>With our structured enum valuetype, we would have a problem: The type <code>Shape</code> above would be in a <code>nil</code> state if it is not assigned by a sub-Shape (e.g <code>Rectangle</code>)</p>
+<p>We could circumvent a bit some misuses by forbidding constructions like these:</p>
+<pre><code class="language-csharp">var shape = new Shape(); // Would not compile
+Rectangle rect; // Would not compile alone without a constructor
+
+Shape rect = new Rectangle(1,2); // Ok
+</code></pre>
+<p>This is fine for local variables, but more problematic if such a type is embedded into another struct.</p>
+<p>Thus we would have a state in which a structured enum could be in a <code>null</code> state (or <code>nil</code> or <code>none</code>). Using <code>null</code> is not ideal, because the semantic is usually used for reference types, but let's assume that we could use it:</p>
+<pre><code class="language-csharp">Shape shape;
+
+// here shape would be equivalent to `null`
+if (shape == null)
+{
+  shape = new Rectangle(1,2);
+}
+</code></pre>
+<p>In the pattern matching case, we would have to add a special case for this:</p>
+<pre><code class="language-csharp">public static float CalculateArea(Shape shape)
+{
+    switch shape
+    {
+        Rectangle(w,l) =&gt;  return w * l;  // deconstruct the union to &quot;local variables&quot;
+        Circle b =&gt;  return 2.0f * Math.PI * b.radius;  // no deconstruct, simply use it via b
+        Triangle(w,h) =&gt;  return w * h / 2.0f;
+        null =&gt; return 0.0f; // case for a non initialized entry
+    }
+}
+</code></pre>
+<p>We could also alias null to a special enum type, typically in the case of <code>Option&lt;T&gt;</code>, obviously constrained to one that doesn't have any parameters:</p>
+<pre><code class="language-csharp">public struct enum Option&lt;T&gt;
+{
+  null as None,
+  Some(T value)
+}
+</code></pre>
+<p>behind the scene, it would resolve <code>None</code> for <code>$type</code> field of the base <code>Option&lt;T&gt;</code> to 0 instead of 1. This would allow something like:</p>
+<pre><code class="language-csharp">Option&lt;int&gt; x;
+
+if (x is None)  // equivalent to x == null
+{
+...
+}
+</code></pre>
+<p>Array allocation would suffer the same issue and could be resolved the same way:</p>
+<pre><code class="language-csharp">var shapes = new Shape[10];
+
+if (shapes[0] == null)  // this would be case, as shapes[0] hasn't been initialized
+{
+...
+}
+</code></pre>
+<h3 id="ref-and-out-aliasing">ref and out aliasing</h3>
+<p>Similar to the struct inheritance pitfalls, cares must be also taken with the usage of <code>ref</code> and structured enums.</p>
+<p>Typically, a case like:</p>
+<pre><code class="language-csharp">public float Transform(ref Shape shape)
+{
+   shape = new Rectangle() // Not ok
+   ...
+}
+
+Circle circle = new Circle(1.0f)
+
+Transform(ref circle);
+</code></pre>
+<p>The <code>ref</code> would allow to pass a reference, but this should not allow to assign it completely. This would be similar to an implicit <code>ref readonly</code> (as discussed <a href="https://github.com/dotnet/roslyn/issues/118">here</a>)</p>
+<p>On the other hand, and <code>out</code> could allow such downcast aliasing:</p>
+<pre><code class="language-csharp">public void Create(int param, out Shape shape)
+{
+   if (param  &gt; xxx)
+   {
+      shape = new Rectangle() // Ok
+   }
+   ...
+}
+
+var shapes = new Shape[10];
+Create(11, out shapes[0]); // ok
+</code></pre>
+<p>but would not allow upcast aliasing:</p>
+<pre><code class="language-csharp">public void Create(out Shape shape)
+{
+   shape = new Rectangle() // Ok
+   ...
+}
+
+Circle circle;
+Create(out circle); // Not Ok
+</code></pre>
+<h3 id="pinning-marshalling">Pinning, Marshalling</h3>
+<p>How would react a perfectly blittable structured enum to a <code>fixed</code> pinning? How would marshal such a type to an interop layer?</p>
+<p>Unsure if we should allow such a thing... The projection details is quite implementation dependent, so I don't expect structured enums to interop/marshal to native code.</p>
+<h1 id="next">Next?</h1>
+<p>Currently, when I have to develop such a behavior in C#, I need to roll my own &quot;freaking&quot; struct, but of course, it cannot be as nice and convenient as the syntax presented here.</p>
+<p>As you can see, there are some pitfalls that should be addressed, though I haven't come to an issue that would make this implementation completely impossible/unsafe, but maybe there is one?</p>
+<p>Unlike the issue &quot;<a href="https://github.com/dotnet/roslyn/issues/9039">Request: make C# 7's discriminated unions compatible with F#</a>&quot;, I really don't want to have this compatibility with F# as it would completely obliterate the performance and efficiency that C# deserve.</p>
+<p>Bottom line is: I would love such a type companion in my favorite language toolbox!</p>
+<p>So what do you think about the concept?</p>
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

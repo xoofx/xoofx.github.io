@@ -61,7 +61,7 @@
 <blockquote>
 <p>How to find efficiently a specified <code>int</code> from an <code>int[]</code> using x86-64 SIMD instructions ?</p>
 </blockquote>
-<p>I won't claim that the version described in this blog post is the fastest on earth, and so the goal is more educational and about SIMD empowering: if you are not familiar with SIMD code or you feel intimidated about using them, please don't! They are fun to use and they can often give this satisfaction of the 10x performance benefit!</p>
+<p>I won't claim that the version described in this blog post is the fastest on earth, and so the goal is more educational and about SIMD empowering: if you are not familiar with SIMD code or you feel intimidated about using them, please don't! They are fun to use and they can often give this satisfaction of a 10x performance boost!</p>
 <p>So let's have a look at the challenge...</p>
 <h2 id="the-scalar-version">The Scalar version</h2>
 <p>The scalar code of this version is pretty simple:</p>
@@ -834,7 +834,13 @@ G_M000_IG15:                ;; offset=010CH
 <pre><code class="language-c#">    // Our data cursor
     ref var pv = ref MemoryMarshal.GetReference(data);
 </code></pre>
-<p>The benefit of doing this is that it will remove all bounds checks that you can still see around in the generic version (because some patterns are not fully detected). We are using a <code>ref</code> instead of an unsafe <code>*</code> pointer for the reason that we still want our code to be GC friendly. Using a <code>ref</code> here allows the GC to update this pointer if necessary (if the pointed data is being moved by the GC) while a fixed/pinned statement would block the GC for moving this data around.</p>
+<p>The benefit of doing this is that it will remove all bounds checks that you can still see around in the generic version (because some patterns are not fully detected). We are using a <code>ref</code> instead of an unsafe <code>*</code> pointer for the reason that we still want our code to be GC friendly. Using a <code>ref</code> here allows the GC to update this pointer if necessary (if the pointed data is being moved by the GC) while a fixed/pinned statement would block the GC for moving this data around and might cause GC fragmentation.</p>
+<p>You might then wonder how do we advance a <code>ref</code>? Simply by using the <a href="https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.unsafe.add?view=net-7.0#system-runtime-compilerservices-unsafe-add-1(-0@-system-intptr)"><code>Unsafe.Add&lt;T&gt;(ref T, nint elementOffset)</code></a> method! (and other related methods):</p>
+<pre><code class="language-c#">// Load a Vector256&lt;int&gt; from a ref int at the index i + Vector256&lt;int&gt;.Count * 3
+// equivalent of:
+// Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref data[i + Vector256&lt;int&gt;.Count * 3])
+Unsafe.As&lt;int, Vector256&lt;int&gt;&gt;(ref Unsafe.Add(ref pv, i + Vector256&lt;int&gt;.Count * 3))
+</code></pre>
 <h3 id="using-nint">Using nint</h3>
 <p>Secondly, we need to return an index to the data, so we are declaring the variable <code>nint i = 0;</code> at the beginning that we will keep between the different batch groups. Now you might wonder why using <code>nint</code> instead of a <code>int</code>? <code>nint</code> is a shorthand for <code>System.IntPtr</code> and matches the CPU register size. It helps the compiler to avoid generating many up-casting from int32 to int64 in various places (<code>movsxd</code> instructions). In the generic <code>ReadOnlySpan&lt;int&gt;</code> SIMD version, you won't see this <code>movsxd</code> instructions, because the compiler is able to detect such pattern, but because in our case we are keeping a single variable across the different batch groups (next section), the compiler won't notice this and will generate these spurious <code>movsxd</code>.</p>
 <h3 id="using-more-batches">Using more batches</h3>
@@ -1042,7 +1048,7 @@ ENDFOR
 </code></pre>
 <p>Similarly, the loop processing <code>1</code> x <code>Vector256&lt;int&gt;</code> is using the <code>Avx2.MoveMask(Vector256&lt;float&gt;)</code> to compute this index per int directly from the <code>Vector256&lt;int&gt;</code> result of the comparison. As you can see, the signature is using a float (!) while it does work on a 32 int as well, which is super convenient. There are plenty of instructions like this in SSE/AVX that looks like they are only relevant for floating point while they do work also for integer types.</p>
 <h2 id="results">Results</h2>
-<p>And the results of the benchmark is giving a significant boost for the optimized version, <strong>from 4x to 10x</strong> performance boost!</p>
+<p>And the results of the benchmark is giving a significant boost for the optimized version, <strong>from 4x to 10x</strong> performance boost! (Oops, actually, it looks like closer to x8, but let's keep 10x for the marketing 😁)</p>
 <div class="table-responsive">
 <table class="table">
 <thead>
@@ -1453,7 +1459,7 @@ ENDFOR
 </div>
 <h2 id="final-words">Final words</h2>
 <p>Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/">.NET 5</a>, <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/">.NET 6</a> and <a href="https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/">.NET 7</a>, it will give you a - huge! - glimpse of what is happening there. Simple functions like <code>string.IndexOf(char)</code> are using these intrinsics under the hood and are implemented entirely in C# without the need for a C++ fallback.</p>
-<p>Not only the BCL is benefiting from the usage of such intrinsics, but the whole .NET ecosystem with plenty of OSS projects that are joining the effort: for example, <a href="https://nietras.com/">Nietras</a> shared recently a cool library <a href="https://nietras.com/2023/06/05/introducing-sep/">Sep - Possibly the World's Fastest .NET CSV Parser</a> which is extensively using such intrinsics to dramatically boost CSV parsing speed.</p>
+<p>Not only the BCL is benefiting from the usage of such intrinsics, but the whole .NET ecosystem, with plenty of OSS projects, are joining the effort: for example, <a href="https://nietras.com/">Nietras</a> shared recently a cool library <a href="https://nietras.com/2023/06/05/introducing-sep/">Sep - Possibly the World's Fastest .NET CSV Parser</a> which is extensively using SIMD intrinsics to dramatically boost CSV parsing speed.</p>
 <p>This initial simple implementation in this post also shows that the C++ compiler won't be able to optimize (here, auto-vectorize) without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.</p>
 <p>More specifically, the zoo of Intel SIMD intrinsics can be involved in more algorithm tricks than their ARM counterparts, and that's the cool and fun part of this: Figuring out how to best use them!</p>
 <p>Happy coding! 🤗</p>

@@ -9,15 +9,15 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
+    <loc>https://xoofx.com/404</loc>
+    <lastmod>2023-07-10</lastmod>
+  </url>
+  <url>
     <loc>https://xoofx.com/about</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
     <loc>https://xoofx.com/resume</loc>
-    <lastmod>2023-07-10</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/404</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -93,15 +93,11 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn</loc>
-    <lastmod>2023-07-10</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.com/blog/2009/10/12/potatro-and-raymarching-story-of</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2016/05/11/goodbye-project-json</loc>
+    <loc>https://xoofx.com/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -109,11 +105,11 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2009/10/18/adding-asm-x86-syntax-highlighting-to</loc>
+    <loc>https://xoofx.com/blog/2016/05/11/goodbye-project-json</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr</loc>
+    <loc>https://xoofx.com/blog/2009/10/18/adding-asm-x86-syntax-highlighting-to</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -121,7 +117,7 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr</loc>
+    <loc>https://xoofx.com/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -129,11 +125,11 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2015/09/10/slow-visual-studio-2015-with-roslyn</loc>
+    <loc>https://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2015/06/15/migration-to-jekyll</loc>
+    <loc>https://xoofx.com/blog/2015/09/10/slow-visual-studio-2015-with-roslyn</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -141,7 +137,7 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2014/09/14/why-windows-ui-matters-part-2</loc>
+    <loc>https://xoofx.com/blog/2015/06/15/migration-to-jekyll</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -149,11 +145,11 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/01/08/building-fx-hlsl-files-under-visual</loc>
+    <loc>https://xoofx.com/blog/2014/09/14/why-windows-ui-matters-part-2</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2014/09/12/why-windows-ui-matters-part-1</loc>
+    <loc>https://xoofx.com/blog/2010/01/08/building-fx-hlsl-files-under-visual</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -161,11 +157,15 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2014/08/13/packages-vnext-power-up-our-net-builds</loc>
+    <loc>https://xoofx.com/blog/2014/09/12/why-windows-ui-matters-part-1</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
     <loc>https://xoofx.com/blog/2010/03/08/work-in-progress-4k-intro-for</loc>
+    <lastmod>2023-07-10</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.com/blog/2014/08/13/packages-vnext-power-up-our-net-builds</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -189,11 +189,11 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2014/05/25/managing-multiple-platforms-in-visual</loc>
+    <loc>https://xoofx.com/blog/2010/08/25/making-of-ergon-4k-pc-intro</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/08/25/making-of-ergon-4k-pc-intro</loc>
+    <loc>https://xoofx.com/blog/2014/05/25/managing-multiple-platforms-in-visual</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -217,11 +217,15 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
+    <loc>https://xoofx.com/blog/2010/10/23/high-performance-memcpy-gotchas-in-c</loc>
+    <lastmod>2023-07-10</lastmod>
+  </url>
+  <url>
     <loc>https://xoofx.com/blog/2011/10/02/managed-directx-with-win8-metro-style</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/10/23/high-performance-memcpy-gotchas-in-c</loc>
+    <loc>https://xoofx.com/blog/2010/10/25/implementing-unmanaged-c-interface</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -229,11 +233,7 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/12/28/crinkler-secrets-4k-intro-executable</loc>
-    <lastmod>2023-07-10</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.com/blog/2010/11/30/official-release-of-sharpdx-10</loc>
+    <loc>https://xoofx.com/blog/2010/11/02/hacking-direct2d-to-use-directly</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -241,7 +241,7 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/11/02/hacking-direct2d-to-use-directly</loc>
+    <loc>https://xoofx.com/blog/2010/11/30/official-release-of-sharpdx-10</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
@@ -249,7 +249,7 @@
     <lastmod>2023-07-10</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.com/blog/2010/10/25/implementing-unmanaged-c-interface</loc>
+    <loc>https://xoofx.com/blog/2010/12/28/crinkler-secrets-4k-intro-executable</loc>
     <lastmod>2023-07-10</lastmod>
   </url>
 </urlset>

@@ -123,7 +123,7 @@ G_M000_IG07:                ;; offset=0027H
 <p>Secondly, you can also see that the generated ASM code above by the .NET JIT (<code>net7.0</code> version) is quite good enough, almost identical to the <a href="https://godbolt.org/z/njWKK33Gq">generated C++ version</a>. It is expected, as the .NET JIT is nowadays generating competitive code as long as inlining of critical functions is well performed and the register pressure is low (e.g you don't see registers being spilled out on the stack via the <code>rsp</code> register in critical loops)..</p>
 <p>Thirdly, a cautious reader would suggest that this loop could be slightly more optimized with scalar CPU instructions by testing e.g 4 elements instead of only 1 per loop items, and that would be correct! But let's keep the scalar version as simple as it is, we will have more fun with the SIMD version. 🙂</p>
 <h2 id="generic-simd-version">Generic SIMD Version</h2>
-<p>One of the cool addition to .NET 7 are generic SIMD code through via the namespace <code>System.Runtime.Intrinsics</code> that allows you to write SIMD code without dealing with specific CPU instructions, as long as the code stays simple and you can use the <a href="https://learn.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector256?view=net-7.0#methods">various existing methods available</a>.</p>
+<p>One of the cool addition to .NET 7 are generic SIMD code via the namespace <code>System.Runtime.Intrinsics</code> that allows you to write SIMD code without dealing with specific CPU instructions, as long as the code stays simple and you can use the <a href="https://learn.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector256?view=net-7.0#methods">various existing methods available</a>.</p>
 <p>This is pretty cool because we can translate the previous scalar loop to a vectorized/SIMD loop with a generic SIMD code that is very simple and easy to follow.</p>
 <p>Here is the generic <code>Vector128&lt;int&gt;</code> version that is able to process 4 ints per loop:</p>
 <pre><code class="language-c#">static int Find_Generic_128_(ReadOnlySpan&lt;int&gt; data, int value)
@@ -894,7 +894,7 @@ G_M000_IG06:                ;; offset=007AH
 <h3 id="using-cpu-intrinsics">Using CPU intrinsics</h3>
 <p>Now, how can we avoid the stack spilling by not using <code>Vector256&lt;T&gt;.GetElement(index)</code>? By using specific SSE/AVX instructions!</p>
 <p>For the first <code>4</code> x <code>Vector256&lt;int&gt;</code> batch, we are using the following code to compute the index of the first element found without using any branches:</p>
-<pre><code>if (r5 != Vector256&lt;int&gt;.Zero)
+<pre><code class="language-c#">if (r5 != Vector256&lt;int&gt;.Zero)
 {
     // r12 = pack 32 to 16 of r1/r2
     var t = Avx2.Permute2x128(r1, r2, 0b_0010_0000);
@@ -935,7 +935,7 @@ G_M000_IG06:                ;; offset=007AH
 </code></pre>
 <p>Which expands to this manual <a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=VPERM2I128&amp;ig_expand=4962">here</a>.</p>
 <p>It gives a description <code>Shuffle 128-bits (composed of integer data) selected by imm8 from a and b, and store the results in dst.</code> but this is too vague to really understand how this intruction works. But the good thing is that we have the details of the instructions defined via a pseudo microcode:</p>
-<pre><code>__m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8)
+<pre><code class="language-nasm">__m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8)
 
 DEFINE SELECT4(src1, src2, control) {
 	CASE(control[1:0]) OF
@@ -969,7 +969,7 @@ while the second <code>0b_0011_0001</code> is translating to:</li>
 <p>And basically, this instruction with these control byte are packing the low and high 128 bits part together of the two r1/r2 registers:</p>
 <p><img src="/images/vperm2i128.drawio.svg" alt="vperm2i128" /></p>
 <p>Why are we performing such swap? Because most of the AVX2 SIMD instructions are working on interleaved SIMD 128 lanes, and the instruction <code>PackSignedSaturate(Vector256&lt;int&gt; left, Vector256&lt;int&gt; right)</code> which is the instrinsic <a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_packs_epi32&amp;ig_expand=4962,4892">VPACKSSDW/_mm256_packs_epi32</a> is defined like this:</p>
-<pre><code>__m256i _mm256_packs_epi32 (__m256i a, __m256i b)
+<pre><code class="language-nasm">__m256i _mm256_packs_epi32 (__m256i a, __m256i b)
 
 dst[15:0] := Saturate16(a[31:0])          ; a[127:0]
 dst[31:16] := Saturate16(a[63:32])
@@ -996,7 +996,7 @@ dst[MAX:256] := 0
 <p>That's why we need to swap the 128 parts around in order to keep the order of the data.</p>
 <p>We further reduce from <code>int</code> to <code>short</code>, and from <code>short</code> to <code>byte</code>.</p>
 <p>The last SIMD instruction <code>Avx2.MoveMask(Vector256&lt;byte&gt;)</code> (intrinsic <a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_movemask_epi8&amp;ig_expand=4962,4635">_mm256_movemask_epi8</a>) is compressing the 32 bytes into 32 bits.</p>
-<pre><code>int _mm256_movemask_epi8 (__m256i a)
+<pre><code class="language-nasm">int _mm256_movemask_epi8 (__m256i a)
 
 FOR j := 0 to 31
 	i := j*8
@@ -1004,6 +1004,42 @@ FOR j := 0 to 31
 ENDFOR
 </code></pre>
 <p>We can then extract the local position within these 32 bytes by using <code>BitOperations.TrailingZeroCount(int)</code>.</p>
+<p>But as suggested by Nietras <a href="https://mastodon.social/@nietras/110686107948948524">here</a>, instead of performing the permutation before the <code>PackSignedSaturate</code> we could do it after and save 1 permutation per pack, which is quite nice1:</p>
+<pre><code class="language-c#">if (r5 != Vector256&lt;int&gt;.Zero)
+{
+    // r12 = pack 32 to 16 of r1/r2
+    // r34 = pack 32 to 16 of r3/r4
+    // but it's working on 128 bit lanes, so we need to reorder them
+    Vector256&lt;short&gt; r12 = Avx2.PackSignedSaturate(r1, r2).AsInt16();
+    Vector256&lt;short&gt; r34 = Avx2.PackSignedSaturate(r3, r4).AsInt16();
+
+    // Reorder r12 &amp; r34 correctly
+    r12 = Avx2.Permute4x64(r12.AsInt64(), 0b_11_01_10_00).AsInt16();
+    r34 = Avx2.Permute4x64(r34.AsInt64(), 0b_11_01_10_00).AsInt16();
+
+    // pack 16 to 8 of r12/r34
+    Vector256&lt;sbyte&gt; r = Avx2.PackSignedSaturate(r12, r34);
+
+    // Reorder r correctly
+    r = Avx2.Permute4x64(r.AsInt64(), 0b_11_01_10_00).AsSByte();
+
+    // Get the mask from &lt;8 x byte&gt;
+    var idx = Avx2.MoveMask(r);
+    return (int)(i + BitOperations.TrailingZeroCount(idx));
+}
+</code></pre>
+<p>and generates the following assembly:</p>
+<pre><code class="language-nasm">G_M000_IG14:                ;; offset=00CDH
+       C5E56BC4             vpackssdw ymm0, ymm3, ymm4
+       C4E3FD00C0D8         vpermq   ymm0, ymm0, -40
+       C5F56BCA             vpackssdw ymm1, ymm1, ymm2
+       C4E3FD00C9D8         vpermq   ymm1, ymm1, -40
+       C5F563C0             vpacksswb ymm0, ymm1, ymm0
+       C4E3FD00C0D8         vpermq   ymm0, ymm0, -40
+       C5FDD7C0             vpmovmskb eax, ymm0
+       F30FBCC0             tzcnt    eax, eax
+       4103C1               add      eax, r9d
+</code></pre>
 <p>Similarly, the loop processing <code>1</code> x <code>Vector256&lt;int&gt;</code> is using the <code>Avx2.MoveMask(Vector256&lt;float&gt;)</code> to compute this index per int directly from the <code>Vector256&lt;int&gt;</code> result of the comparison. As you can see, the signature is using a float (!) while it does work on a 32 int as well, which is super convenient. There are plenty of instructions like this in SSE/AVX that looks like they are only relevant for floating point while they do work also for integer types.</p>
 <h2 id="results">Results</h2>
 <p>And the results of the benchmark is giving a significant boost for the optimized version, <strong>from 4x to 10x</strong> performance boost!</p>
@@ -1025,41 +1061,41 @@ ENDFOR
 <tr>
 <td><strong>Find_Simple</strong></td>
 <td><strong>32</strong></td>
-<td style="text-align: right;"><strong>9.497 ns</strong></td>
-<td style="text-align: right;"><strong>0.2087 ns</strong></td>
-<td style="text-align: right;"><strong>0.2993 ns</strong></td>
-<td style="text-align: right;"><strong>9.555 ns</strong></td>
+<td style="text-align: right;"><strong>9.481 ns</strong></td>
+<td style="text-align: right;"><strong>0.2092 ns</strong></td>
+<td style="text-align: right;"><strong>0.3066 ns</strong></td>
+<td style="text-align: right;"><strong>9.491 ns</strong></td>
 <td style="text-align: right;"><strong>1.00</strong></td>
 <td style="text-align: right;"><strong>0.00</strong></td>
 </tr>
 <tr>
 <td>Find_Generic_128</td>
 <td>32</td>
-<td style="text-align: right;">4.572 ns</td>
-<td style="text-align: right;">0.0025 ns</td>
-<td style="text-align: right;">0.0020 ns</td>
-<td style="text-align: right;">4.572 ns</td>
-<td style="text-align: right;">0.48</td>
-<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">6.420 ns</td>
+<td style="text-align: right;">0.0166 ns</td>
+<td style="text-align: right;">0.0129 ns</td>
+<td style="text-align: right;">6.416 ns</td>
+<td style="text-align: right;">0.67</td>
+<td style="text-align: right;">0.03</td>
 </tr>
 <tr>
 <td>Find_Generic_256</td>
 <td>32</td>
-<td style="text-align: right;">7.308 ns</td>
-<td style="text-align: right;">0.5040 ns</td>
-<td style="text-align: right;">1.4861 ns</td>
-<td style="text-align: right;">7.455 ns</td>
-<td style="text-align: right;">0.78</td>
-<td style="text-align: right;">0.17</td>
+<td style="text-align: right;">4.663 ns</td>
+<td style="text-align: right;">0.0309 ns</td>
+<td style="text-align: right;">0.0258 ns</td>
+<td style="text-align: right;">4.656 ns</td>
+<td style="text-align: right;">0.49</td>
+<td style="text-align: right;">0.02</td>
 </tr>
 <tr>
-<td>Find_AVX2_256_Optimized</td>
+<td>Find_AVX_256_Optimized</td>
 <td>32</td>
-<td style="text-align: right;">2.398 ns</td>
-<td style="text-align: right;">0.0085 ns</td>
-<td style="text-align: right;">0.0075 ns</td>
-<td style="text-align: right;">2.397 ns</td>
-<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">2.275 ns</td>
+<td style="text-align: right;">0.0156 ns</td>
+<td style="text-align: right;">0.0146 ns</td>
+<td style="text-align: right;">2.278 ns</td>
+<td style="text-align: right;">0.24</td>
 <td style="text-align: right;">0.01</td>
 </tr>
 <tr>
@@ -1075,41 +1111,41 @@ ENDFOR
 <tr>
 <td><strong>Find_Simple</strong></td>
 <td><strong>64</strong></td>
-<td style="text-align: right;"><strong>16.557 ns</strong></td>
-<td style="text-align: right;"><strong>0.3431 ns</strong></td>
-<td style="text-align: right;"><strong>0.4580 ns</strong></td>
-<td style="text-align: right;"><strong>16.622 ns</strong></td>
+<td style="text-align: right;"><strong>16.442 ns</strong></td>
+<td style="text-align: right;"><strong>0.3419 ns</strong></td>
+<td style="text-align: right;"><strong>0.4324 ns</strong></td>
+<td style="text-align: right;"><strong>16.264 ns</strong></td>
 <td style="text-align: right;"><strong>1.00</strong></td>
 <td style="text-align: right;"><strong>0.00</strong></td>
 </tr>
 <tr>
 <td>Find_Generic_128</td>
 <td>64</td>
-<td style="text-align: right;">8.531 ns</td>
-<td style="text-align: right;">0.0269 ns</td>
-<td style="text-align: right;">0.0238 ns</td>
-<td style="text-align: right;">8.543 ns</td>
-<td style="text-align: right;">0.52</td>
-<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">13.991 ns</td>
+<td style="text-align: right;">0.6312 ns</td>
+<td style="text-align: right;">1.8411 ns</td>
+<td style="text-align: right;">12.551 ns</td>
+<td style="text-align: right;">0.86</td>
+<td style="text-align: right;">0.12</td>
 </tr>
 <tr>
 <td>Find_Generic_256</td>
 <td>64</td>
-<td style="text-align: right;">6.626 ns</td>
-<td style="text-align: right;">0.0900 ns</td>
-<td style="text-align: right;">0.0752 ns</td>
-<td style="text-align: right;">6.589 ns</td>
-<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">6.509 ns</td>
+<td style="text-align: right;">0.0365 ns</td>
+<td style="text-align: right;">0.0285 ns</td>
+<td style="text-align: right;">6.523 ns</td>
+<td style="text-align: right;">0.39</td>
 <td style="text-align: right;">0.01</td>
 </tr>
 <tr>
-<td>Find_AVX2_256_Optimized</td>
+<td>Find_AVX_256_Optimized</td>
 <td>64</td>
-<td style="text-align: right;">2.936 ns</td>
-<td style="text-align: right;">0.0161 ns</td>
-<td style="text-align: right;">0.0143 ns</td>
-<td style="text-align: right;">2.935 ns</td>
-<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">2.855 ns</td>
+<td style="text-align: right;">0.0116 ns</td>
+<td style="text-align: right;">0.0103 ns</td>
+<td style="text-align: right;">2.857 ns</td>
+<td style="text-align: right;">0.17</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr>
@@ -1125,40 +1161,40 @@ ENDFOR
 <tr>
 <td><strong>Find_Simple</strong></td>
 <td><strong>128</strong></td>
-<td style="text-align: right;"><strong>35.024 ns</strong></td>
-<td style="text-align: right;"><strong>0.3709 ns</strong></td>
-<td style="text-align: right;"><strong>0.3097 ns</strong></td>
-<td style="text-align: right;"><strong>35.064 ns</strong></td>
+<td style="text-align: right;"><strong>35.323 ns</strong></td>
+<td style="text-align: right;"><strong>0.5072 ns</strong></td>
+<td style="text-align: right;"><strong>0.4496 ns</strong></td>
+<td style="text-align: right;"><strong>35.470 ns</strong></td>
 <td style="text-align: right;"><strong>1.00</strong></td>
 <td style="text-align: right;"><strong>0.00</strong></td>
 </tr>
 <tr>
 <td>Find_Generic_128</td>
 <td>128</td>
-<td style="text-align: right;">15.533 ns</td>
-<td style="text-align: right;">0.0437 ns</td>
-<td style="text-align: right;">0.0341 ns</td>
-<td style="text-align: right;">15.546 ns</td>
-<td style="text-align: right;">0.44</td>
-<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">22.573 ns</td>
+<td style="text-align: right;">0.0498 ns</td>
+<td style="text-align: right;">0.0441 ns</td>
+<td style="text-align: right;">22.581 ns</td>
+<td style="text-align: right;">0.64</td>
+<td style="text-align: right;">0.01</td>
 </tr>
 <tr>
 <td>Find_Generic_256</td>
 <td>128</td>
-<td style="text-align: right;">10.098 ns</td>
-<td style="text-align: right;">0.0235 ns</td>
-<td style="text-align: right;">0.0208 ns</td>
-<td style="text-align: right;">10.096 ns</td>
-<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">9.979 ns</td>
+<td style="text-align: right;">0.0276 ns</td>
+<td style="text-align: right;">0.0245 ns</td>
+<td style="text-align: right;">9.977 ns</td>
+<td style="text-align: right;">0.28</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr>
-<td>Find_AVX2_256_Optimized</td>
+<td>Find_AVX_256_Optimized</td>
 <td>128</td>
-<td style="text-align: right;">5.223 ns</td>
-<td style="text-align: right;">0.0132 ns</td>
-<td style="text-align: right;">0.0117 ns</td>
-<td style="text-align: right;">5.221 ns</td>
+<td style="text-align: right;">5.196 ns</td>
+<td style="text-align: right;">0.0095 ns</td>
+<td style="text-align: right;">0.0089 ns</td>
+<td style="text-align: right;">5.199 ns</td>
 <td style="text-align: right;">0.15</td>
 <td style="text-align: right;">0.00</td>
 </tr>
@@ -1175,41 +1211,41 @@ ENDFOR
 <tr>
 <td><strong>Find_Simple</strong></td>
 <td><strong>256</strong></td>
-<td style="text-align: right;"><strong>64.626 ns</strong></td>
-<td style="text-align: right;"><strong>1.1894 ns</strong></td>
-<td style="text-align: right;"><strong>1.1126 ns</strong></td>
-<td style="text-align: right;"><strong>64.496 ns</strong></td>
+<td style="text-align: right;"><strong>64.433 ns</strong></td>
+<td style="text-align: right;"><strong>1.2814 ns</strong></td>
+<td style="text-align: right;"><strong>1.1986 ns</strong></td>
+<td style="text-align: right;"><strong>63.995 ns</strong></td>
 <td style="text-align: right;"><strong>1.00</strong></td>
 <td style="text-align: right;"><strong>0.00</strong></td>
 </tr>
 <tr>
 <td>Find_Generic_128</td>
 <td>256</td>
-<td style="text-align: right;">35.388 ns</td>
-<td style="text-align: right;">0.0965 ns</td>
-<td style="text-align: right;">0.0855 ns</td>
-<td style="text-align: right;">35.392 ns</td>
-<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">48.901 ns</td>
+<td style="text-align: right;">0.0357 ns</td>
+<td style="text-align: right;">0.0334 ns</td>
+<td style="text-align: right;">48.907 ns</td>
+<td style="text-align: right;">0.76</td>
 <td style="text-align: right;">0.01</td>
 </tr>
 <tr>
 <td>Find_Generic_256</td>
 <td>256</td>
-<td style="text-align: right;">16.866 ns</td>
-<td style="text-align: right;">0.0433 ns</td>
-<td style="text-align: right;">0.0384 ns</td>
-<td style="text-align: right;">16.881 ns</td>
+<td style="text-align: right;">16.789 ns</td>
+<td style="text-align: right;">0.0683 ns</td>
+<td style="text-align: right;">0.0638 ns</td>
+<td style="text-align: right;">16.815 ns</td>
 <td style="text-align: right;">0.26</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr>
-<td>Find_AVX2_256_Optimized</td>
+<td>Find_AVX_256_Optimized</td>
 <td>256</td>
-<td style="text-align: right;">10.103 ns</td>
-<td style="text-align: right;">0.0524 ns</td>
-<td style="text-align: right;">0.0491 ns</td>
-<td style="text-align: right;">10.131 ns</td>
-<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">9.886 ns</td>
+<td style="text-align: right;">0.0140 ns</td>
+<td style="text-align: right;">0.0124 ns</td>
+<td style="text-align: right;">9.886 ns</td>
+<td style="text-align: right;">0.15</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr>
@@ -1225,40 +1261,40 @@ ENDFOR
 <tr>
 <td><strong>Find_Simple</strong></td>
 <td><strong>512</strong></td>
-<td style="text-align: right;"><strong>120.302 ns</strong></td>
-<td style="text-align: right;"><strong>1.6310 ns</strong></td>
-<td style="text-align: right;"><strong>1.5256 ns</strong></td>
-<td style="text-align: right;"><strong>119.891 ns</strong></td>
+<td style="text-align: right;"><strong>120.161 ns</strong></td>
+<td style="text-align: right;"><strong>1.3342 ns</strong></td>
+<td style="text-align: right;"><strong>1.1828 ns</strong></td>
+<td style="text-align: right;"><strong>120.274 ns</strong></td>
 <td style="text-align: right;"><strong>1.00</strong></td>
 <td style="text-align: right;"><strong>0.00</strong></td>
 </tr>
 <tr>
 <td>Find_Generic_128</td>
 <td>512</td>
-<td style="text-align: right;">63.086 ns</td>
-<td style="text-align: right;">0.1117 ns</td>
-<td style="text-align: right;">0.1044 ns</td>
-<td style="text-align: right;">63.058 ns</td>
-<td style="text-align: right;">0.52</td>
+<td style="text-align: right;">89.880 ns</td>
+<td style="text-align: right;">0.1807 ns</td>
+<td style="text-align: right;">0.1690 ns</td>
+<td style="text-align: right;">89.867 ns</td>
+<td style="text-align: right;">0.75</td>
 <td style="text-align: right;">0.01</td>
 </tr>
 <tr>
 <td>Find_Generic_256</td>
 <td>512</td>
-<td style="text-align: right;">39.328 ns</td>
-<td style="text-align: right;">0.8087 ns</td>
-<td style="text-align: right;">2.3845 ns</td>
-<td style="text-align: right;">38.056 ns</td>
-<td style="text-align: right;">0.33</td>
-<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">37.246 ns</td>
+<td style="text-align: right;">0.3284 ns</td>
+<td style="text-align: right;">0.3225 ns</td>
+<td style="text-align: right;">37.262 ns</td>
+<td style="text-align: right;">0.31</td>
+<td style="text-align: right;">0.00</td>
 </tr>
 <tr>
-<td>Find_AVX2_256_Optimized</td>
+<td>Find_AVX_256_Optimized</td>
 <td>512</td>
-<td style="text-align: right;">15.840 ns</td>
-<td style="text-align: right;">0.0257 ns</td>
-<td style="text-align: right;">0.0215 ns</td>
-<td style="text-align: right;">15.842 ns</td>
+<td style="text-align: right;">15.867 ns</td>
+<td style="text-align: right;">0.0183 ns</td>
+<td style="text-align: right;">0.0171 ns</td>
+<td style="text-align: right;">15.863 ns</td>
 <td style="text-align: right;">0.13</td>
 <td style="text-align: right;">0.00</td>
 </tr>
@@ -1275,40 +1311,40 @@ ENDFOR
 <tr>
 <td><strong>Find_Simple</strong></td>
 <td><strong>1024</strong></td>
-<td style="text-align: right;"><strong>232.160 ns</strong></td>
-<td style="text-align: right;"><strong>1.9791 ns</strong></td>
-<td style="text-align: right;"><strong>1.8512 ns</strong></td>
-<td style="text-align: right;"><strong>232.436 ns</strong></td>
+<td style="text-align: right;"><strong>232.331 ns</strong></td>
+<td style="text-align: right;"><strong>2.8660 ns</strong></td>
+<td style="text-align: right;"><strong>2.6808 ns</strong></td>
+<td style="text-align: right;"><strong>232.469 ns</strong></td>
 <td style="text-align: right;"><strong>1.00</strong></td>
 <td style="text-align: right;"><strong>0.00</strong></td>
 </tr>
 <tr>
 <td>Find_Generic_128</td>
 <td>1024</td>
-<td style="text-align: right;">119.290 ns</td>
-<td style="text-align: right;">0.2275 ns</td>
-<td style="text-align: right;">0.2017 ns</td>
-<td style="text-align: right;">119.350 ns</td>
-<td style="text-align: right;">0.51</td>
-<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">173.437 ns</td>
+<td style="text-align: right;">1.2228 ns</td>
+<td style="text-align: right;">1.0840 ns</td>
+<td style="text-align: right;">172.894 ns</td>
+<td style="text-align: right;">0.75</td>
+<td style="text-align: right;">0.01</td>
 </tr>
 <tr>
 <td>Find_Generic_256</td>
 <td>1024</td>
-<td style="text-align: right;">65.283 ns</td>
-<td style="text-align: right;">0.1176 ns</td>
-<td style="text-align: right;">0.1100 ns</td>
-<td style="text-align: right;">65.236 ns</td>
+<td style="text-align: right;">64.866 ns</td>
+<td style="text-align: right;">0.0929 ns</td>
+<td style="text-align: right;">0.0726 ns</td>
+<td style="text-align: right;">64.850 ns</td>
 <td style="text-align: right;">0.28</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr>
-<td>Find_AVX2_256_Optimized</td>
+<td>Find_AVX_256_Optimized</td>
 <td>1024</td>
-<td style="text-align: right;">28.667 ns</td>
-<td style="text-align: right;">0.0405 ns</td>
-<td style="text-align: right;">0.0359 ns</td>
-<td style="text-align: right;">28.656 ns</td>
+<td style="text-align: right;">28.875 ns</td>
+<td style="text-align: right;">0.0765 ns</td>
+<td style="text-align: right;">0.0715 ns</td>
+<td style="text-align: right;">28.891 ns</td>
 <td style="text-align: right;">0.12</td>
 <td style="text-align: right;">0.00</td>
 </tr>
@@ -1325,40 +1361,40 @@ ENDFOR
 <tr>
 <td><strong>Find_Simple</strong></td>
 <td><strong>4096</strong></td>
-<td style="text-align: right;"><strong>894.287 ns</strong></td>
-<td style="text-align: right;"><strong>3.6022 ns</strong></td>
-<td style="text-align: right;"><strong>3.0080 ns</strong></td>
-<td style="text-align: right;"><strong>894.541 ns</strong></td>
+<td style="text-align: right;"><strong>898.684 ns</strong></td>
+<td style="text-align: right;"><strong>8.5403 ns</strong></td>
+<td style="text-align: right;"><strong>7.9886 ns</strong></td>
+<td style="text-align: right;"><strong>896.829 ns</strong></td>
 <td style="text-align: right;"><strong>1.00</strong></td>
 <td style="text-align: right;"><strong>0.00</strong></td>
 </tr>
 <tr>
 <td>Find_Generic_128</td>
 <td>4096</td>
-<td style="text-align: right;">454.083 ns</td>
-<td style="text-align: right;">0.3423 ns</td>
-<td style="text-align: right;">0.3035 ns</td>
-<td style="text-align: right;">454.020 ns</td>
-<td style="text-align: right;">0.51</td>
-<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">673.922 ns</td>
+<td style="text-align: right;">1.8541 ns</td>
+<td style="text-align: right;">1.6436 ns</td>
+<td style="text-align: right;">673.437 ns</td>
+<td style="text-align: right;">0.75</td>
+<td style="text-align: right;">0.01</td>
 </tr>
 <tr>
 <td>Find_Generic_256</td>
 <td>4096</td>
-<td style="text-align: right;">234.391 ns</td>
-<td style="text-align: right;">2.5310 ns</td>
-<td style="text-align: right;">2.1135 ns</td>
-<td style="text-align: right;">234.057 ns</td>
+<td style="text-align: right;">232.696 ns</td>
+<td style="text-align: right;">0.9915 ns</td>
+<td style="text-align: right;">0.8790 ns</td>
+<td style="text-align: right;">232.518 ns</td>
 <td style="text-align: right;">0.26</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr>
-<td>Find_AVX2_256_Optimized</td>
+<td>Find_AVX_256_Optimized</td>
 <td>4096</td>
-<td style="text-align: right;">113.839 ns</td>
-<td style="text-align: right;">0.5868 ns</td>
-<td style="text-align: right;">0.5489 ns</td>
-<td style="text-align: right;">113.575 ns</td>
+<td style="text-align: right;">115.904 ns</td>
+<td style="text-align: right;">0.5819 ns</td>
+<td style="text-align: right;">0.5158 ns</td>
+<td style="text-align: right;">115.905 ns</td>
 <td style="text-align: right;">0.13</td>
 <td style="text-align: right;">0.00</td>
 </tr>
@@ -1375,41 +1411,41 @@ ENDFOR
 <tr>
 <td><strong>Find_Simple</strong></td>
 <td><strong>8192</strong></td>
-<td style="text-align: right;"><strong>1,796.290 ns</strong></td>
-<td style="text-align: right;"><strong>13.4828 ns</strong></td>
-<td style="text-align: right;"><strong>12.6118 ns</strong></td>
-<td style="text-align: right;"><strong>1,792.636 ns</strong></td>
+<td style="text-align: right;"><strong>1,781.139 ns</strong></td>
+<td style="text-align: right;"><strong>6.3148 ns</strong></td>
+<td style="text-align: right;"><strong>5.2731 ns</strong></td>
+<td style="text-align: right;"><strong>1,779.763 ns</strong></td>
 <td style="text-align: right;"><strong>1.00</strong></td>
 <td style="text-align: right;"><strong>0.00</strong></td>
 </tr>
 <tr>
 <td>Find_Generic_128</td>
 <td>8192</td>
-<td style="text-align: right;">901.999 ns</td>
-<td style="text-align: right;">1.8796 ns</td>
-<td style="text-align: right;">1.7582 ns</td>
-<td style="text-align: right;">902.707 ns</td>
-<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">1,337.138 ns</td>
+<td style="text-align: right;">3.3049 ns</td>
+<td style="text-align: right;">3.0914 ns</td>
+<td style="text-align: right;">1,336.492 ns</td>
+<td style="text-align: right;">0.75</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr>
 <td>Find_Generic_256</td>
 <td>8192</td>
-<td style="text-align: right;">465.352 ns</td>
-<td style="text-align: right;">5.0166 ns</td>
-<td style="text-align: right;">4.6925 ns</td>
-<td style="text-align: right;">462.971 ns</td>
+<td style="text-align: right;">457.116 ns</td>
+<td style="text-align: right;">0.7556 ns</td>
+<td style="text-align: right;">0.7068 ns</td>
+<td style="text-align: right;">457.027 ns</td>
 <td style="text-align: right;">0.26</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr>
-<td>Find_AVX2_256_Optimized</td>
+<td>Find_AVX_256_Optimized</td>
 <td>8192</td>
-<td style="text-align: right;">183.790 ns</td>
-<td style="text-align: right;">0.8620 ns</td>
-<td style="text-align: right;">0.8063 ns</td>
-<td style="text-align: right;">183.384 ns</td>
-<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">223.426 ns</td>
+<td style="text-align: right;">0.1103 ns</td>
+<td style="text-align: right;">0.0978 ns</td>
+<td style="text-align: right;">223.445 ns</td>
+<td style="text-align: right;">0.13</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 </tbody>
@@ -1417,9 +1453,11 @@ ENDFOR
 </div>
 <h2 id="final-words">Final words</h2>
 <p>Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/">.NET 5</a>, <a href="https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/">.NET 6</a> and <a href="https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/">.NET 7</a>), it will give you a - huge! - glimpse of what is happening there. Simple functions like <code>string.IndexOf(char)</code> are using these intrinsics under the hood and are able to be completely implemented in C# without the need to a fallback to C++.</p>
-<p>This simple case shows also that C++ compiler won't be able to optimize (here, auto-vectorize) such case without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, in that case, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.</p>
+<p>Not only the BCL is benefiting from the usage of such intrinsics, but the whole .NET ecosystem with plenty of OSS projects that are joining the effort: for example, <a href="https://nietras.com/">Nietras</a> shared recently a cool library <a href="https://nietras.com/2023/06/05/introducing-sep/">Sep - Possibly the World's Fastest .NET CSV Parser</a> which is extensively using such intrinsics to dramatically boost CSV parsing speed.</p>
+<p>This initial simple implementation in this post also shows that the C++ compiler won't be able to optimize (here, auto-vectorize) such case without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.</p>
 <p>More specifically, Intel intrinsics can be involved in more algorithm tricks than their ARM counterparts, and that's the cool and fun part of this: Figuring out how to best use them!</p>
 <p>Happy coding! 🤗</p>
+<p>PS: The code is available as a gist <a href="https://gist.github.com/xoofx/b6c569d83678f85ac87a436f8e241917">here</a></p>
 
     </div>
   </article>

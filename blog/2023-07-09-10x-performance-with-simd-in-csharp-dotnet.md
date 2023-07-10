@@ -91,7 +91,7 @@ Thirdly, a cautious reader would suggest that this loop could be slightly more o
 
 ## Generic SIMD Version
 
-One of the cool addition to .NET 7 are generic SIMD code through via the namespace `System.Runtime.Intrinsics` that allows you to write SIMD code without dealing with specific CPU instructions, as long as the code stays simple and you can use the [various existing methods available](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector256?view=net-7.0#methods).
+One of the cool addition to .NET 7 are generic SIMD code via the namespace `System.Runtime.Intrinsics` that allows you to write SIMD code without dealing with specific CPU instructions, as long as the code stays simple and you can use the [various existing methods available](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector256?view=net-7.0#methods).
 
 This is pretty cool because we can translate the previous scalar loop to a vectorized/SIMD loop with a generic SIMD code that is very simple and easy to follow.
 
@@ -628,7 +628,7 @@ Now, how can we avoid the stack spilling by not using `Vector256<T>.GetElement(i
 
 For the first `4` x `Vector256<int>` batch, we are using the following code to compute the index of the first element found without using any branches:
 
-```
+```c#
 if (r5 != Vector256<int>.Zero)
 {
     // r12 = pack 32 to 16 of r1/r2
@@ -679,7 +679,7 @@ Which expands to this manual [here](https://www.intel.com/content/www/us/en/docs
 
 It gives a description `Shuffle 128-bits (composed of integer data) selected by imm8 from a and b, and store the results in dst.` but this is too vague to really understand how this intruction works. But the good thing is that we have the details of the instructions defined via a pseudo microcode:
 
-```
+```nasm
 __m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8)
 
 DEFINE SELECT4(src1, src2, control) {
@@ -720,7 +720,7 @@ And basically, this instruction with these control byte are packing the low and 
 
 Why are we performing such swap? Because most of the AVX2 SIMD instructions are working on interleaved SIMD 128 lanes, and the instruction `PackSignedSaturate(Vector256<int> left, Vector256<int> right)` which is the instrinsic [VPACKSSDW/_mm256_packs_epi32](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_packs_epi32&ig_expand=4962,4892) is defined like this:
 
-```
+```nasm
 __m256i _mm256_packs_epi32 (__m256i a, __m256i b)
 
 dst[15:0] := Saturate16(a[31:0])          ; a[127:0]
@@ -753,7 +753,7 @@ We further reduce from `int` to `short`, and from `short` to `byte`.
 
 The last SIMD instruction `Avx2.MoveMask(Vector256<byte>)` (intrinsic [_mm256_movemask_epi8](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm256_movemask_epi8&ig_expand=4962,4635)) is compressing the 32 bytes into 32 bits.
 
-```
+```nasm
 int _mm256_movemask_epi8 (__m256i a)
 
 FOR j := 0 to 31
@@ -764,6 +764,48 @@ ENDFOR
 
 We can then extract the local position within these 32 bytes by using `BitOperations.TrailingZeroCount(int)`.
 
+But as suggested by Nietras [here](https://mastodon.social/@nietras/110686107948948524), instead of performing the permutation before the `PackSignedSaturate` we could do it after and save 1 permutation per pack, which is quite nice1:
+
+```c#
+if (r5 != Vector256<int>.Zero)
+{
+    // r12 = pack 32 to 16 of r1/r2
+    // r34 = pack 32 to 16 of r3/r4
+    // but it's working on 128 bit lanes, so we need to reorder them
+    Vector256<short> r12 = Avx2.PackSignedSaturate(r1, r2).AsInt16();
+    Vector256<short> r34 = Avx2.PackSignedSaturate(r3, r4).AsInt16();
+
+    // Reorder r12 & r34 correctly
+    r12 = Avx2.Permute4x64(r12.AsInt64(), 0b_11_01_10_00).AsInt16();
+    r34 = Avx2.Permute4x64(r34.AsInt64(), 0b_11_01_10_00).AsInt16();
+
+    // pack 16 to 8 of r12/r34
+    Vector256<sbyte> r = Avx2.PackSignedSaturate(r12, r34);
+
+    // Reorder r correctly
+    r = Avx2.Permute4x64(r.AsInt64(), 0b_11_01_10_00).AsSByte();
+
+    // Get the mask from <8 x byte>
+    var idx = Avx2.MoveMask(r);
+    return (int)(i + BitOperations.TrailingZeroCount(idx));
+}
+```
+
+and generates the following assembly:
+
+```nasm
+G_M000_IG14:                ;; offset=00CDH
+       C5E56BC4             vpackssdw ymm0, ymm3, ymm4
+       C4E3FD00C0D8         vpermq   ymm0, ymm0, -40
+       C5F56BCA             vpackssdw ymm1, ymm1, ymm2
+       C4E3FD00C9D8         vpermq   ymm1, ymm1, -40
+       C5F563C0             vpacksswb ymm0, ymm1, ymm0
+       C4E3FD00C0D8         vpermq   ymm0, ymm0, -40
+       C5FDD7C0             vpmovmskb eax, ymm0
+       F30FBCC0             tzcnt    eax, eax
+       4103C1               add      eax, r9d
+```       
+
 Similarly, the loop processing `1` x `Vector256<int>` is using the `Avx2.MoveMask(Vector256<float>)` to compute this index per int directly from the `Vector256<int>` result of the comparison. As you can see, the signature is using a float (!) while it does work on a 32 int as well, which is super convenient. There are plenty of instructions like this in SSE/AVX that looks like they are only relevant for floating point while they do work also for integer types.
 
 ## Results
@@ -773,47 +815,47 @@ And the results of the benchmark is giving a significant boost for the optimized
 <div class="table-responsive">
 
 { .table }
-|                  Method |    N |         Mean |      Error |     StdDev |       Median | Ratio | RatioSD |
-|------------------------ |----- |-------------:|-----------:|-----------:|-------------:|------:|--------:|
-|             **Find_Simple** |   **32** |     **9.497 ns** |  **0.2087 ns** |  **0.2993 ns** |     **9.555 ns** |  **1.00** |    **0.00** |
-|            Find_Generic_128 |   32 |     4.572 ns |  0.0025 ns |  0.0020 ns |     4.572 ns |  0.48 |    0.01 |
-|           Find_Generic_256 |   32 |     7.308 ns |  0.5040 ns |  1.4861 ns |     7.455 ns |  0.78 |    0.17 |
-| Find_AVX2_256_Optimized |   32 |     2.398 ns |  0.0085 ns |  0.0075 ns |     2.397 ns |  0.25 |    0.01 |
-|                         |      |              |            |            |              |       |         |
-|             **Find_Simple** |   **64** |    **16.557 ns** |  **0.3431 ns** |  **0.4580 ns** |    **16.622 ns** |  **1.00** |    **0.00** |
-|            Find_Generic_128 |   64 |     8.531 ns |  0.0269 ns |  0.0238 ns |     8.543 ns |  0.52 |    0.01 |
-|           Find_Generic_256 |   64 |     6.626 ns |  0.0900 ns |  0.0752 ns |     6.589 ns |  0.41 |    0.01 |
-| Find_AVX2_256_Optimized |   64 |     2.936 ns |  0.0161 ns |  0.0143 ns |     2.935 ns |  0.18 |    0.00 |
-|                         |      |              |            |            |              |       |         |
-|             **Find_Simple** |  **128** |    **35.024 ns** |  **0.3709 ns** |  **0.3097 ns** |    **35.064 ns** |  **1.00** |    **0.00** |
-|            Find_Generic_128 |  128 |    15.533 ns |  0.0437 ns |  0.0341 ns |    15.546 ns |  0.44 |    0.00 |
-|           Find_Generic_256 |  128 |    10.098 ns |  0.0235 ns |  0.0208 ns |    10.096 ns |  0.29 |    0.00 |
-| Find_AVX2_256_Optimized |  128 |     5.223 ns |  0.0132 ns |  0.0117 ns |     5.221 ns |  0.15 |    0.00 |
-|                         |      |              |            |            |              |       |         |
-|             **Find_Simple** |  **256** |    **64.626 ns** |  **1.1894 ns** |  **1.1126 ns** |    **64.496 ns** |  **1.00** |    **0.00** |
-|            Find_Generic_128 |  256 |    35.388 ns |  0.0965 ns |  0.0855 ns |    35.392 ns |  0.55 |    0.01 |
-|           Find_Generic_256 |  256 |    16.866 ns |  0.0433 ns |  0.0384 ns |    16.881 ns |  0.26 |    0.00 |
-| Find_AVX2_256_Optimized |  256 |    10.103 ns |  0.0524 ns |  0.0491 ns |    10.131 ns |  0.16 |    0.00 |
-|                         |      |              |            |            |              |       |         |
-|             **Find_Simple** |  **512** |   **120.302 ns** |  **1.6310 ns** |  **1.5256 ns** |   **119.891 ns** |  **1.00** |    **0.00** |
-|            Find_Generic_128 |  512 |    63.086 ns |  0.1117 ns |  0.1044 ns |    63.058 ns |  0.52 |    0.01 |
-|           Find_Generic_256 |  512 |    39.328 ns |  0.8087 ns |  2.3845 ns |    38.056 ns |  0.33 |    0.02 |
-| Find_AVX2_256_Optimized |  512 |    15.840 ns |  0.0257 ns |  0.0215 ns |    15.842 ns |  0.13 |    0.00 |
-|                         |      |              |            |            |              |       |         |
-|             **Find_Simple** | **1024** |   **232.160 ns** |  **1.9791 ns** |  **1.8512 ns** |   **232.436 ns** |  **1.00** |    **0.00** |
-|            Find_Generic_128 | 1024 |   119.290 ns |  0.2275 ns |  0.2017 ns |   119.350 ns |  0.51 |    0.00 |
-|           Find_Generic_256 | 1024 |    65.283 ns |  0.1176 ns |  0.1100 ns |    65.236 ns |  0.28 |    0.00 |
-| Find_AVX2_256_Optimized | 1024 |    28.667 ns |  0.0405 ns |  0.0359 ns |    28.656 ns |  0.12 |    0.00 |
-|                         |      |              |            |            |              |       |         |
-|             **Find_Simple** | **4096** |   **894.287 ns** |  **3.6022 ns** |  **3.0080 ns** |   **894.541 ns** |  **1.00** |    **0.00** |
-|            Find_Generic_128 | 4096 |   454.083 ns |  0.3423 ns |  0.3035 ns |   454.020 ns |  0.51 |    0.00 |
-|           Find_Generic_256 | 4096 |   234.391 ns |  2.5310 ns |  2.1135 ns |   234.057 ns |  0.26 |    0.00 |
-| Find_AVX2_256_Optimized | 4096 |   113.839 ns |  0.5868 ns |  0.5489 ns |   113.575 ns |  0.13 |    0.00 |
-|                         |      |              |            |            |              |       |         |
-|             **Find_Simple** | **8192** | **1,796.290 ns** | **13.4828 ns** | **12.6118 ns** | **1,792.636 ns** |  **1.00** |    **0.00** |
-|            Find_Generic_128 | 8192 |   901.999 ns |  1.8796 ns |  1.7582 ns |   902.707 ns |  0.50 |    0.00 |
-|           Find_Generic_256 | 8192 |   465.352 ns |  5.0166 ns |  4.6925 ns |   462.971 ns |  0.26 |    0.00 |
-| Find_AVX2_256_Optimized | 8192 |   183.790 ns |  0.8620 ns |  0.8063 ns |   183.384 ns |  0.10 |    0.00 |
+|                 Method |    N |         Mean |      Error |     StdDev |       Median | Ratio | RatioSD |
+|----------------------- |----- |-------------:|-----------:|-----------:|-------------:|------:|--------:|
+|            **Find_Simple** |   **32** |     **9.481 ns** |  **0.2092 ns** |  **0.3066 ns** |     **9.491 ns** |  **1.00** |    **0.00** |
+|       Find_Generic_128 |   32 |     6.420 ns |  0.0166 ns |  0.0129 ns |     6.416 ns |  0.67 |    0.03 |
+|       Find_Generic_256 |   32 |     4.663 ns |  0.0309 ns |  0.0258 ns |     4.656 ns |  0.49 |    0.02 |
+| Find_AVX_256_Optimized |   32 |     2.275 ns |  0.0156 ns |  0.0146 ns |     2.278 ns |  0.24 |    0.01 |
+|                        |      |              |            |            |              |       |         |
+|            **Find_Simple** |   **64** |    **16.442 ns** |  **0.3419 ns** |  **0.4324 ns** |    **16.264 ns** |  **1.00** |    **0.00** |
+|       Find_Generic_128 |   64 |    13.991 ns |  0.6312 ns |  1.8411 ns |    12.551 ns |  0.86 |    0.12 |
+|       Find_Generic_256 |   64 |     6.509 ns |  0.0365 ns |  0.0285 ns |     6.523 ns |  0.39 |    0.01 |
+| Find_AVX_256_Optimized |   64 |     2.855 ns |  0.0116 ns |  0.0103 ns |     2.857 ns |  0.17 |    0.00 |
+|                        |      |              |            |            |              |       |         |
+|            **Find_Simple** |  **128** |    **35.323 ns** |  **0.5072 ns** |  **0.4496 ns** |    **35.470 ns** |  **1.00** |    **0.00** |
+|       Find_Generic_128 |  128 |    22.573 ns |  0.0498 ns |  0.0441 ns |    22.581 ns |  0.64 |    0.01 |
+|       Find_Generic_256 |  128 |     9.979 ns |  0.0276 ns |  0.0245 ns |     9.977 ns |  0.28 |    0.00 |
+| Find_AVX_256_Optimized |  128 |     5.196 ns |  0.0095 ns |  0.0089 ns |     5.199 ns |  0.15 |    0.00 |
+|                        |      |              |            |            |              |       |         |
+|            **Find_Simple** |  **256** |    **64.433 ns** |  **1.2814 ns** |  **1.1986 ns** |    **63.995 ns** |  **1.00** |    **0.00** |
+|       Find_Generic_128 |  256 |    48.901 ns |  0.0357 ns |  0.0334 ns |    48.907 ns |  0.76 |    0.01 |
+|       Find_Generic_256 |  256 |    16.789 ns |  0.0683 ns |  0.0638 ns |    16.815 ns |  0.26 |    0.00 |
+| Find_AVX_256_Optimized |  256 |     9.886 ns |  0.0140 ns |  0.0124 ns |     9.886 ns |  0.15 |    0.00 |
+|                        |      |              |            |            |              |       |         |
+|            **Find_Simple** |  **512** |   **120.161 ns** |  **1.3342 ns** |  **1.1828 ns** |   **120.274 ns** |  **1.00** |    **0.00** |
+|       Find_Generic_128 |  512 |    89.880 ns |  0.1807 ns |  0.1690 ns |    89.867 ns |  0.75 |    0.01 |
+|       Find_Generic_256 |  512 |    37.246 ns |  0.3284 ns |  0.3225 ns |    37.262 ns |  0.31 |    0.00 |
+| Find_AVX_256_Optimized |  512 |    15.867 ns |  0.0183 ns |  0.0171 ns |    15.863 ns |  0.13 |    0.00 |
+|                        |      |              |            |            |              |       |         |
+|            **Find_Simple** | **1024** |   **232.331 ns** |  **2.8660 ns** |  **2.6808 ns** |   **232.469 ns** |  **1.00** |    **0.00** |
+|       Find_Generic_128 | 1024 |   173.437 ns |  1.2228 ns |  1.0840 ns |   172.894 ns |  0.75 |    0.01 |
+|       Find_Generic_256 | 1024 |    64.866 ns |  0.0929 ns |  0.0726 ns |    64.850 ns |  0.28 |    0.00 |
+| Find_AVX_256_Optimized | 1024 |    28.875 ns |  0.0765 ns |  0.0715 ns |    28.891 ns |  0.12 |    0.00 |
+|                        |      |              |            |            |              |       |         |
+|            **Find_Simple** | **4096** |   **898.684 ns** |  **8.5403 ns** |  **7.9886 ns** |   **896.829 ns** |  **1.00** |    **0.00** |
+|       Find_Generic_128 | 4096 |   673.922 ns |  1.8541 ns |  1.6436 ns |   673.437 ns |  0.75 |    0.01 |
+|       Find_Generic_256 | 4096 |   232.696 ns |  0.9915 ns |  0.8790 ns |   232.518 ns |  0.26 |    0.00 |
+| Find_AVX_256_Optimized | 4096 |   115.904 ns |  0.5819 ns |  0.5158 ns |   115.905 ns |  0.13 |    0.00 |
+|                        |      |              |            |            |              |       |         |
+|            **Find_Simple** | **8192** | **1,781.139 ns** |  **6.3148 ns** |  **5.2731 ns** | **1,779.763 ns** |  **1.00** |    **0.00** |
+|       Find_Generic_128 | 8192 | 1,337.138 ns |  3.3049 ns |  3.0914 ns | 1,336.492 ns |  0.75 |    0.00 |
+|       Find_Generic_256 | 8192 |   457.116 ns |  0.7556 ns |  0.7068 ns |   457.027 ns |  0.26 |    0.00 |
+| Find_AVX_256_Optimized | 8192 |   223.426 ns |  0.1103 ns |  0.0978 ns |   223.445 ns |  0.13 |    0.00 |
 
 </div>
 
@@ -821,8 +863,12 @@ And the results of the benchmark is giving a significant boost for the optimized
 
 Nowadays, large and small processing of data is requiring going full width on the CPU in order to achieve optimal performance - before going wider on the CPU cores. It is no surprise that the .NET Teams have been optimizing already the .NET Base Class Libraries (BCL) for several years with such intrinsics. See all the .NET Performance blog posts from Stephen Toub for [.NET 5](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-5/), [.NET 6](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/) and [.NET 7](https://devblogs.microsoft.com/dotnet/performance_improvements_in_net_7/)), it will give you a - huge! - glimpse of what is happening there. Simple functions like `string.IndexOf(char)` are using these intrinsics under the hood and are able to be completely implemented in C# without the need to a fallback to C++.
 
-This simple case shows also that C++ compiler won't be able to optimize (here, auto-vectorize) such case without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, in that case, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.
+Not only the BCL is benefiting from the usage of such intrinsics, but the whole .NET ecosystem with plenty of OSS projects that are joining the effort: for example, [Nietras](https://nietras.com/) shared recently a cool library [Sep - Possibly the World's Fastest .NET CSV Parser](https://nietras.com/2023/06/05/introducing-sep/) which is extensively using such intrinsics to dramatically boost CSV parsing speed.
+
+This initial simple implementation in this post also shows that the C++ compiler won't be able to optimize (here, auto-vectorize) such case without specific compiler pattern matching (and I haven't seen any implementing this one in particular), and so, it makes sense to implement such optimized loops with .NET Vector intrinsics and CPU intrinsics to deliver the best performance.
 
 More specifically, Intel intrinsics can be involved in more algorithm tricks than their ARM counterparts, and that's the cool and fun part of this: Figuring out how to best use them!
 
 Happy coding! 🤗
+
+PS: The code is available as a gist [here](https://gist.github.com/xoofx/b6c569d83678f85ac87a436f8e241917)

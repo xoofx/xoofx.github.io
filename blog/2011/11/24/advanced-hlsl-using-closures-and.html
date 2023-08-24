@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.5.0.0">
+    <title>Advanced HLSL using closures and function pointers | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Advanced HLSL using closures and function pointers | xoofx">
+    <meta name="twitter:description" content="xoofx website">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Advanced HLSL using closures and function pointers | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+      <div class="col-sm-9 js-toc-content">
+        <p id="lunet-results"></p>
+        <article class="page">
+          <div class="title">
+      		  <h1 class="title"><a href="/blog/2011/11/24/advanced-hlsl-using-closures-and.html">Advanced HLSL using closures and function pointers</a></h1>
+      		
+          </div>
+          <div class="entry-content">
+          <div class="blog-post-meta">
+            <span class="fa fa-calendar"></span>
+            <span class="date"><time datetime="2011-11-24" itemprop="datePublished">November 24, 2011</time></span>
+            <i class="fa fa-tags"></i><a href="/blog/tag/d3d10/">D3D10</a>, <a href="/blog/tag/shader/">shader</a>, <a href="/blog/tag/hlsl/">hlsl</a>, <a href="/blog/tag/d3d11/">D3D11</a>, <a href="/blog/tag/directx/">DirectX</a>
+        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2011/2011-11-24-advanced-hlsl-using-closures-and.html">edit</a>
+          </div>
+            
+            
+            Shader languages like HLSL, Cg or GLSL are nowadays driving the most powerful processors in the world, but if you are
+            developing with them, you may have been already a little bit frustrated by one of their expressiveness limitations: the
+            common problem of abstraction and code reuse. In order to overcome this problem, solutions so far were mostly using a
+            glue combination of #define/#include preprocessors directives in order to generate combinations of code, permutation of
+            shaders, so called UberShaders. Recently, this problem has been addressed, for HLSL (new in Direct3D11), by providing
+            the concept of <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff471421%28v=VS.85%29.aspx">Dynamic
+                Linking</a>, and for GLSL, the concept of <a href="http://www.g-truc.net/post-0269.html">SubRoutines</a>, For
+            Direct3D11, the new mechanism has been only available for Shader Model 5.0, meaning that even if this could greatly
+            simplified the problem of abstraction, It is unfortunately only available for Direct3D11 class graphics card, which is
+            of course a huge limitation...<br /><br />But, here is the good news: While the classic usage of dynamic linking is not
+            really possible from earlier version (like SM4.0 or SM3.0), I have found<b> an interesting hack to bring some kind of
+                closures and functions pointers to HLSL</b>(!). This solution doesn't involve any kind of preprocessing directive
+            and is able to <b>work with SM3.0 and SM4.0</b>, so It might be interesting for folks like me that like to abstract and
+            reuse the code as often as possible! But let's see how It can be achieved...<br /><a name='more'></a><br /><br />
+            <h3>A simple problem of abstraction and code reuse in HLSL</h3><br />I have been working recently at my work on a GPU
+            implementation of a versatile perlin/simplex/fbm/turbulence noise in HLSL. While some of the individual algorithm are
+            pretty simples, it is often common to use several permutations of those functions in order to produce some nice noise
+            and turbulences functions (like the <a href="/blog/2010/08/25/making-of-ergon-4k-pc-intro#wormlava">worm-lava texture I
+                did for Ergon 4k intro</a>). Thus, they are an ideal candidate to demonstrate the use of closures and functions
+            pointers. I won't explain here the basic principle of <a href="http://www.noisemachine.com/talk1/">perlin</a> and <a
+                href="http://en.wikipedia.org/wiki/Fractional_Brownian_motion">fbm</a> noise generation to focus on the problem of
+            code reuse in HLSL.<br /><br /><br />Here is a simplified version of a Turbulence Noise implemented in a Pixel Shader:
+            <br /><br />
+            <pre class="language-hlsl"><code>float PerlinNoise(float2 pos){<br />  ....
+            }
+            
+            float AbsNoise(float2 pos) {
+                return abs(PerlinNoise(pos));
+            }
+            
+            float FBMNoise(float2 pos) {
+                float value = 0.0f;
+                float frequency = InitialFrequency;
+                float amplitude = 1.0f;
+                // Classic FBM loop
+                for ( int i=0; i &lt; Octaves; i++ )
+                {
+                    float noiseValue = AbsNoise(pos);
+                    value += amplitude * noiseValue;
+                    frequency *= Lacunarity;
+                    amplitude *= Amplitude;
+                }
+                return value;
+            }
+            
+            // Turbulence noise:
+            // Fbm + Abs + Perlin
+            float TurbulenceAbsPerlinNoisePS(float4 pos : SV_POSITION, float2 texPos : TEXCOORD0)
+             : SV_Target
+            {
+                return FBMNoise(texPos);
+            }
+            </code></pre>
+            The problem with the previous code is that if we want to change the code behind <b>AbsNoise</b> called from FBMNoise
+            (for example, apply cos/sin on the coordinates, or use of a simplex noise instead of the old Perlin Noise), <b>we would
+                have to duplicate the FBMNoise function to call the other function</b>. Of course, we could use the preprocessor to
+            inline the code, but It would end up in something less readable, less debuggable, error prone...etc.
+            <br />Another example: Ken Perlin introduced some really cool functions to modify the noise, like the famous <a
+                href="http://www.noisemachine.com/talk1/23.html">marble effect</a>:<br /><br />
+            <pre class="language-hlsl"><code>static float stripes(float x, float f) {
+                float t = .5 + .5 * sin(f * 2*PI * x);
+                return t * t - .5;
+            }
+            
+            float MarbleNoise(float2 pos) { 
+                return stripes(pos.x + 2 * FBMNoise(pos), 1.6f);
+            }
+            </code></pre>
+            But wait! The MarbleNoise function could even be used in place of the AbsNoise function, in order to get another noise
+            effect. So we could have a marble function calling a FBM... but we could also have a marble function called by a FBM...
+            or both...&nbsp; ugh... so as we can see, It is possible to permute those functions to generate interesting patterns,
+            but unfortunately, the shading language doesn't provide us a way to make those functions pluggable!... Almost! In fact,
+            there is a small breach in the HLSL language and we are going to use it!<br /><br /><br />
+            <h3> Introduction to Dynamic Linking in HLSL</h3><br />So as I said in the introduction, Direct3D11 has introduced the
+            concept of dynamic linking. I suggest the reader to go to an explanation on msdn "<a
+                href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff471421%28v=VS.85%29.aspx">Interfaces and
+                classes</a>". Basically, the main feature introduced in the HLSL language is a bit of Object Oriented Programming
+            (OOP) in order to address the problem of abstraction: Now HLSL has the <b>class</b> and <b>interface </b>keyword. But
+            they were mainly introduced for dynamic linking of a shader, and as I said, dynamic linking is only available with SM5.0
+            profile.<br /><br /><br />
+            <pre
+                class="language-hlsl"><code>// An interface describing a light
+            interface ILight {
+                float3 ComputeAmbient(...);
+                float3 ComputeDiffuse(...);
+                float3 ComputeSpecular(...);
+            };
+            
+            // A 1st implem of the ILight interface
+            class MyModelLight1 : ILight { 
+                float3 ComputeAmbient(...) {
+                    ...
+                    return color;
+                } 
+                ...
+            };
+            
+            // A 2ns implem of the ILight interface
+            class MyModelLight2 : ILight { 
+                float3 ComputeAmbient(...) {
+                    ...
+                    return color;
+                } 
+                ...
+            }
+            
+            // The variable through which we are going to access the light model
+            ILight abstractLight;
+            
+            // We need to declare the two implems in order to get a reference 
+            // to them from C++ code
+            MyModelLight1  modelLight1;
+            MyModelLight2 modelLight2;
+            
+            float4 PixelShader(PS_INPUT Input ) : SV_Target
+            {
+                // Call the abstractLight that was previously setup by C++ at 
+                // PixelShader creation time
+                float3 ambient = abstractLight.ComputeAmbient(Input.Pos);
+                float3 diffuse = abstractLight.ComputeDiffuse(Input.Pos);
+                float3 specular = abstractLight.ComputeSpecular(Input.Pos);
+            
+                return float4(saturate( Ambient + Diffuse + Specular ), 1.0);
+            }
+            </code></pre>
+            <br />To be able to use this shader, we need to setup the abstractLight variable from the C++/C# code, through the usage
+            of <a
+                href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476502%28v=vs.85%29.aspx">ID3D11Device::CreateClassLinkage</a>
+            and in the instatiation of a Pixel Shader <a
+                href="http://msdn.microsoft.com/en-us/library/windows/desktop/ff476513%28v=vs.85%29.aspx">ID3D11Device::CreatePixelShader</a>.<br /><br />As
+            we can see, we need to declare the interface and classes variable globally, so that they can be accessed by the C++
+            program. This is the standard way to use dynamic linking in HLSL... but what If we want to use this differently?
+            <br /><br />
+            <h3> Hacking function pointers in HLSL</h3><br />The principle is very simple: <b>Instead of using interface and classes
+                as global variables, we can in fact use them as function parameters and even local variables from method</b>. The
+            way to use it is then straightforward: <br />
+            <pre class="language-hlsl"><code>// Base class for a calculator
+            interface ICalculator {
+                float Compute(...);
+            };
+            
+            // 1st implem of the calculator
+            class ClassicCalculator : ICalculator { 
+                float Compute(...) {
+                    ...
+                    return value;
+                } 
+            };
+            
+            // 2nd implem of the calculator
+            class ComplexCalculator : ICalculator { 
+                float Compute(...) {
+                    ...
+                    return value;
+                } 
+            };
+            
+            // A function using the interface ICalculator 
+            float MyFunctionUsingICalculator(ICalculator calculator, ...) {
+                ...
+                value += calculator.Compute(...);
+                ...
+                return value;
+            } 
+            
+            // A Pixel shader using the ClassicCalculator
+            float PixelShader1(PS_INPUT Input ) : SV_Target
+            {
+                ClassicCalculator classic;
+                return MyFunctionUsingICalculator(classic, ...);
+            }
+            
+            // A Pixel shader using the ComplexCalculator
+            float PixelShader2(PS_INPUT Input ) : SV_Target
+            {
+                ComplexCalculator complex;
+                return MyFunctionUsingICalculator(complex, ...);
+            }
+            </code></pre>
+            <br />The previous example could be compiled flawlessly with ps_4_0 (Shader Model 4) or ps_3_0 (with some minor changes
+            for the pixel shader), and It would compile just fine! So basically, <b>the interface ICalculator is acting as a
+                function pointer</b>, that has two implementations available through the ClassicCalculator and ComplexCalculator
+            classes.&nbsp; MyFunctionUsingICalculator doesn't have to change its signature to adapt to the underlying function, so
+            as we can see, we have a suitable solution for developing function pointers in HLSL. <br /><br />Now, lets try to see if
+            we could use this model to build our flexible noise functions. Replace ICalculator by a INoise interface. We are seeing
+            that an implementation would have to call another INoise interface. In fact, ideally, we would like to code something
+            like this: <br />
+            <pre class="language-hlsl"><code>// Base class for a noise function
+            interface INoise {
+                float Compute(...);
+            };
+            
+            // Perlin noise implem
+            class PerlinNoise : INoise { 
+                float Compute(...) {
+                    ...
+                    return value;
+                } 
+            };
+            
+            // FBM noise implem
+            class FBMNoise : INoise { 
+                // Would be ideal to be able to do that
+                // We could even make an abstract generic class 
+                // that could provide a base Source INoise
+                // BUT, THIS IS NOT COMPILING!!!
+                INoise Source;
+            
+                float Compute(...) {
+                    float value = 0.0f;
+                    float frequency = InitialFrequency;
+                    float amplitude = 1.0f;
+                    // Classic FBM loop
+                    for ( int i=0; i &lt; Octaves; i++ )
+                    {
+                        // Call the source abstract INoise
+                        float noiseValue = Source.Compute(pos);
+                        value += amplitude * noiseValue;
+                        frequency *= Lacunarity;
+                        amplitude *= Amplitude;
+                    }
+                    return value;
+                } 
+            };
+            
+            
+            // A Pixel shader using the FBMNoise combined with PerlinNoise
+            float PixelShader1(PS_INPUT Input ) : SV_Target
+            {
+                FBMNoise fbmNoise;
+                PerlinNoise perlin;
+                // This is not possible, interface variable members are not allowed
+                fbmNoise.Source = perlin;
+                return fbmNoise.Compute(...);
+            }
+            
+            </code></pre>
+            <br />Unfortunately, <b>HLSL doesn't permit the use of interface as variable members!</b>. This limitation was quite
+            annoying, as It excludes a whole range of combination, like aggregation, composition... making these function pointers
+            useful only for a very limited set of cases... <br />I have tried to overcome this problem using abstract class instead
+            of interface, as classes can be declared as variable members of classes... but, again, there is a huge limitation: The
+            class variable is in fact acting a a final or const variable that cannot be changed, thus making its usage almost
+            useless... <br />But I knew that HLSL permits lots of unusual constructions, and this is where closures are going to
+            resolve this. <br /><br />
+            <h3> Hacking Closures in HLSL</h3><br />So we know that interfaces can be used as function pointers, but their usage is
+            limited as we cannot use anykind of composition. An interesting fact is that we can declare local variables in methods
+            as being class or interfaces... The trick is to use a quite uncommon feature of HLSL: <b>It is possible to declare local
+                classes inside a method, that can access local parameters!</b>Therefore, It is possible to use a kind of <b>deferred
+                composition/aggregation using this technique</b>. Let's rewrite our noise functions using this new closure
+            technique: <br /><br />1. <b>Declare a INoise interface that is able to compute the noise by using a next INoise
+                implementation</b>. <br /><br />
+            <pre class="language-hlsl"><code>// It is possible to compile this code under ps_4_0 and ps_3_0
+            
+            // Declare our INoise interface
+            interface INoise {
+                // Here an interesting hack: We can declare a method that is returning a INoise 
+                // interface. This method will be implemented by the pixel shaders. 
+                INoise Next();
+                
+                // The compute method of a Noise
+                float Compute(float2 pos);
+            };
+            </code></pre>
+            <br />2. <b>Declare NoiseBase as an abstract implementation of INoise </b>that is implementing the methods. If we had
+            the keyword abstract in hlsl we wouldn't have to implement methods of this class. <br /><br />
+            <pre class="language-hlsl"><code>// We are creating an abstract class from INoise in order
+            // to implement both methods
+            class NoiseBase : INoise {
+                INoise Next() {
+                    // This code will never be used. It is only 
+                    // used to declare this class
+                    NoiseBase base;
+                    return base;
+                }
+            
+                float Compute(float2 pos) {
+                    // This code will never be used. It is only 
+                    // used to declare this class
+                    return Next().Compute(pos);
+                }
+            };
+            </code></pre>
+            <br />3. <b>Use NoiseBase to implement final INoise functions</b>. If you look at AbsNoise, FbmNoise or MarbleNoise,
+            they are using the INoise::Next() method to get an instance of the INoise interface they rely on. This is where
+            functions pointers are extremely useful here. <br /><br />
+            <pre class="language-hlsl"><code>// PerlinNoise implem
+            class PerlinNoise : NoiseBase {
+                float Compute(float2 pos) {
+                    // call a standard perlin_noise implemented as a simple external function
+                    return perlin_noise(pos);
+                }
+            };
+            
+            // AbsNoise implem
+            class AbsNoise : NoiseBase {
+                float Compute(float2 pos) {
+                    // Note: We are using Next to access the next underlying function pointer
+                    return abs(Next().Compute(pos));
+                }
+            };
+            
+            // FbmNoise implem
+            class FbmNoise : NoiseBase {
+                float Compute(float2 pos) {
+                    float value = 0.0f;
+                    float amplitude = 1.0f;
+                    float frequency = InitialFrequency;
+                    for ( int i=0; i &lt; Octaves; i++ )
+                    {
+                        float noiseValue = Next().Compute(pos);
+                        value += amplitude * noiseValue;
+                        frequency *= Lacunarity;
+                        amplitude *= Amplitude;
+                    }
+                    return value;
+                }
+            };
+            
+            // MarbleNoise implem
+            class MarbleNoise : NoiseBase {
+                float Compute(float2 pos) { 
+                    return stripes(2 * Next().Compute(pos, frequency), 1.6f);
+                }
+            
+                static float stripes(float x, float f) {
+                    float t = .5 + .5 * sin(f * 2*PI * x);
+                    return t * t - .5;
+                }
+            };
+            </code></pre>
+            <br />4. <b>Implements the pixel shaders with the closure mechanism</b>. We are declaring local classes that will
+            override INoise::Next() method in order to chain INoise function pointers together. <br /><br />
+            <pre class="language-hlsl"><code>// Fbm -&gt; PerlinNoise
+            float FbmPerlinNoise2DPS( float4 pos : SV_POSITION, float2 texPos : TEXCOORD0 )
+             : SV_Target
+            {
+                // Look! We are declaring a local class
+                class Noise1 : PerlinNoise {} noise1;
+                // and this local classs can access local variable!
+                // For example, Noise2 can access previous noise1 variable.
+                class Noise2 : FbmNoise { INoise Next() { return noise1; } } noise2;
+            
+                // Allowing us to cascade the calls and making a kind of deferred composition.
+                return noise2.Compute(texPos);
+            }
+            
+            // Fbm -&gt; Abs -&gt; PerlinNoise
+            float FbmAbsPerlinNoise2DPS( float4 pos : SV_POSITION, float2 texPos : TEXCOORD0 )
+             : SV_Target
+            {
+                class Noise1 : PerlinNoise {} noise1;
+                class Noise2 : AbsNoise { INoise Next() { return noise1; } } noise2;
+                class Noise3 : FbmNoise { INoise Next() { return noise2; } } noise3;
+            
+                // FbmNoise is calling indirectly AbsNoise that will call PerlinNoise.
+                return noise3.Compute(texPos);
+            }
+            
+            // Marble -&gt; Fbm -&gt; Abs -&gt; PerlinNoise
+            float FbmAbsPerlinNoise2DPS( float4 pos : SV_POSITION, float2 texPos : TEXCOORD0 )
+             : SV_Target
+            {
+                class Noise1 : PerlinNoise {} noise1;
+                class Noise2 : AbsNoise { INoise Next() { return noise1; } } noise2;
+                class Noise3 : FbmNoise { INoise Next() { return noise2; } } noise3;
+                class Noise4 : MarbleNoise { INoise Next() { return noise3; } } noise4;
+            
+                // MarbleNoise is calling FbmNoise that is calling indirectly AbsNoise 
+                // that will call PerlinNoise.
+                return noise4.Compute(texPos);
+            }
+            
+            
+            // Fbm -&gt; Marble -&gt; Abs -&gt; PerlinNoise
+            float FbmAbsPerlinNoise2DPS( float4 pos : SV_POSITION, float2 texPos : TEXCOORD0 )
+             : SV_Target
+            {
+                class Noise1 : PerlinNoise {} noise1;
+                class Noise2 : AbsNoise { INoise Next() { return noise1; } } noise2;
+                class Noise3 : MarbleNoise { INoise Next() { return noise2; } } noise3;
+                class Noise4 : FbmNoise { INoise Next() { return noise3; } } noise4;
+            
+                // FbmNoise is calling MarbleNoise that is calling indirectly AbsNoise 
+                // that will call PerlinNoise.
+                return noise4.Compute(texPos);
+            }
+            
+            </code></pre>
+            Et voila! As you can see, we are able to declare local classes from a pixel shader that are acting as closures. It is
+            for example even possible to declare local classes that have a specific code in their Compute() methods.<br />Behind the
+            scene, when chaining the INoise::Next() methods, the fxc HLSL compiler is seeing all thoses classes as
+            "INoise*".<br />It is then possible to perform a fbm(marble(abs(perlin_noise()))) as well as a
+            marble(fbm(abs(perlin_noise()))). <br /><br />In the end, <b>It is effectively possible to implement closures in HLSL
+                that can be used in SM4.0 as well as SM3.0</b>!<br /><br />
+            <h3>Improving closures chaining</h3><br />From the previous example, we can extend the concept by<br />1. Adding
+            <b>static local constructors</b> to each Noise function : <br />
+            <pre class="language-hlsl"><code>// PerlinNoise implem
+            class PerlinNoise : NoiseBase {
+                float Compute(float2 pos) {
+                    // call a standard perlin_noise implemented as a simple external function
+                    return perlin_noise(pos);
+                }
+                // Add local "constructor"
+                static INoise New() {
+                    PerlinNoise noise;
+                    return noise;
+                }
+            };
+            
+            // AbsNoise implem
+            class AbsNoise : NoiseBase {
+                float Compute(float2 pos) {
+                    // Note: We are using Next to access the next underlying function pointer
+                    return abs(Next().Compute(pos));
+                }
+                // Add local constructor and chain with From INoise
+                static INoise New(INoise from) {
+                    class LocalNoise : AbsNoise { INoise Next() { return from; } } noise;
+                    return noise;
+                }
+            };
+            
+            // Add the same constructors to FbmNoise and MarbleNoise.
+            // ....
+            </code></pre>
+            2. And then we can rewrite the Pixel shader functions to <b>chain operators in a shorter form</b>: <br />
+            <pre class="language-hlsl"><code>// Fbm -&gt; Marble -&gt; Abs -&gt; PerlinNoise
+            float FbmAbsPerlinNoise2DPS( float4 pos : SV_POSITION, float2 texPos : TEXCOORD0 )
+             : SV_Target
+            {
+                // FbmNoise is calling MarbleNoise that is calling indirectly AbsNoise 
+                // that will call PerlinNoise.
+                return FbmNoise::New(MarbleNoise::New(AbsNoise::New(PerlinNoise::New()))).Compute(texPos);
+            }
+            </code></pre>
+            <br />This way, It allows a syntax that is even more concise and modular! <br /><br />
+            <h3>Further Considerations</h3><br />This is a very exciting technique that could open lots of abstraction opportunities
+            while developing in HLSL. Though, in order to use this technique, there are a couple of advantages and things to take
+            into account:<br />
+            <ul>
+                <li><b>An interface cannot inherit from another interface </b>(that would be really interesting)</li>
+                <li><b>An interface can only have method members</b>.</li>
+                <li><b>A class can inherit from another class and from several interfaces</b>.</li>
+                <li>Unlike in C/C++, <b>we cannot pre-declare an interface</b>, but we can <b>use a declaration being declared
+                    </b>(See the example of the method INoise::Next, returning a INoise).</li>
+                <li><b>The compiler has a limitation against the reuse of an implementation in a call chain and will complain about
+                        a recursive call </b>(even if there is no recursive call at all): For example, It is not possible to reuse
+                    twice the sample type of class closure in a call chain, meaning that it is not possible to make a call chain
+                    like this one: Marble =&gt; FBM =&gt; Marble =&gt; Abs =&gt; Perlin. The fxc compiler would complain about the
+                    second "Marble" as It would see it as a kind of recursive call. <b>In order to reuse a function, we need to
+                        duplicate it</b>, that's probably the only point that is annoying here.</li>
+                <li><b>Generated compiled asm output from closures are exactly the same as using standard inlining </b>methods.
+                </li>
+                <li>Before going to local class-closure, I have tried several techniques that were sometimes crashing fxc compiler.
+                </li>
+                <li>Thus, as it is a way of hacking the usage HLSL, <b>It is not guarantee that this will be supported in the
+                        future</b>. But at least, if it is working for SM5.0, SM4.0 and 3.0, we can expect that we are safe for a
+                    while!</li>
+                <li>Also, the compilation time under vs_3_0/ps_3_0 profile seems to take more time, not sure if its the language
+                    construction or a regular behavior of 3.0 profiles.</li>
+            </ul>Let me know if you are able to use this technique and If you are finding other interesting constructions or
+            problems. That would be very interesting to dig a little more into the opportunities it opens. Lastly, I have done a
+            small google search about this kind of technique, but didn't found anything... but It could have been used already by
+            someone else, thus this whole technique is a new hypothetical discovery, but I enjoyed a lot to discover it!<br />
+            <script src="http://xoofx.com/syntaxhighlighter/highlighLoader.js" type='text/javascript'></script>
+          </div>
+        </article>
+      </div>
+      <div class="col-sm-3">
+        <nav class="js-toc toc sticky-top"></nav>
+      </div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.5.0.0">
+    <title>Making of Ergon 4K PC Intro | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Making of Ergon 4K PC Intro | xoofx">
+    <meta name="twitter:description" content="xoofx website">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Making of Ergon 4K PC Intro | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+      <div class="col-sm-9 js-toc-content">
+        <p id="lunet-results"></p>
+        <article class="page">
+          <div class="title">
+      		  <h1 class="title"><a href="/blog/2010/08/25/making-of-ergon-4k-pc-intro.html">Making of Ergon 4K PC Intro</a></h1>
+      		
+          </div>
+          <div class="entry-content">
+          <div class="blog-post-meta">
+            <span class="fa fa-calendar"></span>
+            <span class="date"><time datetime="2010-08-25" itemprop="datePublished">August 25, 2010</time></span>
+            <i class="fa fa-tags"></i><a href="/blog/tag/shader/">shader</a>, <a href="/blog/tag/raymarching/">RayMarching</a>, <a href="/blog/tag/demoscene/">demoscene</a>
+        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2010/2010-08-25-making-of-ergon-4k-pc-intro.html">edit</a>
+          </div>
+            
+            
+            
+            
+            <div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/_dv_YkYWn3HA/THTsDtZ_InI/AAAAAAAAC-8/vUE57F9OqNQ/s1600/ergon+2010-03-11+23-34-21-21.jpg" imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img border="0" src="http://4.bp.blogspot.com/_dv_YkYWn3HA/THTsDtZ_InI/AAAAAAAAC-8/vUE57F9OqNQ/s320/ergon+2010-03-11+23-34-21-21.jpg" /></a></div>
+            You are not going to discover any fantastic trick here, the intro itself is not an outstanding coding performance, but I always enjoy reading the making of other intros, so It's time to take some time to put this on a paper!<br /><br />What is <a href="http://pouet.net/prod.php?which=54529">Ergon</a>? It's a small 4k intro (meaning 4096 byte executable) that was released at the <a href="http://breakpoint.untergrund.net/">2010 Breakpoint demoparty</a> (if you can't run it on your hardware, you can still <a href="http://www.youtube.com/watch?v=i_feg-bpqTY">watch it on youtube</a>), which surprisingly was able to finish to the 3rd place! I did the coding, design and worked also on the music with my friend ulrick.<br /><br />That was a great experience even if I didn't expect to work on this production at the beginning of the year... but at the end of January, when BP2010 was announced and supposed to be the last one, I was motivated to go there, and why not, release a 4k intro! One month and a half later, the demo was almost ready... wow, 3 weeks before the party, first time to finish something so ahead an event! But yep, I was able to work on it on part time during the week (and the night of course)... But when I started on it, I had no idea where this project would bring me to... or even what kind of 3D API I had to start from doing this intro!<br /><br /><a name='more'></a>
+            <h3>OpenGL, DirectX 9, 10 or 11?</h3>
+            <br />At FRequency, xt95 is mainly working in OpenGL, mostly due to the fact that he is a linux user. All our previous intros were done using OpenGL, although I did provide some help on some intros, bought OpenGL books few years ago... I'm not a huge fan of the OpenGL C API, but most importantly, from my short experience on this, I was always able to better strip down DirectX code size than OpenGL code... At that time, I was also working a bit more on DirectX API... I even bought a 5770 ATI earlier to be able to play with D3D11 Compute Shader api... I'm also mostly a windows user... DirectX has a very well integrated documentation in Visual Studio, a good SDK, lots of samples inside, a cleaner API (more true on recent D3D10/D3D11), some cool tools like PIX to debug shaders... and thought also that programming on DirectX on windows might reduce the risk to get some incompatibilities between NVidia and ATI graphics card (although, I found that, at least with D3D9, this is not always true...).<br /><br />So ok, DirectX was selected... but which version? I started my first implementation with D3D10. I know that the code is much more verbose than D3D9 and OpenGL2.0, but I wanted to practice it a bit more the somehow "new" API than just reading a book about it. I was also interested to plug some text in the demo and tried an integration with latest Direct2D/DirectWrite API.<br /><br />Everything went well at the beginning with D3D10 API. The code was clean, thanks to the thin layer I developed around DirectX to make the coding experience much closer to what I use to have in C# with SlimDx for example. The resulting C++ code was something like this :<br />
+            <pre class="language-csharp"><code>//
+              // Set VertexBuffer for InputAssembler Stage
+              device.InputAssembler.SetVertexBuffers(screen.vertexBuffer, sizeof(VertexDataOffline)); 
+            
+              // Set TriangleList PrimitiveTopology for InputAssembler Stage
+              device.InputAssembler.SetPrimitiveTopology(PrimitiveTopology::TriangleStrip);
+            
+              // Set VertexShader for the current Pass
+              device.VertexShader.Set(effect.vertexShader);
+            </code></pre>
+            Very pleasant to develop with it, but because I wanted to test D2D1, I switched to D3D10.1 which can be configured to run on D3D10 hardware (with the feature level thing)... So I also started to slightly wrap up the Direct2D API and was able to produce very easily some really nice text... but wow... the code was a bit too large for a 4k (but would be perfect for a 64k). <br /><br />Then during this experiment phase, I tried the D3D11 API with the Compute Shader thing... and found that the code is much more compact than D3D10 if you are performing some kind of... for example, raymarching... I didn't compare code size, but I suspect the code to be able to compete with its D3D9 counterpart (although, there is a downside in D3D11 : if you can afford a real D3D11 hardware, a compute shader can directly render to the screen buffer... otherwise, using the D3D11 Compute shader with features level 10, you have to copy the result from one resource to another... which might hit the size benefit...).<br /><br />I was happy to see that the switch to D3D11 was easy, with some continuity from D3D10 on the API "look &amp; feel"... Although I was disappointed to learn that working this D3D11 and D2D1 was not straightforward because D2D1 is only compatible with D3D10.1 API (which you can run with feature level 9.0 to 10), forcing to initialize and maintain two devices (one for D3D10.1 and one for D3D11), playing with DXGI shared resource between the devices... wow, lots of work, lots of code... and of course, out of question for a 4k...<br /><br />So I tried... a plain old good D3D9... and that was of course much compact in size than their D3D10 counterpart... So for around two weeks in February, I played with those various API while implementing some basic scene for the intro.I just had a bad surprise when releasing the intro, because lots of people were not able to run it : weird because I was able to test it on several NVidias and at least my ATI 5770... I didn't expect D3D9 to be so sensitive to that, or at least, a bit less sensitive than OpenGL... but I was wrong.<br /><br />
+            <h3>Raymarching optimization</h3>
+            <br />I decided to go for an intro using the <a href="/blog/2009/10/13/potatro-and-raymarching-story-of/">raymarching algorithm</a> that was more likely to be able to deliver a "fat" content in a tiny amount of code. Although, the raymarching stuff was already a bit in the "retired", after the fantastic intros released earlier in 2009 (<a href="http://pouet.net/prod.php?which=52938">Elevated</a> - not really a raymarching intro but soo impressive!, <a href="http://www.pouet.net/prod.php?which=52940">Sult</a>, <a href="http://pouet.net/prod.php?which=53937">Rudebox</a>, <a href="http://www.pouet.net/prod.php?which=53605">Muon-Baryon</a>...etc). But I didn't have enough time to explore a new effect and was not even confident to be able to find anything interesting at that time... so... ok, raymarching.<br /><br />So for one week, after building a 1st scene, I spent my time to try to optimize the raymarching algo. There was an instructive thread on pouet about this : "<a href="http://www.pouet.net/topic.php?which=6675&amp;page=1&amp;x=21&amp;y=7">So, what do distance field equations look like? And how do we solve them?</a>". I tried to implement some trick like...<br />
+            <ol>
+               <li>Generate grid on the vertex shader (with 4x4 pixels for example), to precompute a raw view of the scene, storing the minimal distance step to go before hitting a surface... let the pixel shader to get those interpolate distances (multiplied by a small reduction factor like .9f) and perform some fine grained raymarching with fewer iterations</li>
+               <li>Generate a pre-rendered 3D volume of the scene at a much lower density (like 96x96x96) and use this map to navigate in the distance fields while still performing some "sphere tracing" refinement if needed</li>
+               <li>I tried also somekind of level of detail on the scene : for example, instead of having a texture lookup (for the "bump mapping") for each step during the raymarching, allow the raymarcher to use a simplified analytical surface scene and switch to the more detailled one for the last step</li>
+            </ol>
+            Well, I have to admit that all those techniques were not really clever in anyway... and the result was matching the lack of this cleverness! None of them provide a significant speed optimization compare to the code size hit they were generated.<br /><br />So after one week of optimization, well, I just went to a basic raymarcher algo. The shader was developed under Visual C++, integrated in the project (thanks to NShader syntax highlighting). I did a small C# tool to strip the shader comments, remove unnecessary spaces... integrated in the build (pre-build events in VC++), It's really enjoyable to work with this toolchain.<br /><br />
+            <h3>Scenes design</h3>
+            <br />For the scenes, I decided to use the same kind of technique used in the Rudebox 4k intro : Leveraging more on the geometry and lights, but not on the materials. That made the success of the rudebox and I was motivated to build some complex CSG with boolean operations on basic elements (box, sphere...etc.). The nice thing about this approach is that It avoids to use inside the ISO surface anykind of if/then/else for determining the material... just letting the lights properly set in the scene might do the work. Yep, indeed, rudebox is for example a scene with say, a white material for all the objects. What makes the difference is the position of lights in the scene, their intensity...etc. Ergon used the same trick here.<br /><br />I spent around two to three weeks to build the scenes. I ended up with 4 scenes, each one quite cool on their own, with a consistent design among them. One of the scene was using the fonts to render a wall of text in raymarching.<br /><br />Because I'm not sure that I will be able to use those scenes, well, I'm going to post their screenshot here!<br />
+            <div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/_dv_YkYWn3HA/THUBmST_zaI/AAAAAAAAC_E/aewD_Zk-XKU/s1600/centroid+2010-02-15+22-50-35-95.jpg" imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img border="0" src="http://4.bp.blogspot.com/_dv_YkYWn3HA/THUBmST_zaI/AAAAAAAAC_E/aewD_Zk-XKU/s320/centroid+2010-02-15+22-50-35-95.jpg" /></a></div>
+            <br />The <b>1st scene</b> I developed during my D3D9/D3D10/D3D11 API experiments was a massive tentacle model coming from a balckhole. All the tentacles were moving around a weird cutted sphere, with a central "eye"... I was quite happy about this scene that had a unique design. From the beginning, I wanted to add some post-processing, to enhance the visuals, and to make them a bit different from other raymarching scene... So I went with a simple post-processing that was performing some patterns on the pixels, adding a radial blur to produce some kind of "ghost rays" coming out from the scene, making the corners darker, and adding a small flickering the more you go to the corners. Well, only this piece of code was already taking a scene on its own, but that was the price to have a genuine ambiance, so...<br /><br />The colors and theming was almost settled from the beginning... I'm a huge fan of warm colors!<br /><br />
+            <div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/_dv_YkYWn3HA/THUFFnxWNJI/AAAAAAAAC_M/vY90O14kdqI/s1600/centroid_logo_FRequency+2010-02-15+22-50-55-35.jpg" imageanchor="1" style="clear: left; float: left; margin-bottom: 1em; margin-right: 1em;"><img border="0" src="http://4.bp.blogspot.com/_dv_YkYWn3HA/THUFFnxWNJI/AAAAAAAAC_M/vY90O14kdqI/s320/centroid_logo_FRequency+2010-02-15+22-50-55-35.jpg" /></a></div>
+            The <b>2nd scene</b> was using a font rendering coupling with the raymarcher.... a kind of flying flag, with the logo FRequency appearing from left to right with a light on it... (I will probably release those effects on pouet just for the record...), that was also a fresh use of raymarching... didn't see anything like this in latest 4k production, so, I was expecting to insert this text in the 4k, as It's not so common... The code to use the d3d font was not too fat... so I was still confident to be able to use those 2 scenes.<br /><br />
+            <div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/_dv_YkYWn3HA/THUG0KwkdwI/AAAAAAAAC_c/16TiIjlQUFA/s1600/centroid_raptor+2010-08-25+14-01-40-63.jpg" imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img border="0" src="http://4.bp.blogspot.com/_dv_YkYWn3HA/THUG0KwkdwI/AAAAAAAAC_c/16TiIjlQUFA/s320/centroid_raptor+2010-08-25+14-01-40-63.jpg" /></a></div>
+            After that, I was looking for some nasty objects... so for the <b>3rd scene</b>, I tried to randomly play with some weird functions and ended up with a kind of "raptor" creature... I wanted also to use a weird generated texture I found few month ago, that was perfect for it. <br /><br />Finally, I wanted to use the texture to make a kind of lava sea with a moving snake on it... that was the last scene I coded (and of course, 2 others scenes that are too ugly to show here! :) ).<br /><br />
+            <div class="separator" style="clear: both; text-align: center;"><a href="http://1.bp.blogspot.com/_dv_YkYWn3HA/THUHirH3dCI/AAAAAAAAC_k/gyooO5NNwrg/s1600/ergon+2010-03-11+23-33-44-65.jpg" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="http://1.bp.blogspot.com/_dv_YkYWn3HA/THUHirH3dCI/AAAAAAAAC_k/gyooO5NNwrg/s320/ergon+2010-03-11+23-33-44-65.jpg" /></a></div>
+            <br />We also started at that time, in February, to work on the music, and as I explained in my <a href="/blog/2010/02/13/coding-4k-intro-for-breakpoint-2010">earlier posts</a>, we used 4klang synth for the intro. But making all those scenes with a music prototype, the "crinklered" compressed exe was more around 5ko... even If the shader code was already optimized in size, using some kind of preprocessor templating (like in rudebox or receptor). The intro was of course laking a clear direction, there was no transitions between the scenes... and most importantly, It was not possible to fit all those scenes in 4k, while expecting the music to grow a little bit more in the final exe...<br /><br />
+            <h3 id="wormlava">The story of the Worm-Lava texture </h3>
+            <br />Last year, around November, while I was playing with several perlin's like noise, I found an interesting variation using perlin noise and the <a href="http://www.noisemachine.com/talk1/23.html">marble-cosine effect</a> that was able to represents some kind of worms, quite freaking ugly in some way, but that was a unique texture effect!<br /><br />
+            <table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;">
+               <tbody>
+                  <tr>
+                     <td style="text-align: center;"><a href="http://3.bp.blogspot.com/_dv_YkYWn3HA/THUMvGNLtUI/AAAAAAAAC_s/rOgq8oOozE4/s1600/BodyNoise.jpg" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="400" src="http://3.bp.blogspot.com/_dv_YkYWn3HA/THUMvGNLtUI/AAAAAAAAC_s/rOgq8oOozE4/s640/BodyNoise.jpg" width="640" /></a></td>
+                  </tr>
+                  <tr>
+                     <td class="tr-caption" style="text-align: center;">(Click to enlarge, lots of details in it!)</td>
+                  </tr>
+               </tbody>
+            </table>
+            <br />This texture was primarily developed in C# but the code was quite straightforward to port in a texture shader... Yep, that's probably an old trick with D3D9 to use the function <a href="http://msdn.microsoft.com/en-us/library/bb172834%28v=VS.85%29.aspx">D3DXFillTextureTX </a>to directly fill a texture from a shader with a single line of code... Why using this? Because It was the only way to get a noise() function accessible from a shader, without having to implement it... As weird as it may sounds, the <a href="http://msdn.microsoft.com/en-us/library/bb509629%28VS.85%29.aspx">HLSL perlin noise()</a> function is not accessible outside a texture shader. A huge drawback of this method is also that the shader is not a real GPU shader, but is instead computed on the CPU... that explain why ergon intro is taking so long to generate the texture at the beginning (with a 1280x720 texture resolution for example).<br /><br />So how does look this texture shader in order to generate this texture?<br />
+            <pre class="language-csharp"><code>// -------------------------------------------------------------------------
+            // worm noise function
+            // -------------------------------------------------------------------------
+            #define ty(x,y) (pow(.5+sin((x)*y*6.2831)/2,2)-.5)
+            #define t2(x,y) ty(y+2*ty(x+2*noise(float3(cos((x)/3)+x,y,(x)*.1)),.3),.7)
+            #define tx(x,y,a,d) ((t2(x, y) * (a - x) * (d - y) + t2(x - a, y) * x * (d - y) + t2(x, y - d) * (a - x) * y + t2(x - a, y - d) * x * y) / (a * d))
+            
+            float4 x( float2 x : position, float2 y : psize) : color {
+               float a=0,d=64;
+               // Modified FBM functions to generate a blob texture
+               for(;d&gt;=2;d/=2)
+                   a += abs(tx(x.x*d,x.y*d,d,d)/d);
+               return a*2;   
+            }
+            </code></pre>
+            <br />The tx macro is basically applying a tiling on the noise. <br />The core t2 and ty macros are the one that are able to generate this "worm-noise". It's in fact a tricky combination of the usual cosine perlin noise. Instead of having something like cos(x + noise(x,y)), I have something like special_sin( y + special_sin( x + noise(cos(x/3)+x,y), power1), power2), with special_sin function like ((1 + sin(x*power*2*PI))/2) ^ 2<br /><br />Also, don't be afraid... this formula didn't came out of my head like this... that was clearly after lots of permutations from the original function, with lots of run/stop/change_parameters steps! :D<br /><br />
+            <h3>Music and synchronization</h3>
+            <br />It took some time to build the music theme and to be satisfied with it... At the beginning, I let ulrick making a first version of the music... But because I had a clear view of the design and direction, I was expecting a very specific progression in the tune and even in the chords used... That was really annoying for ulrick (excuse-me my friend!), as I was very intrusive in the composition process... At some point, I ended up in making a 2 pattern example of what I wanted in terms of chords and musical ambiance... and ulrick was kind enough to take this sample pattern and clever to add some intro's musical feeling in it. He will be able to talk about this better than me, so I'll ask him if he can insert some small explanation here!<br /><br />ulrick here:<i> « working with @lx on this prod was a very enjoyable job. I started a  music which @lx did not like very much, it did not reflect the feelings that  @lx wanted to give through the Ergon. He thus composed a few patterns using a  very emotional musical scale. I entered into the music very easily and added my  own stuffs. For the anecdote, I added a second scale to the music to allow for a  clearer transition between the first and second parts of the Ergon. After doing  so, we realized that our music actually used the chromatic scale on E</i> »<br /><br />The synchronization was the last part of the work in the demo. I first used the default synchronization mechanism from the 4klang... but I was lacking some features like, if the demo is running slowly, I needed to know exactly where I was... Using plain 4klang sync, I was missing some events on slow hardware, even preventing the intro to switch between the scenes, because the switching event was missed by the rendering loop!<br /><br />So I did my own small synchronization based on regular events of the snare and a reduce view of the sample patterns for this particular events. This is the only part of the intro that was developed in x86 assembler in order to keep it as small as possible.<br /><br />The whole code was something like this :<br />
+            <pre class="language-cpp"><code>static float const_time = 0.001f;
+              static int SAMPLES_PER_DRUMS = SAMPLES_PER_TICK*16;
+              static int SAMPLES_PER_DROP_DRUMS = SAMPLES_PER_TICK*4;
+              static int SMOOTHSTEP_FACTOR = 3;
+            
+              static unsigned char drum_flags[96] = {
+                    // pattern n°   time        z.z sequence
+               1,1,1,1,   // pattern 0 0         0 0
+               1,1,1,1,   // pattern 1 7,384615385 4 1
+               0,0,0,0,   // pattern 2 14,76923077 8 2
+               0,0,0,0,   // pattern 3 22,15384615 12 3
+               0,0,0,0,   // pattern 4 29,53846154 16 4
+               0,0,0,0,   // pattern 5 36,92307692 20 5
+               0,0,0,0,   // pattern 6 44,30769231 24 6
+               0,0,0,0,   // pattern 7 51,69230769 28 7
+               0,0,0,1,   // pattern 8 59,07692308 32 8
+               0,0,0,1,   // pattern 8 66,46153846 36 9
+               1,1,1,1,   // pattern 9 73,84615385 40 10
+               1,1,1,1,   // pattern 9 81,23076923 44 11
+               1,1,1,1,   // pattern 10 88,61538462 48 12
+               0,0,0,0,   // pattern 11 96         52 13
+               0,0,0,0,   // pattern 2 103,3846154 56 14
+               0,0,0,0,   // pattern 3 110,7692308 60 15
+               0,0,0,0,   // pattern 4 118,1538462 64 16
+               0,0,0,0,   // pattern 5 125,5384615 68 17
+               0,0,0,0,   // pattern 6 132,9230769 72 18
+               0,0,0,0,   // pattern 7 140,3076923 76 19
+               0,0,0,1,   // pattern 8 147,6923077 80 20
+               1,1,1,1,   // pattern 12 155,0769231 84 21
+               1,1,1,1,   // pattern 13 162,4615385 88 22
+              };          
+            
+              // Calculate time, synchro step and boom shader variables
+              __asm {
+               fild dword ptr [time]      // st0 : time
+               fmul dword ptr [const_time]     // st0 = st0 * 0.001f
+               fstp dword ptr [shaderVar.x]    // shaderVar.x = time * 0.001f
+               mov eax, dword ptr [MMTime.u.sample]
+               cdq
+               sub eax, SAMPLES_PER_TICK*8
+               jae not_first_drum
+               xor eax,eax
+            not_first_drum:
+               idiv dword ptr [SAMPLES_PER_DRUMS]   // eax = drumStep , edx = remainder step
+               mov dword ptr [drum_step], eax
+               fild dword ptr [drum_step]
+               fstp dword ptr [shaderVar.z]    // shaderVar.z = drumStep
+               
+            not_end: cmp byte ptr [eax + drum_flags],0
+               jne no_boom
+            
+               mov eax, SAMPLES_PER_TICK*4
+               sub eax,edx
+               jae boom_ok
+               xor eax,eax
+            boom_ok:
+               mov dword ptr [shaderVar.y],eax
+               fild dword ptr [shaderVar.y]
+               fidiv dword ptr [SAMPLES_PER_DROP_DRUMS] // st0 : boom
+               fild dword ptr [SMOOTHSTEP_FACTOR]   // st0: 3, st1-4 = boom
+               fsub st(0),st(1)       // st0 : 3 - boom , st1-3 = boom
+               fsub st(0),st(1)       // st0 : 3 - boom*2, st1-2 = boom
+               fmul st(0),st(1)       // st0 : boom * (3-boom*2), st1 = boom
+               fmulp st(1),st(0)
+               fstp dword ptr [shaderVar.y]
+            no_boom:
+              };
+            </code></pre>
+            <br />That was smaller then what I was able to do with pure 4klang sync... with the drawback that the sync was probably too simplistic... but I couldn't afford more code for the sync... so...<br /><br />
+            <h3>Final mixing</h3>
+            <br />
+            <div class="separator" style="clear: both; text-align: center;"><a href="http://1.bp.blogspot.com/_dv_YkYWn3HA/THWLFJzRjwI/AAAAAAAADAE/n_iz0MZ5CoU/s1600/ergon+2010-03-11+23-34-41-70.jpg" imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img border="0" src="http://1.bp.blogspot.com/_dv_YkYWn3HA/THWLFJzRjwI/AAAAAAAADAE/n_iz0MZ5CoU/s320/ergon+2010-03-11+23-34-41-70.jpg" /></a></div>
+            Once the music was almost finished, I spent a couple of days to work on the transitions, sync, camera movements. Because It was not possible to fit the 4 scenes, I had to mix the scene 3 (the raptor) and 4 (the snake and the lava sea), found a way to put a transition through a "central brain". Ulrick wanted to put a different music style for the transition, I was not confident with it... until I put the transition in action, letting the brain collapsed while the space under it was digging all around... and the music was fitting very well! cool!<br /><br /><br />I did also use a simple big shader for the whole intro, with some if (time &lt; x) then scene_1 else scene_2...etc. I didn't expect to do this, because this is hurting the performance in the pixel shader to do this kind of branch processing...   But I was really running out of space here and the only solution was in fact to use a single shader with some repetitive code.  Here is an excerpt from the shader code : You can see how scene and camera management has been done, as well as for lights. This part was compressing quite well due to its repetitive pattern.  <br />
+            <pre class="language-hlsl"><code>// -------------------------------------------------------------------------
+            
+            // t3
+            
+            // Helper function to rotate a vector. Usage :
+            
+            // t3(mypoint.xz, .7);  &lt;= rotate mypoint around Y axis with .7 radians
+            // -------------------------------------------------------------------------
+            float2 t3(inout float2 x,float y){
+             return x=x*cos(y)+sin(y)*float2(-x.y,x.x);
+            }
+            
+            // -------------------------------------------------------------------------
+            // v : main raymarching function
+            // -------------------------------------------------------------------------
+            float4 v(float2 x:texcoord):color{ 
+             float a=1,b=0,c=0,d=0,e=0,f=0,i; 
+             float3 n,o,p,q,r,s,t=0,y;
+             int w;
+             r=normalize(float3(x.x*1.25,-x.y,1));     // ray
+             x = float2(.001,0);          // epsilon factor
+             
+             // Scene management
+             if (z.z&lt;39) {
+              w = (z.z&lt;10)?0:(z.z&gt;26)?3+int(fmod(z.z,5)):int(fmod(z.z,3));
+            
+              //w=4;
+              if (w==0) { p=float3(12,5+30*smoothstep(16,0,z.x),0);t3(r.yz,1.1*smoothstep(16,0,z.x));t3(r.xz,1.54); }
+              if (w==1) { p=float3(-13,4,-8);t3(r.yz,.2);t3(r.xz,-.5);t3(r.xy,sin(z.x/3)/3); }
+              if (w==2) { p=float3(0,8.5,-5);t3(r.yz,.2);t3(r.xy,sin(z.x/3)/5); }
+              if (w==3) {
+               p=float3(13+sin(z.x/5)*3,10+3*sin(z.x/2),0); 
+               t3(r.yz, sin(z.x/5)*.6);
+               t3(r.xz, 1.54+z.x/5);
+               t3(r.xy, cos(z.x/10)/3);
+               t3(p.xz,z.x/5);
+              }
+            
+              if (w == 4) {
+               p=float3(30+sin(z.x/5)*3,8,0);
+               t3(r.yz, sin(z.x/5)/5);
+               t3(r.xz, 1.54+z.x/3);
+               t3(r.xy, sin(z.x/10)/3);
+               t3(p.xz,z.x/3);
+              } 
+            
+              if (w &gt; 4) {
+               p=float3(4.5,25+10*sin(z.x/3),0);
+               t3(r.yz, 1.54*sin(z.x/5));
+               t3(r.xz, .7+z.x/2);
+               t3(r.xy, sin(z.x/10)/3);
+               t3(p.xz,z.x/2);
+              }  
+             } else if (z.z&lt;52) {
+              p=float3(20,20,0);
+              t3(r.yz, .9);
+              t3(r.xz, 1.54+z.x/4);  
+              t3(p.xz,z.x/4);
+             } else if (z.z&lt;81) {
+              w = int(fmod(z.z,3));
+              if (w==0 ) {
+               p=float3(40+sin(z.x/5)*3,8,0);
+               t3(r.yz, sin(z.x/5)/5);
+               t3(r.xz, 1.54+z.x/3);
+               t3(r.xy, sin(z.x/10)/3);
+               t3(p.xz,z.x/3);
+              }
+              if (w==1 ) {
+               p=float3(-10,30,0);
+               t3(r.yz, 1.1);
+               t3(r.xz, z.x/4);  
+              }
+              if (w==2 ) {
+               p=float3(25+sin(z.x/5)*3,10+3*sin(z.x/2),0); 
+               t3(r.yz, sin(z.x/5)/2);
+               t3(r.xz, 1.54+z.x/5);
+               t3(r.xy, cos(z.x/10)/3);
+               t3(p.xz,z.x/5);   
+              }
+             } else { 
+              p=float3(0,4,8);
+              t3(r.yz,sin(z.x/5)/5);
+              t3(r.xy,cos(z.x/4)/2);
+              t3(r.xz,-1.54+smoothstep(0,4,z.x-155)*(z.x-155)/3);
+             }
+            
+             
+             // Boom effect on camera
+             p.x+=z.y*sin(111*z.x)/4;
+             
+             // Lights 
+             static float4 l[6] = {{.7,.2,0,2},{.7,0,0,3},{.02,.05,.2,7},
+             {(4+10*step(24,z.z))*cos(z.x/5),-5,(4+10*step(24,z.z))*sin(z.x/5),0},
+             {-30+5*sin(z.x/2),8,6+10*sin(z.x/2),0},
+             {25,25,10,0}
+             };
+            </code></pre>
+            <br />
+            <h3 id="statistics">Compression statistics</h3>
+            <br />Final compression results are given in the following table:<br /><br />
+            <div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/_dv_YkYWn3HA/THV_VxFZEEI/AAAAAAAAC_8/XiL7HMgonv0/s1600/ergon_compression_results.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" height="262" src="http://4.bp.blogspot.com/_dv_YkYWn3HA/THV_VxFZEEI/AAAAAAAAC_8/XiL7HMgonv0/s640/ergon_compression_results.png" width="640" /></a></div>
+            <br />So to summarize, total exe size is 4070 bytes, and is composed of :<br />
+            <ul>
+               <li>Synth code + music data is taking around 35% of the total exe size = 1461 bytes</li>
+               <li>Shader code is taking 36% = 1467 bytes</li>
+               <li>Main code + non shader data is 14% = 549 bytes</li>
+               <li>PE + crinkler decoder + crinkler import is 15% = 593 bytes</li>
+            </ul>
+            <br /><br />The intro was finished around the 13 march 2010, well ahead BP2010. So that was damn cool... I spent the rest of my time until BP2010 to try to develop a procedural 4k gfx, using D3D11 compute shaders, raymarching and a Global Illumination algorithm... but the results (algo finished during the party) disappointed me... And when I saw the fantastic <a href="http://pouet.net/prod.php?which=54544">Burj Babil by Psycho</a>, he was right about using a plain raymarcher without any complicated true light management... a good "basic" raymarching algo, with some tone mapping finetune was much more relevant here!<br /><br />Anyway, my GI experiment on the compute shader will probably deserve an article here.<br /><br />
+            <hr />
+            <br />
+            <div class="separator" style="clear: both; text-align: center;"><a href="http://2.bp.blogspot.com/_dv_YkYWn3HA/THUZCSP15JI/AAAAAAAAC_0/W0O8RFBzoTg/s1600/ergon+2010-03-11+23-35-46-40.jpg" imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img border="0" src="http://2.bp.blogspot.com/_dv_YkYWn3HA/THUZCSP15JI/AAAAAAAAC_0/W0O8RFBzoTg/s320/ergon+2010-03-11+23-35-46-40.jpg" /></a></div>
+            I really enjoyed to make this demo and to see that ergon was able to make it in the top 3... after seeing BP2009, I was not expecting at all the intro to be in the top 3!... although I know that the competition this year was far much easier than the previous BP!<br /><br />Anyway, that was nice to work with my friend ulrick... and to contribute to the demoscene with this prod. I hope that I will be able to keep on working on the demos like this... I still have lots of things to learn, and that's cool!
+            
+      
+          </div>
+        </article>
+      </div>
+      <div class="col-sm-3">
+        <nav class="js-toc toc sticky-top"></nav>
+      </div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

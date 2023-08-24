@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.5.0.0">
+    <title>Dynamic audio synthesis with Silverlight 3 | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Dynamic audio synthesis with Silverlight 3 | xoofx">
+    <meta name="twitter:description" content="xoofx website">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Dynamic audio synthesis with Silverlight 3 | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+      <div class="col-sm-9 js-toc-content">
+        <p id="lunet-results"></p>
+        <article class="page">
+          <div class="title">
+      		  <h1 class="title"><a href="/blog/2009/12/23/dynamic-audio-synthesis-with.html">Dynamic audio synthesis with Silverlight 3</a></h1>
+      		
+          </div>
+          <div class="entry-content">
+          <div class="blog-post-meta">
+            <span class="fa fa-calendar"></span>
+            <span class="date"><time datetime="2009-12-23" itemprop="datePublished">December 23, 2009</time></span>
+            
+        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-12-24-dynamic-audio-synthesis-with.html">edit</a>
+          </div>
+            
+            
+            While WebGL is going to be something really cool for some online demomaking (although i would be happy to have an equivalent under Silverlight), it seems that audio is going to be a bit more limited.<br />Few months ago, Iwas very excited about a new feature in Silverlight 3.0 : dynamic raw audio access. That was something I was <a href="http://forums.xna.com/forums/t/4076.aspx">asking (with others) </a>to the XNA team, but they sadly rejected totally such a feature request. Hopefully, Silverlight was more listening to its community and they brought this feature. Notice that this is the first time we have such an access under .NET. You don't have this under the normal .NET Framework, what a shame!<br />At that time, the dynamic raw audio access in the <a href="http://forums.silverlight.net/forums/p/82270/192781.aspx">Silverlight beta had a bad latency</a>... but they solved this issue and believe it or not, it's working GREAT.<br /><br />It's now possible to achieve a latency as low as 20 to 30ms, although that might not be sufficient for a professional audio system, that's already really cool to have it on a browser.<br /><br />I did a very small experiment with just a plain cosinus to output some dynamic sound and the result is quite cool, under 7ko in xap archive (push the button and move the slider)<br /><iframe src="http://rmasm.net/code4k/SilverSynth/index.html" frameborder="0" width="400" height="300" scrolling="no"></iframe><br /><br />You can download the <a href="http://rmasm.net/code4k/SilverSynth/SilverSynth.7z">Visual Studio C# Project here</a>.
+          </div>
+        </article>
+      </div>
+      <div class="col-sm-3">
+        <nav class="js-toc toc sticky-top"></nav>
+      </div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

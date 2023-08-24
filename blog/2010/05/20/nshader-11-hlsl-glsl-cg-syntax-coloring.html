@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.5.0.0">
+    <title>NShader 1.1, hlsl, glsl, cg syntax coloring for Visual Studio 2008 & 2010 | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="NShader 1.1, hlsl, glsl, cg syntax coloring for Visual Studio 2008 & 2010 | xoofx">
+    <meta name="twitter:description" content="xoofx website">
+    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="NShader 1.1, hlsl, glsl, cg syntax coloring for Visual Studio 2008 & 2010 | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md navbar-light w-100">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ml-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+      </nav>
+    </div>
+    <div class="row">
+      
+      <div class="col-sm-9 js-toc-content">
+        <p id="lunet-results"></p>
+        <article class="page">
+          <div class="title">
+      		  <h1 class="title"><a href="/blog/2010/05/20/nshader-11-hlsl-glsl-cg-syntax-coloring.html">NShader 1.1, hlsl, glsl, cg syntax coloring for Visual Studio 2008 & 2010</a></h1>
+      		
+          </div>
+          <div class="entry-content">
+          <div class="blog-post-meta">
+            <span class="fa fa-calendar"></span>
+            <span class="date"><time datetime="2010-05-20" itemprop="datePublished">May 20, 2010</time></span>
+            <i class="fa fa-tags"></i><a href="/blog/tag/tools/">Tools</a>, <a href="/blog/tag/hlsl/">hlsl</a>, <a href="/blog/tag/visual-studio/">Visual Studio</a>, <a href="/blog/tag/nshader/">nshader</a>
+        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2010/2010-05-20-nshader-11-hlsl-glsl-cg-syntax-coloring.html">edit</a>
+          </div>
+            
+            
+            I have recently released <a href="http://nshader.codeplex.com/">NShader</a> 1.1 which adds support for Visual Studio 2010 as well as bugfixes for hlsl/glsl syntax highlighting.<br /><br />While this plugin is quite cool to add a basic syntax highlighting for shader languages, It lacks intellisense/completion/error markers to improve the editor experience. I didn't have time to add such a functionality in this release as... I don't really have too much time dedicated to this project... and well, I have so much to learn from effectively practicing a lot more shader languages that I'm fine with this basic syntax highlighting! ;) Is it a huge task to add intellisense? It depends, but concretely, I need to implement for each shading language a full grammar/lexer parser in order to provide a reliable intellisense. Of course, a very basic intellisense would be feasible without this, but I would rather not to use an annoying/unreliable intellisense popup.<br /><a name='more'></a><br />Although, I did some research about existing lexers for shading languages, surprisingly, this is not something you can find easily. For hlsl for example, afaik, there is no bnf grammar published by Microsoft, so If you want to do it yourself, you need to go through the whole HLSL reference documentation and compile yourself a bnf... and that's something I can't afford in my spare time. One could argue that there are some startup code available on the net (<a href="http://src.chromium.org/svn/trunk/src/o3d/compiler/technique/Technique.g3pl">O3D from google</a> has an antlr parser/lexer, or a relative simpler <a href="http://code.google.com/p/schladetsch/source/browse/trunk/Effects/Tools/EffectTranslator/Grammars/Shader.g">one from Christian Schladetsch</a>), agree with that, but well... It still ask a bit more time to patch them, add support for SM5.0, handle correctly preprocessor directives... and so on... After that, I need to integrate it through the language service API, not the worst part. Anyway, If someone is motivated to help me on this, we could come with something. We will follow also if <a href="http://forums.xna.com/forums/p/7908/318939.aspx">Intelishade is able to resurrect in an open source way</a>... a joint venture would be interesting. <br /><br />Also, what's my feedback about migrating VS2008 language service to VS2010? Well, It was pretty straightforward! I did follow the sdk instructions about "<a href="http://msdn.microsoft.com/en-us/library/dd885475%28VS.100%29.aspx">Migrating a Legacy Language Service</a>" but It was not fully working as expected. In fact, the only remaining problem was that the <a href="http://social.msdn.microsoft.com/Forums/en-US/vsx/thread/b7ff2dfb-a391-46ee-9f52-862b9b4c9e77">WSIX VS2001 installer didn't register automatically the NShader Language Service</a>. I was forced to add manually the pkgdef file (containing registry update for the language service) to the vsix archive. While I was working on the migration to VS2010, I had a look at the new <a href="http://msdn.microsoft.com/en-us/library/dd885242.aspx">extensibility framework </a>and was surprised to see that the new framework is by far much easier to implement in VS2010. Although, I didn't take the time to migrate NShader to use this new framework, It seems to be pretty easy... also nice thing is that they did provide a compatibility layer for legacy Language Service, so I didn't bother with the new api. But If I had to write a new plugin for VS, I would definitely use the new API, although It would only work with VS2010+ versions...<br /><br />One small recurrent disappointment : Visual Studio is still restricting to provide plugins for Express editions. From a "commercial point of view", I understand this restriction, although for the thousands (million maybe?) of people using express edition, this is a huge lack of functionality.I'm sure that allowing community plugins into Express Editions would in fact improve a lot more Visual Studio adoption.<br /><br />My next post should be about the making of <a href="http://pouet.net/prod.php?which=54529">Ergon at BP2010</a>. I have a couple of things to share about it, but I'm quite lazy at that time to write this post... but It's on the way! ;)
+          </div>
+        </article>
+      </div>
+      <div class="col-sm-3">
+        <nav class="js-toc toc sticky-top"></nav>
+      </div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

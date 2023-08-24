@@ -4,14 +4,14 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.4.2.0">
+    <meta name="generator" content="lunet 0.5.0.0">
     <title>Migration to Jekyll | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Migration to Jekyll | xoofx">
-    <meta name="twitter:description" content="Late to the party, but I finally took the time to migrate my previous blog code4k to github using Jekyll which is a static blog generator. I simply wanted to have a full and easy control of my website without relying on a laborious php+mysql setup (which always require site backups, MySql backups, PHP updates, CMS updates... etc.) While looking for a proper solution (and reading an excellent tribute to...">
+    <meta name="twitter:description" content="xoofx website">
     <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Migration to Jekyll | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
@@ -42,36 +42,36 @@
     </div>
     <div class="row">
       
-<div class="col-sm-9 js-toc-content">
-  <p id="lunet-results"></p>
-  <article class="page">
-    <div class="title">
-		  <h1 class="title"><a href="/blog/2015/06/15/migration-to-jekyll/">Migration to Jekyll</a></h1>
-		
-    </div>
-    <div class="entry-content">
-    <div class="blog-post-meta">
-      <span class="fa fa-calendar"></span>
-      <span class="date"><time datetime="2015-06-15" itemprop="datePublished">June 15, 2015</time></span>
-      <i class="fa fa-tag"></i><a href="/blog/tag/jekyll/">jekyll</a>
-  	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2015/2015-06-15-migration-to-jekyll.md">edit</a>
-    </div>
-      <p>Late to the party, but I finally took the time to migrate my previous blog <a href="http://code4k.blogspot.com">code4k</a> to <a href="https://github.com/xoofx/xoofx.github.io">github</a> using <a href="http://jekyllrb.com/">Jekyll</a> which is a static blog generator.</p>
-<p>I simply wanted to have a full and easy control of my website without relying on a laborious php+mysql setup (which always require site backups, MySql backups, PHP updates, CMS updates... etc.)</p>
-<p>While looking for a proper solution (and reading <a href="https://developmentseed.org/blog/2012/07/27/build-cms-free-websites/">an excellent tribute to static website generator</a>), I discovered that Jekyll is natively supported by <a href="https://pages.github.com/">github pages</a>, meaning that It is possible to host a web site on github pages while github takes care of generating the static site on their side, so that I don't have to push 2 repositories (the templated site and the generated static site)</p>
-<p>I was a little reluctant about using Jekyll on Windows, as it is a Ruby program often relying on some native plugins, but I followed the tutorial &quot;<a href="http://jekyll-windows.juthilo.com/">Running Jekyll on Windows</a>&quot; without any troubles. Before, I started to test it with Docker, but realized that in the end the Windows install was easier and more up-to-date.</p>
-<p>After this, you just need to install the <a href="https://github.com/github/pages-gem">github-pages gems</a>, and then type <code>jekyll serve</code> in a command prompt to test and browse the website on the local machine, easy!</p>
-<p>I have been inspired by the setup of the blog of <a href="http://haacked.com/">Phil Haack</a>. Also as github pages doesn't support archive by tags (because they usually require Jekyll plugins), I have slightly forked the idea for tags from &quot;<a href="http://www.minddust.com/post/tags-and-categories-on-github-pages/">Tags and Categories on github pages</a>&quot; and make it a bit more automatic so that I have archive by tags running on github pages. The hack was to code a very simple plugin that generates tag pages, but instead of generating them in the output site (the generated site, as most of the other plugins I have seen do), it generates the pages on the original/templated site so that I can commit them along my repository.</p>
-<p>It took me a bit of time to port my previous blog to Jekyll, as I had to fix manually some URLs. I had also to setup proper css handling...etc. but so far very happy with the changes.
-Now, whenever possible, I can finally enjoy typing my posts in markdown using my favorite markdown editor <a href="http://markdownpad.com/">MarkdownPad</a>! and use git workflow to push my changes (like writing drafts in a branch). You can even edit these pages and contribute back to them to fix all the typos all around! ;)</p>
-<p>At least, I hope that I will be quicker at updating this blog, so many things to share, so little done so far!</p>
-
-    </div>
-  </article>
-</div>
-<div class="col-sm-3">
-  <nav class="js-toc toc sticky-top"></nav>
-</div>
+      <div class="col-sm-9 js-toc-content">
+        <p id="lunet-results"></p>
+        <article class="page">
+          <div class="title">
+      		  <h1 class="title"><a href="/blog/2015/06/15/migration-to-jekyll/">Migration to Jekyll</a></h1>
+      		
+          </div>
+          <div class="entry-content">
+          <div class="blog-post-meta">
+            <span class="fa fa-calendar"></span>
+            <span class="date"><time datetime="2015-06-15" itemprop="datePublished">June 15, 2015</time></span>
+            <i class="fa fa-tag"></i><a href="/blog/tag/jekyll/">jekyll</a>
+        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2015/2015-06-15-migration-to-jekyll.md">edit</a>
+          </div>
+            <p>Late to the party, but I finally took the time to migrate my previous blog <a href="http://code4k.blogspot.com">code4k</a> to <a href="https://github.com/xoofx/xoofx.github.io">github</a> using <a href="http://jekyllrb.com/">Jekyll</a> which is a static blog generator.</p>
+            <p>I simply wanted to have a full and easy control of my website without relying on a laborious php+mysql setup (which always require site backups, MySql backups, PHP updates, CMS updates... etc.)</p>
+            <p>While looking for a proper solution (and reading <a href="https://developmentseed.org/blog/2012/07/27/build-cms-free-websites/">an excellent tribute to static website generator</a>), I discovered that Jekyll is natively supported by <a href="https://pages.github.com/">github pages</a>, meaning that It is possible to host a web site on github pages while github takes care of generating the static site on their side, so that I don't have to push 2 repositories (the templated site and the generated static site)</p>
+            <p>I was a little reluctant about using Jekyll on Windows, as it is a Ruby program often relying on some native plugins, but I followed the tutorial &quot;<a href="http://jekyll-windows.juthilo.com/">Running Jekyll on Windows</a>&quot; without any troubles. Before, I started to test it with Docker, but realized that in the end the Windows install was easier and more up-to-date.</p>
+            <p>After this, you just need to install the <a href="https://github.com/github/pages-gem">github-pages gems</a>, and then type <code>jekyll serve</code> in a command prompt to test and browse the website on the local machine, easy!</p>
+            <p>I have been inspired by the setup of the blog of <a href="http://haacked.com/">Phil Haack</a>. Also as github pages doesn't support archive by tags (because they usually require Jekyll plugins), I have slightly forked the idea for tags from &quot;<a href="http://www.minddust.com/post/tags-and-categories-on-github-pages/">Tags and Categories on github pages</a>&quot; and make it a bit more automatic so that I have archive by tags running on github pages. The hack was to code a very simple plugin that generates tag pages, but instead of generating them in the output site (the generated site, as most of the other plugins I have seen do), it generates the pages on the original/templated site so that I can commit them along my repository.</p>
+            <p>It took me a bit of time to port my previous blog to Jekyll, as I had to fix manually some URLs. I had also to setup proper css handling...etc. but so far very happy with the changes.
+            Now, whenever possible, I can finally enjoy typing my posts in markdown using my favorite markdown editor <a href="http://markdownpad.com/">MarkdownPad</a>! and use git workflow to push my changes (like writing drafts in a branch). You can even edit these pages and contribute back to them to fix all the typos all around! ;)</p>
+            <p>At least, I hope that I will be quicker at updating this blog, so many things to share, so little done so far!</p>
+      
+          </div>
+        </article>
+      </div>
+      <div class="col-sm-3">
+        <nav class="js-toc toc sticky-top"></nav>
+      </div>
     </div>
   </div>
 	<footer class="blog-footer">

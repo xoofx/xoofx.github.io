@@ -22,27 +22,22 @@ end
 
 # Resources bundle
 with bundle
-    fontawesome = resource "npm:font-awesome" "4.7.0"
-    jquery = resource "npm:jquery" "3.5.1"
-    popperjs = resource "npm:popper.js" "1.16.1"
-    bootstrap = resource "npm:bootstrap" "4.5.0"
-    tocbot = resource "npm:tocbot" "4.12.0"
-    anchorjs = resource "npm:anchor-js" "4.2.2"
-    prismjs = resource "npm:prismjs" "1.20.0"
-
-    scss.includes.add bootstrap.path + "/scss"
-    scss.includes.add fontawesome.path + "/scss"
+    bootstrap = resource "npm:bootstrap" "5.3.1"
+    bootstrap_icons = resource "npm:bootstrap-icons" "1.10.5"
+    tocbot = resource "npm:tocbot" "4.21.1"
+    anchorjs = resource "npm:anchor-js" "5.0.0"
+    prismjs = resource "npm:prismjs" "1.29.0"
 
     # css files
     css tocbot "/dist/tocbot.css"
+    css bootstrap_icons "/font/bootstrap-icons.min.css"
+    css bootstrap "/dist/css/bootstrap.min.css"
     css "/css/prism.css"
-    css "/css/main.scss"
+    css "/css/main.css"
 
     # js files
-    js jquery "/dist/jquery.min.js"
-    js popperjs "/dist/umd/popper.min.js"
     js anchorjs "/anchor.min.js"
-    js bootstrap "/dist/js/bootstrap.min.js"
+    js bootstrap "/dist/js/bootstrap.bundle.min.js"
     js tocbot "/dist/tocbot.min.js"
     js prismjs "/prism.js"
     js prismjs "/components/prism-shell-session.min.js"
@@ -56,7 +51,7 @@ with bundle
     js "/js/xoofx.js"
     
     # copy font files
-    content fontawesome "/fonts/fontawesome-webfont.*" "/fonts/"
+    content bootstrap_icons "/font/fonts/bootstrap-icons.*" "/css/fonts/"
 
     # concatenate css/js files
     concat = true
@@ -73,12 +68,17 @@ with builtins
     # render tags from a post
     func render_tags(post)    
         if !post.tags; ret null; end;            
-        result = post.tags.size == 1 ? '<i class="fa fa-tag"></i>' : '<i class="fa fa-tags"></i>'
+        result = post.tags.size == 1 ? '<i class="bi bi-tag"></i>' : '<i class="bi bi-tags"></i>'
         for tag in post.tags
             result = result + (for.first?'':', ') + '<a href="' + site.taxonomies["tags"].terms[tag].url + '">' + tag + '</a>'
         end
         ret result
     end
+end
+
+with markdown
+    # Use Bootstrap img_fluid for all Markdown image links
+    options.css_img_attr = "img-fluid"
 end
 
 with taxonomies

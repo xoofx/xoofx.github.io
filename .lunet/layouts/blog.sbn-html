@@ -10,12 +10,12 @@ layout: base
     </div>
     <div class="entry-content">
     <div class="blog-post-meta">
-      <span class="fa fa-calendar"></span>
+      <span class="bi bi-calendar"></span>
       <span class="date"><time datetime="{{ page.date | date.to_string '%Y-%m-%d' }}" itemprop="datePublished">{{ page.date | date.to_string "%B %e, %Y" }}</time></span>
       {{ render_tags page }}
-  	  <span class="fa fa-edit"></span> <a href="{{ site.github_repo_url }}edit/master{{ page.path }}">edit</a>
+  	  <span class="bi bi-edit"></span> <a href="{{ site.github_repo_url }}edit/master{{ page.path }}">edit</a>
     </div>
-      {{ content }}
+{{ content }}
     </div>
   </article>
 {{ if page.ghcommentid }}

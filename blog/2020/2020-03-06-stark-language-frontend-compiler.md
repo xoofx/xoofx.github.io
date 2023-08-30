@@ -268,7 +268,7 @@ First, array co-variance is one of the big legacy design decision that is now po
 
 In C#, Arrays are co-variant, meaning that this is possible:
 
-```c#
+```cs
 var array_of_string = new string[] { "a", "b" };
 var array_of_object = (object[])array_of_string;
 array_of_object[0] = 1; // will result in a runtime cast error
@@ -368,7 +368,7 @@ The `FixedArray` type is also a special case for the native compiler. As you can
 
 At the IL level, I had to modify ECMA-335 to introduce a new generic type literal reference and also a new IL opcode to load its value. For instance the property `public func size -> int => tSize` which is returning the `tSize` generic argument is translated at the IL level to a new opcode `ldtarg    !tSize`:
 
-```c#
+```cs
 	// Token: 0x06000035 RID: 53 RVA: 0x0000240B File Offset: 0x0000060B
 	.method public final hidebysig specialname newslot virtual 
 		instance native int get_size () cil managed 

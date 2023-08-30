@@ -24,7 +24,7 @@ So let's have a look at the challenge...
 
 The scalar code of this version is pretty simple:
 
-```C#
+```cs
 static int FindSimple(ReadOnlySpan<int> data, int value)
 {
     for (var i = 0; i < data.Length; i++)
@@ -97,7 +97,7 @@ This is pretty cool because we can translate the previous scalar loop to a vecto
 
 Here is the generic `Vector128<int>` version that is able to process 4 ints per loop:
 
-```c#
+```cs
 static int Find_Generic_128_(ReadOnlySpan<int> data, int value)
 {
     // In theory we should check for Vector128.IsHardwareAccelerated and dispatch
@@ -129,7 +129,7 @@ static int Find_Generic_128_(ReadOnlySpan<int> data, int value)
 
 And the generic `Vector256<int>` version that is able to process 8 ints per loop:
 
-```c#
+```cs
 static int Find_Generic_256_(ReadOnlySpan<int> data, int value)
 {
     // In theory we should check for Vector256.IsHardwareAccelerated and dispatch
@@ -333,7 +333,7 @@ G_M000_IG05:                ;; offset=0060H
 and this code is actually associated with the following C# code:
 
 
-```c#
+```cs
         // Will generate stack spilling!
         for (var k = 0; k < vectorLength; k++)
             if (result.GetElement(k) != 0)
@@ -346,7 +346,7 @@ The stack spilling is not that terrible because this code only runs once we have
 
 Ok, so let's optimize the SIMD version with some unsafe tricks, MOAR SIMD per loop and CPU specific intrinsics:
 
-```C#
+```cs
 public static int Find_AVX_256_Optimized(ReadOnlySpan<int> data, int value)
 {
     // Our data cursor
@@ -548,7 +548,7 @@ Let's have a look at them.
 
 Firstly, we are going to use a `ref` data cursor instead of accessing the `ReadOnlySpan<int>`, this is done with the first instruction:
 
-```c#
+```cs
     // Our data cursor
     ref var pv = ref MemoryMarshal.GetReference(data);
 ```
@@ -557,7 +557,7 @@ The benefit of doing this is that it will remove all bounds checks that you can 
 
 You might then wonder how do we advance a `ref`? Simply by using the [`Unsafe.Add<T>(ref T, nint elementOffset)`](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.unsafe.add?view=net-7.0#system-runtime-compilerservices-unsafe-add-1(-0@-system-intptr)) method! (and other related methods):
 
-```c#
+```cs
 // Load a Vector256<int> from a ref int at the index i + Vector256<int>.Count * 3
 // equivalent of:
 // Unsafe.As<int, Vector256<int>>(ref data[i + Vector256<int>.Count * 3])
@@ -598,7 +598,7 @@ So, we are breaking our code into 3 loops, from a coarser batch to a scalar loop
 
 Another trick is to minimize the computation when we haven't found an item, even in the case of the `4` x `Vector256<int>`. The trick here is to generate a single branch for checking if we have a match by `OR|`ing the `4` comparisons and only check the result of the `OR|`ing:
 
-```c#
+```cs
         var r1 = Vector256.Equals(Unsafe.As<int, Vector256<int>>(ref Unsafe.Add(ref pv, i)), compareValue);
         var r2 = Vector256.Equals(Unsafe.As<int, Vector256<int>>(ref Unsafe.Add(ref pv, i + Vector256<int>.Count)), compareValue);
         var r3 = Vector256.Equals(Unsafe.As<int, Vector256<int>>(ref Unsafe.Add(ref pv, i + Vector256<int>.Count * 2)), compareValue);
@@ -639,7 +639,7 @@ Now, how can we avoid the stack spilling by not using `Vector256<T>.GetElement(i
 
 For the first `4` x `Vector256<int>` batch, we are using the following code to compute the index of the first element found without using any branches:
 
-```c#
+```cs
 if (r5 != Vector256<int>.Zero)
 {
     // r12 = pack 32 to 16 of r1/r2
@@ -672,7 +672,7 @@ So we have `4` x `Vector256<int>` registers in `r1`, `r2`, `r3`, `r4`, and what 
 
 I'm always using the [Intel Intrinsics Guide](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html) to look at these functions. If you look at the comment of the functions, you will see the CPU instruction name `VPERM2I128`:
 
-```c#
+```cs
     /// <summary>
     ///   <para>__m256i _mm256_permute2x128_si256 (__m256i a, __m256i b, const int imm8)</para>
     ///   <para>VPERM2I128 ymm, ymm, ymm/m256, imm8</para>
@@ -712,7 +712,7 @@ dst[MAX:256] := 0
 
 So we are using it like this:
 
-```c#
+```cs
     var t = Avx2.Permute2x128(r1, r2, 0b_0010_0000);
     r2 = Avx2.Permute2x128(r1, r2, 0b_0011_0001);
     r1 = t;
@@ -777,7 +777,7 @@ We can then extract the local position within these 32 bytes by using `BitOperat
 
 But as suggested by Nietras [here](https://mastodon.social/@nietras/110686107948948524), instead of performing the permutation before the `PackSignedSaturate` we could do it after the packing and save 1 permutation per pack, which is quite nice!:
 
-```c#
+```cs
 if (r5 != Vector256<int>.Zero)
 {
     // r12 = pack 32 to 16 of r1/r2

@@ -3,9 +3,10 @@ layout: _default
 ---
   <div class="container">
     <div class="row">
-      <nav class="navbar navbar-expand-md navbar-light w-100">
+      <nav class="navbar navbar-expand-md">
+        <div class="container-fluid">
             <a class="xoofx-logo navbar-brand" href="/"></a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
             <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
@@ -13,13 +14,14 @@ layout: _default
                     depth: 1,
                     kind: "nav",
                     list_class: "w-100"
-                } 
+                }
             ~}}
             </div>            
+        </div>
       </nav>
     </div>
     <div class="row">
-      {{ content }}
+{{ content }}
     </div>
   </div>
 	<footer class="blog-footer">

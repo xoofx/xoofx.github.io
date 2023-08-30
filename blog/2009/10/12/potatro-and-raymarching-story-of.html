@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.5.0.0">
+    <meta name="generator" content="lunet 0.5.3.0">
     <title>Potatro, RayMarching and DistanceFields : a story of SphereTracing | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
@@ -21,9 +21,10 @@
 
   <div class="container">
     <div class="row">
-      <nav class="navbar navbar-expand-md navbar-light w-100">
+      <nav class="navbar navbar-expand-md">
+        <div class="container-fluid">
             <a class="xoofx-logo navbar-brand" href="/"></a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
             <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
@@ -34,259 +35,260 @@
     <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
   <li class='nav-item '>
     <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
-  <li class='nav-item  ml-auto'>
+  <li class='nav-item  ms-auto'>
     <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
 </ol>
             </div>            
+        </div>
       </nav>
     </div>
     <div class="row">
-      
-      <div class="col-sm-9 js-toc-content">
-        <p id="lunet-results"></p>
-        <article class="page">
-          <div class="title">
-      		  <h1 class="title"><a href="/blog/2009/10/12/potatro-and-raymarching-story-of.html">Potatro, RayMarching and DistanceFields : a story of SphereTracing</a></h1>
-      		
-          </div>
-          <div class="entry-content">
-          <div class="blog-post-meta">
-            <span class="fa fa-calendar"></span>
-            <span class="date"><time datetime="2009-10-12" itemprop="datePublished">October 12, 2009</time></span>
-            <i class="fa fa-tags"></i><a href="/blog/tag/raymarching/">RayMarching</a>, <a href="/blog/tag/spheretracing/">SphereTracing</a>, <a href="/blog/tag/demoscene/">demoscene</a>
-        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-10-13-potatro-and-raymarching-story-of.html">edit</a>
-          </div>
-            
-            
-            <div class="separator" style="clear: both; text-align: center;"><a href="http://www.frequency.fr/" imageanchor="1"
-                    style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;" target="_blank"><img border="0"
-                        height="150" src="http://www.frequency.fr/images/stories/productions/potatro.jpg" width="200" /></a><br />
-            </div>The "Raymarching + Distancefields" is the technique which was most notably used in the majority of 4k intros
-            released in 2009 (and still will have probably a strong influence in 2010). Within Frequency, xt95 introduced this
-            technique thanks to the <a href="http://iquilezles.org/www/material/nvscene2008/nvscene2008.htm">fantastic work of iq
-            </a>and <a href="http://pouet.net/prod.php?which=52974">Systemkit</a>. When wullon asked Frequency to build a little
-            intro to announce the construction of the <a href="http://demoscene.fr/">demoscene.fr</a> web site, xt95 produced a
-            promising first draft of the <a href="http://pouet.net/prod.php?which=53476">Potratro </a>from which i could work to
-            improve the overall design, the "isos" forms and the scenes. Yet I had not taken the time to understand the principle of
-            RayMarching + DistanceFields, even if it did not seem to be totally abscond.<br /><br />Back from the <a
-                href="http://www.mainparty.net/">#main 2009</a>, while i looked at the BBS pouet, I came across the following
-            thread: "<a href="http://pouet.net/topic.php?which=6675&amp;page=1&amp;x=30&amp;y=3">So, what do remote field equations
-                look like? And how do we solve them?</a>" . Trivial question, but first answers didn't enlighten me about the basic
-            understanding that i had already, but the main principle was still a bit obscure for me. But Ferris then posted a link
-            to an article by John C. Hart, "<a href="http://graphics.cs.uiuc.edu/%7Ejch/papers/zeno.pdf">Sphere tracing: a geometric
-                method for the antialiased ray tracing of implicit surfaces</a>" in 1996 and iq referred to two articles, a first
-            even older John C. Hart, "<a href="http://graphics.cs.uiuc.edu/%7Ejch/papers/rtqjs.pdf">Ray Tracing Deterministic 3-D
-                Fractals</a>" dating from 1989 and a resumption of the principle in the "<a
-                href="http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter08.html">Chapter 8. Per-Pixel Displacement Mapping
-                with Distance Functions </a>"of the book GPU from NVidia-Gems2 dating from 2004. Browsing the original article by
-            John C. Hart, everything became clear! This article is an attempt to restore you some of the basic principle of
-            RayMarching + DistanceFields, or more explicitly called Sphere Tracing.<br /><br /><a name='more'></a><br />
-            <h3>The general principle</h3>I will not detail the concept of <a
-                href="http://en.wikipedia.org/wiki/Ray_tracing_%28graphics%29">raytracing</a>, but I'll just put in relation with
-            the RayMarching. To make a rendering, raytracing needs to calculate the intersection of the beam of vision with an
-            object in the scene (to extract information from the surface material: diffuse color, refraction, diffraction, etc ....)
-            And Therefore, to calculate formulas of intersections for each object. In the case where an object is modeled by a set
-            of triangles, it requires to calculate the intersection of the ray with each triangle in the scene to determine which
-            object is concerned by the beam. The calculation of intersections is very easy to implement, the formulas are
-            established, so there is no problems, except for performance, since we must compute the intersection of the beam with a
-            substantial number of surfaces (even if there are some way accelerate the division of space through eg K-d
-            Trees).<br /><br />However, when one wants to represent <a href="http://fr.wikipedia.org/wiki/Isosurface">implicit
-                surfaces </a>continuous or discontinuous (also called "Level surface" or "isosurface"), it is much more difficult to
-            calculate this intersection since it would require the calculation of intersection between the equation of surface
-            (Fig.1) and the path of a ray. This calculation would be specific to each equation. Thus, if the principle of a
-            raytracing rendering is based on the intersection of the ray cast with objects in a scene, <b>how to compute efficiently
-                the intersection of the ray with an implicit surfaces?</b><br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMZS-AncI/AAAAAAAACcA/nu-mQkNRxDY/s1600-h/image001.jpg"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMZS-AncI/AAAAAAAACcA/nu-mQkNRxDY/s320/image001.jpg" /></a><br />
-            </div>
-            <div style="text-align: center;">Definition of an implicit surface. Fig.1 (see Wikipedia)<br /></div><br />Before
-            discussing the intersection RayMarching, we make a little reminder to inform our discussion. In the example given of a
-            simple sphere of radius r (origin 0): the algebraic formula is : <br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMbb4Je-I/AAAAAAAACcI/J--22X9RD2U/s1600-h/image002.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMbb4Je-I/AAAAAAAACcI/J--22X9RD2U/s320/image002.gif" /></a><br />
-            </div>Representing as distance, the sphere can be written differently:<br /><br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMcgdMUgI/AAAAAAAACcQ/vC1lGulfg-0/s1600-h/image003.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMcgdMUgI/AAAAAAAACcQ/vC1lGulfg-0/s320/image003.gif" /></a><br />
-            </div><br />To calculate the intersection with sp1 a sphere of radius r1 using RayMarching with a radius of vision
-            behind p1 (x1, y1, z1) and direction v1 (VX1, VY1, VZ1), we will from the origin of the radius (x1, y1, z1), calculate
-            the distance to the surface of the sphere, by substituting the following:<br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMd4Xff5I/AAAAAAAACcY/1r-nbV59GIg/s1600-h/image004.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMd4Xff5I/AAAAAAAACcY/1r-nbV59GIg/s320/image004.gif" /></a><br />
-            </div><br />And with the following properties for d1: <br />
-            <ul>
-                <li>If d1 = 0, then the point (x1, y1, z1) is located exactly on the surface of the sphere </li>
-                <li>If d1 &lt; 0, then the point (x1, y1, z1) is a distance | d1 | inside surface. </li>
-                <li>If d1 &gt; 0, then the point (x1, y1, z1) is a distance | d1 | outside surface. </li>
-            </ul>
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMfxJ2NHI/AAAAAAAACcg/LORAyNp-9_4/s1600-h/image005.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMfxJ2NHI/AAAAAAAACcg/LORAyNp-9_4/s320/image005.gif" /></a><br />
-            </div><br />If d1 &gt; 0, the point p1 is outside the sphere, it suffices to calculate the intersection i1, we have to
-            move from p1 to a distance of d1 in the direction of v1: i1 = p1 + d1v1 <br /><br />In the case of a single sphere, the
-            calculation of intersection using the method of RayMarching is fairly trivial (and not really more interesting than
-            analytical resolution), but if we have a more complex form, we can't determine the intersection at once. Take the
-            example of a second sphere which would be added to the previous scene:<br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMihFYSZI/AAAAAAAACcw/kPhc_F5SNGw/s1600-h/image007.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMihFYSZI/AAAAAAAACcw/kPhc_F5SNGw/s320/image007.gif" /></a><br />
-            </div><br />We want to determine on which sphere (p1, v1) intersects. With a single sphere, we have determined this
-            intersection easily moving p1 to d1.v1. But with another sphere sp2, how can we move forward without colliding with sp2?
-            If we move to d1 without checking, and it is found that sp2 is on the way, we'll skip sp2 and miss the intersection with
-            sp2. <br />However, we know that the distance between p1 and sp2 is :<br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMkl5ppUI/AAAAAAAACdA/oMmhUrIIJyc/s1600-h/image009.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMkl5ppUI/AAAAAAAACdA/oMmhUrIIJyc/s320/image009.gif" /></a><br />
-            </div><br /><br />The trick is to move towards v1 to the minimum distance of all objects in the scene. So we move a step
-            toward the intersection, a step that is equal to minD:<br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMn1Tc-iI/AAAAAAAACdQ/BwO2_SCQseQ/s1600-h/image010.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMn1Tc-iI/AAAAAAAACdQ/BwO2_SCQseQ/s320/image010.gif" /></a><br />
-            </div><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMjs9d10I/AAAAAAAACc4/KQ515hvrpLs/s1600-h/image008.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMjs9d10I/AAAAAAAACc4/KQ515hvrpLs/s320/image008.gif" /></a><br />
-            </div><br />Until minD &gt; 0, it means that we have not yet intersected any object. We can then generalize the march of
-            the ray by:<br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMo_9r04I/AAAAAAAACdY/M44Z0sUOrNA/s1600-h/image011.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMo_9r04I/AAAAAAAACdY/M44Z0sUOrNA/s320/image011.gif" /></a><br />
-            </div><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMpxuI9DI/AAAAAAAACdg/Jv-is4D_WdE/s1600-h/image012.jpg"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMpxuI9DI/AAAAAAAACdg/Jv-is4D_WdE/s320/image012.jpg" /></a><br />
-            </div><br />To explain a little more progress on the radius and the complex interactions with objects, you can download
-            <a href="http://xoofx.com/upload/SphereTracing2DApp.zip">SphereTracing2DApp.zip</a>, a 2D application developed in C #
-            that allows you to view the progress of a radius and the number of steps that must perform before falling on an
-            intersection:<br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMrL0HgEI/AAAAAAAACdo/Xwcz29bGBA0/s1600-h/image013.jpg"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMrL0HgEI/AAAAAAAACdo/Xwcz29bGBA0/s320/image013.jpg" /></a><br />
-            </div>
-            <div style="text-align: center;">A screenshot of <a
-                    href="http://xoofx.com/upload/SphereTracing2DApp.zip">SphereTracing2DApp</a> a C# 2D application to understand
-                SphereTracing <br /></div><br />The white dot in the lower left is the origin of the ray (the camera). The red line
-            is the direction of the ray. The 1st white circle is the minimum distance from the origin with all the objects in the
-            scene (here, the blue rectangle). The ray can therefore move to that distance sphere without encountering a single
-            object. The operation is thus repeated until an object is actually met (or minD &lt; epsilon). The green line tells us
-            which object has been selected from the closest "distance field".<br /><br />We understand now that calculating the
-            intersection of the camera's ray with an iso surface is in fact an incremental approximation of a bounding sphere moving
-            towards the ray-intersection line.<br /><br />
-            <h3>Note on terminology: SphereTracing, RayMarching, DistanceFields...</h3>As we have seen, the algorithm is to move
-            within a distance of a sphere of radius equal to the minimum distance between the origin ray and the surface of all
-            objects in the scene . This technique has been called&nbsp; <b>Sphere Tracing</b> by John.C.Hart. While in the
-            demoscene, iq introduced the term distance fields, but then unfortunately eclipsed the original term which seems to me
-            far more explicit. <br />So when we speak of "Raymarching-Distancefields" we're actually performing a Sphere Tracing!
-            <br /><br />
-            <h3>General algorithm Sphere Tracing</h3>The general algorithm Sphere Tracing is the following: <br />
-            <pre class="language-cpp"><code>
-            ro // r0: original position of the camera
-            v // v: Direction of the camera  
-            d = 0 // d: distance to the object  
-            p = ro // p: Next position the camera  
-            do (  
-                d = iso (r) // Distance to object  
-                p = p + d * v;  
-                step++;  
-            ) while (d &lt; epsilon && step &lt; MAX_STEP)
-            </code></pre>
-            
-            Iso function returns the minimum distance r from the surface of all objects in the scene. In the case of two
-            spheres previous function iso would be like:
-            <br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMsJ2pnOI/AAAAAAAACdw/v_BTIWIYCG4/s1600-h/image014.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMsJ2pnOI/AAAAAAAACdw/v_BTIWIYCG4/s320/image014.gif" /></a><br />
-            </div><br />If no intersection is encountered, the Sphere Tracing is stopped based on a maximum distance zfar p, or by
-            limiting the number of steps (MAX_STEP). <br /><br />
-            <h3>Primitives</h3>The sphere is of course not the only element we can use for modeling a surface iso. As we have seen,
-            any function f (x, y, z) might do the trick (provided that this function returns values that do not introduce too many
-            discontinuities on the surface). Thus, it is easy enough to use other primitives (box, cone, torus...) as described in
-            the article by John C. Hart. <br /><br />
-            <h3>Construction of a complex scene </h3>For 4k intros, it's pretty amazing to see the complexity of scenes that can be
-            made with this system. I have so far spoken of a single sphere. How then build more complex scenes? Using the principle
-            CSG (Constructive Solid Geometry) as shown John.C.Hart, one of the oldest techniques in 3D modeling: it is enough to
-            make "Boolean operations" on iso formulas: intersection, union, complement... etc.. <br />Thus, two objects, each with
-            their respective functions iso d1 and d2, to calculate: <br />
-            <ul>
-                <li>The<b> union of two objects</b> (D1 U D2), just take a min of d1 and d2: iso (p) = min (d1 (p), d2 (p)). </li>
-                <li>The <b>intersection of two objects</b> (D1 n D2), just take the max of d1 and d2: iso (p) = max (d1 (p), d2
-                    (p)). </li>
-                <li>The <b>inverse of an object</b> (-d1), simply reverse the sign iso iso (p) = -d1 (p). </li>
-                <li>The <b>subtraction of two objects</b> (d1-d2) just do an intersection of d1 with the inverse of d2: iso (p) =
-                    max (d1 (p),-d2 (p)) </li>
-            </ul>The translation can be performed just inside the iso formula. For a sphere whose center c (cx, cy, cz) of radius r,
-            the geometric distance of p (x, y, z) is:<br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOM1V_KBZI/AAAAAAAACew/tJAbdq6Qts0/s1600-h/image021.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOM1V_KBZI/AAAAAAAACew/tJAbdq6Qts0/s320/image021.gif" /></a><br />
-            </div><br />As the scale, rotation, twist ... etc.. Example of a twist on the y-axis:<br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOM2T-9KOI/AAAAAAAACe4/JrcZYsRHppA/s1600-h/image022.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOM2T-9KOI/AAAAAAAACe4/JrcZYsRHppA/s320/image022.gif" /></a><br />
-            </div><br />In his presentation NVScene8, iq provides a whole list of other functions: modulo, blending, noise ... etc..
-            Several techniques also use textures3D to apply richer transformations to iso-surfaces (see Clouds Dreams or Rudebox
-            #main 2009). <br /><br />
-            <h3>Reflection, light, etc. ... AO.</h3>Once we got out of the loop Sphere Tracing, if d &lt; epsilon, p is on the
-            surface of the object viewed. To calculate the normal to the surface, we use a gradient in p, we calculate an
-            approximation of the derivative on the surface. Let n (p), the normal p and eps is small enough:<br /><br />
-            <div class="separator" style="clear: both; text-align: center;"><a
-                    href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOM3S0mY2I/AAAAAAAACfA/9E2Iixp5euo/s1600-h/image023.gif"
-                    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
-                        src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOM3S0mY2I/AAAAAAAACfA/9E2Iixp5euo/s320/image023.gif" /></a><br />
-            </div><br />From there, it is fairly easy to implement reflection, shadows, lighting, an OSAO
-            (Object-Space-Ambient-Occlusion), bump mapping... this is only limited by GPU resources!<br /><br />
-            <h3>Optimizations</h3>As we have seen, the number of steps required for a SphereTracing may be important, especially
-            when a ray is close to an object without touching it (see the C # application to understand the phenomenon). In this
-            case, the ray march in small steps, and the number of calculations can become very large (several times the calculation
-            of the original iso formula of a single point). There are some way to avoid this, like using a minimum step
-            size.<br /><br />For this, there are a few tips to follow: <br />
-            <ul>
-                <li>Minimize statements like if / then / else / switch in the code, sub-functions ... etc.. if not eliminate them.
-                </li>
-                <li>Therefore, avoid a scene management in the shader (if scene == 0 then this function iso, else if another
-                    function iso), but manage them outside the shader (via the compilation of different shader in GLSL, or using
-                    different pass/technique in HLSL). </li>
-                <li>Build shaders-specific scenes (one that supports reflection, another supporting the ao + reflection) and inline
-                    initialization stage and the iso format. For this help of techniques such as "<b>templatization</b>" such as
-                    concatenation / substitution code to the shader initialization (which was for example used in Rudebox Alcatraz
-                    via directives #define preprocessing, or Muon baryon with a concatenation / substitution in C). </li>
-                <li>Make a precomputation coarse stage of the scene in a texture 3D to accelerate a coarse SphereTracing, and then
-                    apply a SphereTracing on each pixel of the screen when necessary. </li>
-            </ul><br />
-            <h3>Next?</h3>We have seen the principle of Sphere Tracing or RayMarching-DistanceFields, a technique widely fashionable
-            in recent 4k intros. This technique has the advantage of being particularly simple to implement and incredibly efficient
-            in its rendering. It's a safe bet that this technique will still be around in 2010 and that the scenes are becoming
-            increasingly complex and rich (with, for example, the creation of specific tools to aid modeling of CSG
-            scenes).<br /><br /><br />Code sample : <a
-                href="http://xoofx.com/upload/SphereTracing2DApp.zip">SphereTracing2DApp.zip</a> is a C# 2D application showing the
-            ray marching algorithm in action.<br /><br />This article was initially written for the <a
-                href="http://www.demoscene.fr/">www.demoscene.fr</a> web site. It's an imperfect translation quickly done with
-            google translator service and with few minor changes. Tell me if there is anything wrongly explained here! ;)
-          </div>
-        </article>
-      </div>
-      <div class="col-sm-3">
-        <nav class="js-toc toc sticky-top"></nav>
-      </div>
+
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2009/10/12/potatro-and-raymarching-story-of.html">Potatro, RayMarching and DistanceFields : a story of SphereTracing</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="bi bi-calendar"></span>
+      <span class="date"><time datetime="2009-10-12" itemprop="datePublished">October 12, 2009</time></span>
+      <i class="bi bi-tags"></i><a href="/blog/tag/raymarching/">RayMarching</a>, <a href="/blog/tag/spheretracing/">SphereTracing</a>, <a href="/blog/tag/demoscene/">demoscene</a>
+  	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-10-13-potatro-and-raymarching-story-of.html">edit</a>
+    </div>
+
+
+<div class="separator" style="clear: both; text-align: center;"><a href="http://www.frequency.fr/" imageanchor="1"
+        style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;" target="_blank"><img border="0"
+            height="150" src="http://www.frequency.fr/images/stories/productions/potatro.jpg" width="200" /></a><br />
+</div>The "Raymarching + Distancefields" is the technique which was most notably used in the majority of 4k intros
+released in 2009 (and still will have probably a strong influence in 2010). Within Frequency, xt95 introduced this
+technique thanks to the <a href="http://iquilezles.org/www/material/nvscene2008/nvscene2008.htm">fantastic work of iq
+</a>and <a href="http://pouet.net/prod.php?which=52974">Systemkit</a>. When wullon asked Frequency to build a little
+intro to announce the construction of the <a href="http://demoscene.fr/">demoscene.fr</a> web site, xt95 produced a
+promising first draft of the <a href="http://pouet.net/prod.php?which=53476">Potratro </a>from which i could work to
+improve the overall design, the "isos" forms and the scenes. Yet I had not taken the time to understand the principle of
+RayMarching + DistanceFields, even if it did not seem to be totally abscond.<br /><br />Back from the <a
+    href="http://www.mainparty.net/">#main 2009</a>, while i looked at the BBS pouet, I came across the following
+thread: "<a href="http://pouet.net/topic.php?which=6675&amp;page=1&amp;x=30&amp;y=3">So, what do remote field equations
+    look like? And how do we solve them?</a>" . Trivial question, but first answers didn't enlighten me about the basic
+understanding that i had already, but the main principle was still a bit obscure for me. But Ferris then posted a link
+to an article by John C. Hart, "<a href="http://graphics.cs.uiuc.edu/%7Ejch/papers/zeno.pdf">Sphere tracing: a geometric
+    method for the antialiased ray tracing of implicit surfaces</a>" in 1996 and iq referred to two articles, a first
+even older John C. Hart, "<a href="http://graphics.cs.uiuc.edu/%7Ejch/papers/rtqjs.pdf">Ray Tracing Deterministic 3-D
+    Fractals</a>" dating from 1989 and a resumption of the principle in the "<a
+    href="http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter08.html">Chapter 8. Per-Pixel Displacement Mapping
+    with Distance Functions </a>"of the book GPU from NVidia-Gems2 dating from 2004. Browsing the original article by
+John C. Hart, everything became clear! This article is an attempt to restore you some of the basic principle of
+RayMarching + DistanceFields, or more explicitly called Sphere Tracing.<br /><br /><a name='more'></a><br />
+<h3>The general principle</h3>I will not detail the concept of <a
+    href="http://en.wikipedia.org/wiki/Ray_tracing_%28graphics%29">raytracing</a>, but I'll just put in relation with
+the RayMarching. To make a rendering, raytracing needs to calculate the intersection of the beam of vision with an
+object in the scene (to extract information from the surface material: diffuse color, refraction, diffraction, etc ....)
+And Therefore, to calculate formulas of intersections for each object. In the case where an object is modeled by a set
+of triangles, it requires to calculate the intersection of the ray with each triangle in the scene to determine which
+object is concerned by the beam. The calculation of intersections is very easy to implement, the formulas are
+established, so there is no problems, except for performance, since we must compute the intersection of the beam with a
+substantial number of surfaces (even if there are some way accelerate the division of space through eg K-d
+Trees).<br /><br />However, when one wants to represent <a href="http://fr.wikipedia.org/wiki/Isosurface">implicit
+    surfaces </a>continuous or discontinuous (also called "Level surface" or "isosurface"), it is much more difficult to
+calculate this intersection since it would require the calculation of intersection between the equation of surface
+(Fig.1) and the path of a ray. This calculation would be specific to each equation. Thus, if the principle of a
+raytracing rendering is based on the intersection of the ray cast with objects in a scene, <b>how to compute efficiently
+    the intersection of the ray with an implicit surfaces?</b><br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMZS-AncI/AAAAAAAACcA/nu-mQkNRxDY/s1600-h/image001.jpg"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMZS-AncI/AAAAAAAACcA/nu-mQkNRxDY/s320/image001.jpg" /></a><br />
+</div>
+<div style="text-align: center;">Definition of an implicit surface. Fig.1 (see Wikipedia)<br /></div><br />Before
+discussing the intersection RayMarching, we make a little reminder to inform our discussion. In the example given of a
+simple sphere of radius r (origin 0): the algebraic formula is : <br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMbb4Je-I/AAAAAAAACcI/J--22X9RD2U/s1600-h/image002.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMbb4Je-I/AAAAAAAACcI/J--22X9RD2U/s320/image002.gif" /></a><br />
+</div>Representing as distance, the sphere can be written differently:<br /><br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMcgdMUgI/AAAAAAAACcQ/vC1lGulfg-0/s1600-h/image003.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMcgdMUgI/AAAAAAAACcQ/vC1lGulfg-0/s320/image003.gif" /></a><br />
+</div><br />To calculate the intersection with sp1 a sphere of radius r1 using RayMarching with a radius of vision
+behind p1 (x1, y1, z1) and direction v1 (VX1, VY1, VZ1), we will from the origin of the radius (x1, y1, z1), calculate
+the distance to the surface of the sphere, by substituting the following:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMd4Xff5I/AAAAAAAACcY/1r-nbV59GIg/s1600-h/image004.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMd4Xff5I/AAAAAAAACcY/1r-nbV59GIg/s320/image004.gif" /></a><br />
+</div><br />And with the following properties for d1: <br />
+<ul>
+    <li>If d1 = 0, then the point (x1, y1, z1) is located exactly on the surface of the sphere </li>
+    <li>If d1 &lt; 0, then the point (x1, y1, z1) is a distance | d1 | inside surface. </li>
+    <li>If d1 &gt; 0, then the point (x1, y1, z1) is a distance | d1 | outside surface. </li>
+</ul>
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMfxJ2NHI/AAAAAAAACcg/LORAyNp-9_4/s1600-h/image005.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMfxJ2NHI/AAAAAAAACcg/LORAyNp-9_4/s320/image005.gif" /></a><br />
+</div><br />If d1 &gt; 0, the point p1 is outside the sphere, it suffices to calculate the intersection i1, we have to
+move from p1 to a distance of d1 in the direction of v1: i1 = p1 + d1v1 <br /><br />In the case of a single sphere, the
+calculation of intersection using the method of RayMarching is fairly trivial (and not really more interesting than
+analytical resolution), but if we have a more complex form, we can't determine the intersection at once. Take the
+example of a second sphere which would be added to the previous scene:<br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMihFYSZI/AAAAAAAACcw/kPhc_F5SNGw/s1600-h/image007.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMihFYSZI/AAAAAAAACcw/kPhc_F5SNGw/s320/image007.gif" /></a><br />
+</div><br />We want to determine on which sphere (p1, v1) intersects. With a single sphere, we have determined this
+intersection easily moving p1 to d1.v1. But with another sphere sp2, how can we move forward without colliding with sp2?
+If we move to d1 without checking, and it is found that sp2 is on the way, we'll skip sp2 and miss the intersection with
+sp2. <br />However, we know that the distance between p1 and sp2 is :<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMkl5ppUI/AAAAAAAACdA/oMmhUrIIJyc/s1600-h/image009.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMkl5ppUI/AAAAAAAACdA/oMmhUrIIJyc/s320/image009.gif" /></a><br />
+</div><br /><br />The trick is to move towards v1 to the minimum distance of all objects in the scene. So we move a step
+toward the intersection, a step that is equal to minD:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMn1Tc-iI/AAAAAAAACdQ/BwO2_SCQseQ/s1600-h/image010.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMn1Tc-iI/AAAAAAAACdQ/BwO2_SCQseQ/s320/image010.gif" /></a><br />
+</div><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMjs9d10I/AAAAAAAACc4/KQ515hvrpLs/s1600-h/image008.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMjs9d10I/AAAAAAAACc4/KQ515hvrpLs/s320/image008.gif" /></a><br />
+</div><br />Until minD &gt; 0, it means that we have not yet intersected any object. We can then generalize the march of
+the ray by:<br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMo_9r04I/AAAAAAAACdY/M44Z0sUOrNA/s1600-h/image011.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOMo_9r04I/AAAAAAAACdY/M44Z0sUOrNA/s320/image011.gif" /></a><br />
+</div><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMpxuI9DI/AAAAAAAACdg/Jv-is4D_WdE/s1600-h/image012.jpg"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMpxuI9DI/AAAAAAAACdg/Jv-is4D_WdE/s320/image012.jpg" /></a><br />
+</div><br />To explain a little more progress on the radius and the complex interactions with objects, you can download
+<a href="http://xoofx.com/upload/SphereTracing2DApp.zip">SphereTracing2DApp.zip</a>, a 2D application developed in C #
+that allows you to view the progress of a radius and the number of steps that must perform before falling on an
+intersection:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMrL0HgEI/AAAAAAAACdo/Xwcz29bGBA0/s1600-h/image013.jpg"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOMrL0HgEI/AAAAAAAACdo/Xwcz29bGBA0/s320/image013.jpg" /></a><br />
+</div>
+<div style="text-align: center;">A screenshot of <a
+        href="http://xoofx.com/upload/SphereTracing2DApp.zip">SphereTracing2DApp</a> a C# 2D application to understand
+    SphereTracing <br /></div><br />The white dot in the lower left is the origin of the ray (the camera). The red line
+is the direction of the ray. The 1st white circle is the minimum distance from the origin with all the objects in the
+scene (here, the blue rectangle). The ray can therefore move to that distance sphere without encountering a single
+object. The operation is thus repeated until an object is actually met (or minD &lt; epsilon). The green line tells us
+which object has been selected from the closest "distance field".<br /><br />We understand now that calculating the
+intersection of the camera's ray with an iso surface is in fact an incremental approximation of a bounding sphere moving
+towards the ray-intersection line.<br /><br />
+<h3>Note on terminology: SphereTracing, RayMarching, DistanceFields...</h3>As we have seen, the algorithm is to move
+within a distance of a sphere of radius equal to the minimum distance between the origin ray and the surface of all
+objects in the scene . This technique has been called&nbsp; <b>Sphere Tracing</b> by John.C.Hart. While in the
+demoscene, iq introduced the term distance fields, but then unfortunately eclipsed the original term which seems to me
+far more explicit. <br />So when we speak of "Raymarching-Distancefields" we're actually performing a Sphere Tracing!
+<br /><br />
+<h3>General algorithm Sphere Tracing</h3>The general algorithm Sphere Tracing is the following: <br />
+<pre class="language-cpp"><code>
+ro // r0: original position of the camera
+v // v: Direction of the camera  
+d = 0 // d: distance to the object  
+p = ro // p: Next position the camera  
+do (  
+    d = iso (r) // Distance to object  
+    p = p + d * v;  
+    step++;  
+) while (d &lt; epsilon && step &lt; MAX_STEP)
+</code></pre>
+
+Iso function returns the minimum distance r from the surface of all objects in the scene. In the case of two
+spheres previous function iso would be like:
+<br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMsJ2pnOI/AAAAAAAACdw/v_BTIWIYCG4/s1600-h/image014.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://3.bp.blogspot.com/_dv_YkYWn3HA/StOMsJ2pnOI/AAAAAAAACdw/v_BTIWIYCG4/s320/image014.gif" /></a><br />
+</div><br />If no intersection is encountered, the Sphere Tracing is stopped based on a maximum distance zfar p, or by
+limiting the number of steps (MAX_STEP). <br /><br />
+<h3>Primitives</h3>The sphere is of course not the only element we can use for modeling a surface iso. As we have seen,
+any function f (x, y, z) might do the trick (provided that this function returns values that do not introduce too many
+discontinuities on the surface). Thus, it is easy enough to use other primitives (box, cone, torus...) as described in
+the article by John C. Hart. <br /><br />
+<h3>Construction of a complex scene </h3>For 4k intros, it's pretty amazing to see the complexity of scenes that can be
+made with this system. I have so far spoken of a single sphere. How then build more complex scenes? Using the principle
+CSG (Constructive Solid Geometry) as shown John.C.Hart, one of the oldest techniques in 3D modeling: it is enough to
+make "Boolean operations" on iso formulas: intersection, union, complement... etc.. <br />Thus, two objects, each with
+their respective functions iso d1 and d2, to calculate: <br />
+<ul>
+    <li>The<b> union of two objects</b> (D1 U D2), just take a min of d1 and d2: iso (p) = min (d1 (p), d2 (p)). </li>
+    <li>The <b>intersection of two objects</b> (D1 n D2), just take the max of d1 and d2: iso (p) = max (d1 (p), d2
+        (p)). </li>
+    <li>The <b>inverse of an object</b> (-d1), simply reverse the sign iso iso (p) = -d1 (p). </li>
+    <li>The <b>subtraction of two objects</b> (d1-d2) just do an intersection of d1 with the inverse of d2: iso (p) =
+        max (d1 (p),-d2 (p)) </li>
+</ul>The translation can be performed just inside the iso formula. For a sphere whose center c (cx, cy, cz) of radius r,
+the geometric distance of p (x, y, z) is:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOM1V_KBZI/AAAAAAAACew/tJAbdq6Qts0/s1600-h/image021.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOM1V_KBZI/AAAAAAAACew/tJAbdq6Qts0/s320/image021.gif" /></a><br />
+</div><br />As the scale, rotation, twist ... etc.. Example of a twist on the y-axis:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOM2T-9KOI/AAAAAAAACe4/JrcZYsRHppA/s1600-h/image022.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://4.bp.blogspot.com/_dv_YkYWn3HA/StOM2T-9KOI/AAAAAAAACe4/JrcZYsRHppA/s320/image022.gif" /></a><br />
+</div><br />In his presentation NVScene8, iq provides a whole list of other functions: modulo, blending, noise ... etc..
+Several techniques also use textures3D to apply richer transformations to iso-surfaces (see Clouds Dreams or Rudebox
+#main 2009). <br /><br />
+<h3>Reflection, light, etc. ... AO.</h3>Once we got out of the loop Sphere Tracing, if d &lt; epsilon, p is on the
+surface of the object viewed. To calculate the normal to the surface, we use a gradient in p, we calculate an
+approximation of the derivative on the surface. Let n (p), the normal p and eps is small enough:<br /><br />
+<div class="separator" style="clear: both; text-align: center;"><a
+        href="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOM3S0mY2I/AAAAAAAACfA/9E2Iixp5euo/s1600-h/image023.gif"
+        imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0"
+            src="http://1.bp.blogspot.com/_dv_YkYWn3HA/StOM3S0mY2I/AAAAAAAACfA/9E2Iixp5euo/s320/image023.gif" /></a><br />
+</div><br />From there, it is fairly easy to implement reflection, shadows, lighting, an OSAO
+(Object-Space-Ambient-Occlusion), bump mapping... this is only limited by GPU resources!<br /><br />
+<h3>Optimizations</h3>As we have seen, the number of steps required for a SphereTracing may be important, especially
+when a ray is close to an object without touching it (see the C # application to understand the phenomenon). In this
+case, the ray march in small steps, and the number of calculations can become very large (several times the calculation
+of the original iso formula of a single point). There are some way to avoid this, like using a minimum step
+size.<br /><br />For this, there are a few tips to follow: <br />
+<ul>
+    <li>Minimize statements like if / then / else / switch in the code, sub-functions ... etc.. if not eliminate them.
+    </li>
+    <li>Therefore, avoid a scene management in the shader (if scene == 0 then this function iso, else if another
+        function iso), but manage them outside the shader (via the compilation of different shader in GLSL, or using
+        different pass/technique in HLSL). </li>
+    <li>Build shaders-specific scenes (one that supports reflection, another supporting the ao + reflection) and inline
+        initialization stage and the iso format. For this help of techniques such as "<b>templatization</b>" such as
+        concatenation / substitution code to the shader initialization (which was for example used in Rudebox Alcatraz
+        via directives #define preprocessing, or Muon baryon with a concatenation / substitution in C). </li>
+    <li>Make a precomputation coarse stage of the scene in a texture 3D to accelerate a coarse SphereTracing, and then
+        apply a SphereTracing on each pixel of the screen when necessary. </li>
+</ul><br />
+<h3>Next?</h3>We have seen the principle of Sphere Tracing or RayMarching-DistanceFields, a technique widely fashionable
+in recent 4k intros. This technique has the advantage of being particularly simple to implement and incredibly efficient
+in its rendering. It's a safe bet that this technique will still be around in 2010 and that the scenes are becoming
+increasingly complex and rich (with, for example, the creation of specific tools to aid modeling of CSG
+scenes).<br /><br /><br />Code sample : <a
+    href="http://xoofx.com/upload/SphereTracing2DApp.zip">SphereTracing2DApp.zip</a> is a C# 2D application showing the
+ray marching algorithm in action.<br /><br />This article was initially written for the <a
+    href="http://www.demoscene.fr/">www.demoscene.fr</a> web site. It's an imperfect translation quickly done with
+google translator service and with few minor changes. Tell me if there is anything wrongly explained here! ;)
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
     </div>
   </div>
 	<footer class="blog-footer">

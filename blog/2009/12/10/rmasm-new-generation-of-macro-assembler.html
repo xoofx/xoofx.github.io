@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.5.0.0">
+    <meta name="generator" content="lunet 0.5.3.0">
     <title>RMasm, a new generation of macro assembler | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
@@ -21,9 +21,10 @@
 
   <div class="container">
     <div class="row">
-      <nav class="navbar navbar-expand-md navbar-light w-100">
+      <nav class="navbar navbar-expand-md">
+        <div class="container-fluid">
             <a class="xoofx-logo navbar-brand" href="/"></a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
             <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
@@ -34,87 +35,88 @@
     <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
   <li class='nav-item '>
     <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
-  <li class='nav-item  ml-auto'>
+  <li class='nav-item  ms-auto'>
     <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
 </ol>
             </div>            
+        </div>
       </nav>
     </div>
     <div class="row">
-      
-      <div class="col-sm-9 js-toc-content">
-        <p id="lunet-results"></p>
-        <article class="page">
-          <div class="title">
-      		  <h1 class="title"><a href="/blog/2009/12/10/rmasm-new-generation-of-macro-assembler.html">RMasm, a new generation of macro assembler</a></h1>
-      		
-          </div>
-          <div class="entry-content">
-          <div class="blog-post-meta">
-            <span class="fa fa-calendar"></span>
-            <span class="date"><time datetime="2009-12-10" itemprop="datePublished">December 10, 2009</time></span>
-            <i class="fa fa-tags"></i><a href="/blog/tag/assembler/">assembler</a>, <a href="/blog/tag/x86/">x86</a>, <a href="/blog/tag/rmasm/">rmasm</a>
-        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-12-11-rmasm-new-generation-of-macro-assembler.html">edit</a>
-          </div>
-            
-            
-            
-            
-            I have not updated this website for a while... that's because I was actively working on a new exciting project called <a href="http://rmasm.net/">RMasm</a>!<br /><br />What is RMasm? It's <b>a new generation of macro assembler</b>, using the <a href="http://en.wikipedia.org/wiki/Ruby_%28programming_language%29">Ruby language </a>as its main "macro" language and supports, in the beginning, the x86 assembler syntax. You may ask "Why developing another assembler while there are plenty of them around? (look at Nasm, Fasm, Masm, HLA...)". Well, while I was coding the new softsynth for FRequency in assembler (project that is temporally suspended because of RMasm, oops, sorry ulrick for the delay!), I found current assemblers to be very limited by their macro language. Although I was using Masm that is recognized to have a "strong" macro language, I found this language very ugly, not really powerful, syntax hard to learn and in definitive, quite limited.<br /><br />So i started to think about a new kind of assembler...<br /><a name='more'></a><br /><br />
-            <h3>An assembler is... an interpreter</h3>
-            <br />I first tried to prototype something with <a href="http://irony.codeplex.com/">Irony</a>, which is a great C# library to write BNF grammars directly inside the C# language, instead of going through the old Yacc/Lex/Bison/ANTLR whatever tool chain. I was trying to mimic Masm syntax but i had some problems developing a <a href="http://irony.codeplex.com/Thread/View.aspx?ThreadId=74018">macro expansion system</a>. I almost decided to abandon the idea... but found an interesting common characteristic of assemblers : <b>a macro assembler is in fact also an interpreted language</b> (the "macro" language used to develop macro). Let's look at the following Masm example:<br /><br />
-            <pre><code>; MASM assembler example file<br />; --- CStr(): macro function to define a text constant<br />CStr macro text<br />local text_var<br />  .const                           ; Open the const section<br />text_var db text,0                 ; Add the text to text_var<br />  .code                            ; Reopen the code section<br />  exitm <offset text_var>          ; Return the offset of test_var address</offset><br />endm<br />  <br />  ; Try to call CStr macro<br />  .code                            ; &lt;-- Original text 1<br />  mov [eax], CStr("Column 1")      ; &lt;-- Original text 2 <br /></code></pre>
-            When being assembled with Masm, this file is interpreted by Masm, and after one preprocessing pass, the following file is generated :<br /><br />
-            <pre><code>.code      ; &lt;-- Original text 1<br />  .const                           ; &lt;-- text inserted by macro CStr<br />text_var0001 db "Column 1",0       ; &lt;-- text inserted by macro CStr<br />  .code                            ; &lt;-- text inserted by macro CStr<br />  mov [eax],offset text_var0001    ; &lt;-- Modified text 2<br /></code></pre>
-            The macro CStr is allocating a string in the const section and returning the address of the string to the caller. It's then easier to write string declaration in assembler. As you can see, the CStr macro is literally called by the preprocessor but one thing that I found not common to say, the C preprocessor, is that the macro is able to output some text to the previous line the macro is called (see &lt;-- text inserted ) while being able to return a from the macro call ( offset text_var0001).<br /><br />So that's why I'm saying that a macro language is in fact an interpreted language (although there is nothing new here, but it was at least new to my mind! ;) ). Before interpreting the mov [eax],... instruction to translate it to its binary representation, the assembler is performing several pass to expand the macros in order to get a plain file with only processor instructions.<br /><br />
-            <h3>Using Ruby as the main interpreter language...</h3>
-            Now, suppose that we use a well-known interpreted language to mimic this feature. Let's take Ruby :<br /><br />
-            <pre><code>eax = "eax"<br />def mov(dst,src)<br />  puts "We are in mov #{dst},#{src}"<br />  # Here generate the binary representation of the instruction<br />end<br /><br />def CStr(str)<br />  puts "We are in CStr #{str}"<br />  # open the section and add the str to a db * declaration<br />  label_str = "this_is_the_label"   # here create a label from (str)<br />  return label_str    # should return an .offset<br />end<br /><br />mov [eax], CStr("Column 1")<br /></code></pre>
-            This Ruby program (you can test it directly with an <a href="http://ironruby.codeplex.com/wikipage?title=SilverlightInteractiveSession&amp;referringTitle=Home">online Ruby interpreter like IronRuby</a>) will output the following result:<br />
-            <pre >We are in CStr Column 1<br />We are in mov ["eax"],this_is_the_label<br /></pre>
-            And here is a main concept of RMasm : It's build with Ruby being the main interpreter language as well as extending the language itself to allow specific assembler declaration.<br /><br />A RMasm assembler file is in fact a Ruby file which uses the rmasm ruby module to allow new syntax inside the language itself. <br /><br />
-            <h3>... to build a new language and compiler : RMasm</h3>
-            Now, look at the resulting RMasm assembler syntax example for x86:<br /><br />
-            <pre># Specify that we want to use the x86 assembler<br />  use :x86<br /><br />  # Define a structure<br />  struct :MyStructure do<br />    db :my_field1<br />    dw :my_field2<br />    dd :my_field3<br />  end<br /><br />  # Open the data section<br />  section:data<br /><br />    MyStructure :my_structure_var                            # Declare a structure<br />    db :this_is_a_text &lt;&lt; "This is a text directive"   # Declare a text<br /><br />  # Open the code section<br />  section:code<br /><br />  __:MyProcedure.global    # Declare the label MyProcedure and make it global (public)<br />    xor eax,eax<br />    mov [esi],eax<br />    ret<br /></pre>
-            With RMasm, this file will be able to be compiled to a .obj or .out object! RMasm is not relying on a complex Lex/Yacc parser but is leveraging on the power of Ruby to create a new <a href="http://en.wikipedia.org/wiki/Domain-specific_language">Domain Specific Language</a> aka DSL. RMasm is indeed a DSL language based on Ruby, nothing else.<br /><br />
-            <h3>What are the unique features of RMasm?</h3>
-            You may ask, "so well, you are designing a new assembler using an existing interpreted language to speed-up the development, but why RMasm could help me while there are already a bunch of existing assemblers?"<br /><br />The short answer is : <b>RMasm could help you to enhance your experience writing in an assembler language. Moreover you could enhance the language itself to meet your needs</b>. Not only RMasm provides raw assembler, and HLL (High Level Language) as well, but it provides a genuine way to extend the language itself, using operator overloading in Ruby or whatever!<br /><br />With RMasm, it will be possible to extend the language to accept the following syntax :<br /><br />
-            <pre>eax &lt;&lt; 0 <br />ebx &lt;&lt; eax<br /></pre>
-            which would be equivalent to :  <br />
-            <pre>xor eax, eax<br />mov ebx, eax<br /></pre>
-            with the following code to extend RMasm :<br /><br />
-            <pre># Reopen the RMasm::Register class to add a new operator<br />class RMasm::Register<br />  def &lt;&lt;(arg)<br />    if arg == 0<br />      xor self, self      # Generate xor instruction if arg is 0<br />    else<br />      mov self, arg       # Generate plain mov instruction else<br />    end<br />  end<br />end<br /></pre>
-            What we have done is extending the class RMasm::Register (part of the RMasm framework) to add a new operator &lt;&lt; that generates instructions when calling the operator &lt;&lt; to a register.<br /><br />With RMasm, expecting features are to be able to:<br />
-            <ul>
-               <li><b>To debug your macro assembler file</b>, not the binary exe, but the file being generated! Because a rmasm file is in fact a Ruby file, you can debug your asm file. This is one of the major features that makes RMasm really exciting! Think of it : you have developed a complex macro. Instead of putting several "print" to debug your assembler file (which is what we are doing with current assemblers) you can debug the file with a classic Ruby debugger. This is what i'm using to develop RMasm. Now, i'm able to step in macros and see what's in action!<br /></li>
-               <li><b>Extend the language</b>, with operator overloading, block of code...etc. Because RMasm is extending&nbsp; Ruby to add assembler syntax, RMasm can be extended as well to add your own high level assembler syntax. RMasm can be considered as a <b>meta-assembler</b>.</li>
-               <li>
-                  <b>Enhanced data declaration</b>: with RMasm, data declaration is going to be much easier than what we have in current assemblers on even in the C language. For example, with RMasm, the following declaration is performing a complex data initialization (leveraging on Ruby data structures : hash {}, ranges  (0..15), arrays []... and so on!) :<br /><br />
-                  <pre># initialize an array of 50 word (2 bytes) with the values<br /># [0] = 0, [1] = 2, [2] = 2, [3] = 3<br /># [5] = 9, [10] = 9<br /># [11..49] = 65535<br />dw :my_label[50] &lt;&lt; [0,1,2,3] &lt;&lt; { 5 =&gt; 9, 10 =&gt; 9} &lt;&lt; { (11..-1) =&gt; 65535 }<br /></pre>
-                  <br />
-               </li>
-               <li>
-                  <b>Namespace support</b>: with RMasm, namespaces are supported (through the concept of Ruby's module) allowing to wrap any existing API in a nice way (here inside a Win32 module):<br />
-                  <pre>Win32.MessageBox "I'm here from an assembler program"<br /></pre>
-               </li>
-               <li>
-                  <b>Supports for advanced calling convention</b>: with RMasm, it will be possible to simplify calling COM object using the object-oriented characteristic of Ruby. This is really interesting to improve the language experience, allowing to call any COM interface like we use to do in a "high level language" like C++. While, still being able to check, modify, write-your-own generated assembler directive<br />
-                  <pre># A call to<br />directx.Draw(arg1, arg2)<br /><br /># will be translated by RMasm to something<br />push arg2<br />push arg1<br />push directx<br />mov eax, directx.vtable<br />call [eax + DirectX_Draw]<br /></pre>
-               </li>
-               <li><b>Supports for "precompiled" header</b>: with RMasm, it is going possible to have some kind of precompiled header, most notably for example for all Windows includes, speeding up compilation time.<br /></li>
-               <li><b>Supports for multiple architecture</b>: RMasm is also a framework to build new assembler. See the "use :x86" directive in the RMasm example. I expect to be able to write "use :z80", or "use :m68020"... while still sharing the same syntax for the struct, data, section, procedure declaration!<br /></li>
-               <li>And much more! The possible extension to RMasm will be so wide that it's impossible to anticipate what we will be able to achieve with it, until we try it!<br /></li>
-            </ul>
-            <h3>Next?</h3>
-            Well, you may have noticed that I'm really excited about this project. The thing is, to make it possible, I need to write a usable assembler... and even if the development is going to be much easier than for a regular assembler, it will however take some time to build a fully functional assembler (preferably supporting x86 assembler syntax)! <br /><br />Of course, because Ruby is running on several platforms, RMasm will be able to run on the same platform. Currently, <a href="http://rmasm.net/index.php?/News/rmasm011released.html">RMasm is in pre-alpha release, version 0.1.1</a>, with a growing architecture that is not yet achieved, not able to generate a .obj or anything similar... so, It will take some times to have a workable version. Hope that I will be able to publish an alpha release in Q1-2010.<br /><br />I believe that this assembler could somehow "revolutionize" the little assembler community... but I might be wrong... although, I feel that with this kind of assembler, demo size coding is going to be a bit easier!<br /><br />But before going much further, I would like to get some feedback about this starting project. What do you think about this? As an assembler programmer? As a C programmer?<br /><br />____________<br /><br />I have just opened the <a href="http://rmasm.net">RMasm Website</a>. This is a basic structure just to settle things... hope that this project will go up to the 1.0 version!
-            
-      
-          </div>
-        </article>
-      </div>
-      <div class="col-sm-3">
-        <nav class="js-toc toc sticky-top"></nav>
-      </div>
+
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2009/12/10/rmasm-new-generation-of-macro-assembler.html">RMasm, a new generation of macro assembler</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="bi bi-calendar"></span>
+      <span class="date"><time datetime="2009-12-10" itemprop="datePublished">December 10, 2009</time></span>
+      <i class="bi bi-tags"></i><a href="/blog/tag/assembler/">assembler</a>, <a href="/blog/tag/x86/">x86</a>, <a href="/blog/tag/rmasm/">rmasm</a>
+  	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-12-11-rmasm-new-generation-of-macro-assembler.html">edit</a>
+    </div>
+
+
+
+
+I have not updated this website for a while... that's because I was actively working on a new exciting project called <a href="http://rmasm.net/">RMasm</a>!<br /><br />What is RMasm? It's <b>a new generation of macro assembler</b>, using the <a href="http://en.wikipedia.org/wiki/Ruby_%28programming_language%29">Ruby language </a>as its main "macro" language and supports, in the beginning, the x86 assembler syntax. You may ask "Why developing another assembler while there are plenty of them around? (look at Nasm, Fasm, Masm, HLA...)". Well, while I was coding the new softsynth for FRequency in assembler (project that is temporally suspended because of RMasm, oops, sorry ulrick for the delay!), I found current assemblers to be very limited by their macro language. Although I was using Masm that is recognized to have a "strong" macro language, I found this language very ugly, not really powerful, syntax hard to learn and in definitive, quite limited.<br /><br />So i started to think about a new kind of assembler...<br /><a name='more'></a><br /><br />
+<h3>An assembler is... an interpreter</h3>
+<br />I first tried to prototype something with <a href="http://irony.codeplex.com/">Irony</a>, which is a great C# library to write BNF grammars directly inside the C# language, instead of going through the old Yacc/Lex/Bison/ANTLR whatever tool chain. I was trying to mimic Masm syntax but i had some problems developing a <a href="http://irony.codeplex.com/Thread/View.aspx?ThreadId=74018">macro expansion system</a>. I almost decided to abandon the idea... but found an interesting common characteristic of assemblers : <b>a macro assembler is in fact also an interpreted language</b> (the "macro" language used to develop macro). Let's look at the following Masm example:<br /><br />
+<pre><code>; MASM assembler example file<br />; --- CStr(): macro function to define a text constant<br />CStr macro text<br />local text_var<br />  .const                           ; Open the const section<br />text_var db text,0                 ; Add the text to text_var<br />  .code                            ; Reopen the code section<br />  exitm <offset text_var>          ; Return the offset of test_var address</offset><br />endm<br />  <br />  ; Try to call CStr macro<br />  .code                            ; &lt;-- Original text 1<br />  mov [eax], CStr("Column 1")      ; &lt;-- Original text 2 <br /></code></pre>
+When being assembled with Masm, this file is interpreted by Masm, and after one preprocessing pass, the following file is generated :<br /><br />
+<pre><code>.code      ; &lt;-- Original text 1<br />  .const                           ; &lt;-- text inserted by macro CStr<br />text_var0001 db "Column 1",0       ; &lt;-- text inserted by macro CStr<br />  .code                            ; &lt;-- text inserted by macro CStr<br />  mov [eax],offset text_var0001    ; &lt;-- Modified text 2<br /></code></pre>
+The macro CStr is allocating a string in the const section and returning the address of the string to the caller. It's then easier to write string declaration in assembler. As you can see, the CStr macro is literally called by the preprocessor but one thing that I found not common to say, the C preprocessor, is that the macro is able to output some text to the previous line the macro is called (see &lt;-- text inserted ) while being able to return a from the macro call ( offset text_var0001).<br /><br />So that's why I'm saying that a macro language is in fact an interpreted language (although there is nothing new here, but it was at least new to my mind! ;) ). Before interpreting the mov [eax],... instruction to translate it to its binary representation, the assembler is performing several pass to expand the macros in order to get a plain file with only processor instructions.<br /><br />
+<h3>Using Ruby as the main interpreter language...</h3>
+Now, suppose that we use a well-known interpreted language to mimic this feature. Let's take Ruby :<br /><br />
+<pre><code>eax = "eax"<br />def mov(dst,src)<br />  puts "We are in mov #{dst},#{src}"<br />  # Here generate the binary representation of the instruction<br />end<br /><br />def CStr(str)<br />  puts "We are in CStr #{str}"<br />  # open the section and add the str to a db * declaration<br />  label_str = "this_is_the_label"   # here create a label from (str)<br />  return label_str    # should return an .offset<br />end<br /><br />mov [eax], CStr("Column 1")<br /></code></pre>
+This Ruby program (you can test it directly with an <a href="http://ironruby.codeplex.com/wikipage?title=SilverlightInteractiveSession&amp;referringTitle=Home">online Ruby interpreter like IronRuby</a>) will output the following result:<br />
+<pre >We are in CStr Column 1<br />We are in mov ["eax"],this_is_the_label<br /></pre>
+And here is a main concept of RMasm : It's build with Ruby being the main interpreter language as well as extending the language itself to allow specific assembler declaration.<br /><br />A RMasm assembler file is in fact a Ruby file which uses the rmasm ruby module to allow new syntax inside the language itself. <br /><br />
+<h3>... to build a new language and compiler : RMasm</h3>
+Now, look at the resulting RMasm assembler syntax example for x86:<br /><br />
+<pre># Specify that we want to use the x86 assembler<br />  use :x86<br /><br />  # Define a structure<br />  struct :MyStructure do<br />    db :my_field1<br />    dw :my_field2<br />    dd :my_field3<br />  end<br /><br />  # Open the data section<br />  section:data<br /><br />    MyStructure :my_structure_var                            # Declare a structure<br />    db :this_is_a_text &lt;&lt; "This is a text directive"   # Declare a text<br /><br />  # Open the code section<br />  section:code<br /><br />  __:MyProcedure.global    # Declare the label MyProcedure and make it global (public)<br />    xor eax,eax<br />    mov [esi],eax<br />    ret<br /></pre>
+With RMasm, this file will be able to be compiled to a .obj or .out object! RMasm is not relying on a complex Lex/Yacc parser but is leveraging on the power of Ruby to create a new <a href="http://en.wikipedia.org/wiki/Domain-specific_language">Domain Specific Language</a> aka DSL. RMasm is indeed a DSL language based on Ruby, nothing else.<br /><br />
+<h3>What are the unique features of RMasm?</h3>
+You may ask, "so well, you are designing a new assembler using an existing interpreted language to speed-up the development, but why RMasm could help me while there are already a bunch of existing assemblers?"<br /><br />The short answer is : <b>RMasm could help you to enhance your experience writing in an assembler language. Moreover you could enhance the language itself to meet your needs</b>. Not only RMasm provides raw assembler, and HLL (High Level Language) as well, but it provides a genuine way to extend the language itself, using operator overloading in Ruby or whatever!<br /><br />With RMasm, it will be possible to extend the language to accept the following syntax :<br /><br />
+<pre>eax &lt;&lt; 0 <br />ebx &lt;&lt; eax<br /></pre>
+which would be equivalent to :  <br />
+<pre>xor eax, eax<br />mov ebx, eax<br /></pre>
+with the following code to extend RMasm :<br /><br />
+<pre># Reopen the RMasm::Register class to add a new operator<br />class RMasm::Register<br />  def &lt;&lt;(arg)<br />    if arg == 0<br />      xor self, self      # Generate xor instruction if arg is 0<br />    else<br />      mov self, arg       # Generate plain mov instruction else<br />    end<br />  end<br />end<br /></pre>
+What we have done is extending the class RMasm::Register (part of the RMasm framework) to add a new operator &lt;&lt; that generates instructions when calling the operator &lt;&lt; to a register.<br /><br />With RMasm, expecting features are to be able to:<br />
+<ul>
+   <li><b>To debug your macro assembler file</b>, not the binary exe, but the file being generated! Because a rmasm file is in fact a Ruby file, you can debug your asm file. This is one of the major features that makes RMasm really exciting! Think of it : you have developed a complex macro. Instead of putting several "print" to debug your assembler file (which is what we are doing with current assemblers) you can debug the file with a classic Ruby debugger. This is what i'm using to develop RMasm. Now, i'm able to step in macros and see what's in action!<br /></li>
+   <li><b>Extend the language</b>, with operator overloading, block of code...etc. Because RMasm is extending&nbsp; Ruby to add assembler syntax, RMasm can be extended as well to add your own high level assembler syntax. RMasm can be considered as a <b>meta-assembler</b>.</li>
+   <li>
+      <b>Enhanced data declaration</b>: with RMasm, data declaration is going to be much easier than what we have in current assemblers on even in the C language. For example, with RMasm, the following declaration is performing a complex data initialization (leveraging on Ruby data structures : hash {}, ranges  (0..15), arrays []... and so on!) :<br /><br />
+      <pre># initialize an array of 50 word (2 bytes) with the values<br /># [0] = 0, [1] = 2, [2] = 2, [3] = 3<br /># [5] = 9, [10] = 9<br /># [11..49] = 65535<br />dw :my_label[50] &lt;&lt; [0,1,2,3] &lt;&lt; { 5 =&gt; 9, 10 =&gt; 9} &lt;&lt; { (11..-1) =&gt; 65535 }<br /></pre>
+      <br />
+   </li>
+   <li>
+      <b>Namespace support</b>: with RMasm, namespaces are supported (through the concept of Ruby's module) allowing to wrap any existing API in a nice way (here inside a Win32 module):<br />
+      <pre>Win32.MessageBox "I'm here from an assembler program"<br /></pre>
+   </li>
+   <li>
+      <b>Supports for advanced calling convention</b>: with RMasm, it will be possible to simplify calling COM object using the object-oriented characteristic of Ruby. This is really interesting to improve the language experience, allowing to call any COM interface like we use to do in a "high level language" like C++. While, still being able to check, modify, write-your-own generated assembler directive<br />
+      <pre># A call to<br />directx.Draw(arg1, arg2)<br /><br /># will be translated by RMasm to something<br />push arg2<br />push arg1<br />push directx<br />mov eax, directx.vtable<br />call [eax + DirectX_Draw]<br /></pre>
+   </li>
+   <li><b>Supports for "precompiled" header</b>: with RMasm, it is going possible to have some kind of precompiled header, most notably for example for all Windows includes, speeding up compilation time.<br /></li>
+   <li><b>Supports for multiple architecture</b>: RMasm is also a framework to build new assembler. See the "use :x86" directive in the RMasm example. I expect to be able to write "use :z80", or "use :m68020"... while still sharing the same syntax for the struct, data, section, procedure declaration!<br /></li>
+   <li>And much more! The possible extension to RMasm will be so wide that it's impossible to anticipate what we will be able to achieve with it, until we try it!<br /></li>
+</ul>
+<h3>Next?</h3>
+Well, you may have noticed that I'm really excited about this project. The thing is, to make it possible, I need to write a usable assembler... and even if the development is going to be much easier than for a regular assembler, it will however take some time to build a fully functional assembler (preferably supporting x86 assembler syntax)! <br /><br />Of course, because Ruby is running on several platforms, RMasm will be able to run on the same platform. Currently, <a href="http://rmasm.net/index.php?/News/rmasm011released.html">RMasm is in pre-alpha release, version 0.1.1</a>, with a growing architecture that is not yet achieved, not able to generate a .obj or anything similar... so, It will take some times to have a workable version. Hope that I will be able to publish an alpha release in Q1-2010.<br /><br />I believe that this assembler could somehow "revolutionize" the little assembler community... but I might be wrong... although, I feel that with this kind of assembler, demo size coding is going to be a bit easier!<br /><br />But before going much further, I would like to get some feedback about this starting project. What do you think about this? As an assembler programmer? As a C programmer?<br /><br />____________<br /><br />I have just opened the <a href="http://rmasm.net">RMasm Website</a>. This is a basic structure just to settle things... hope that this project will go up to the 1.0 version!
+
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
     </div>
   </div>
 	<footer class="blog-footer">

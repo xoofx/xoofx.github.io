@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.5.0.0">
+    <meta name="generator" content="lunet 0.5.3.0">
     <title>Random float number generator using x86 ASM code optimized in size | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
@@ -21,9 +21,10 @@
 
   <div class="container">
     <div class="row">
-      <nav class="navbar navbar-expand-md navbar-light w-100">
+      <nav class="navbar navbar-expand-md">
+        <div class="container-fluid">
             <a class="xoofx-logo navbar-brand" href="/"></a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
             <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
@@ -34,172 +35,173 @@
     <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
   <li class='nav-item '>
     <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
-  <li class='nav-item  ml-auto'>
+  <li class='nav-item  ms-auto'>
     <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
 </ol>
             </div>            
+        </div>
       </nav>
     </div>
     <div class="row">
-      
-      <div class="col-sm-9 js-toc-content">
-        <p id="lunet-results"></p>
-        <article class="page">
-          <div class="title">
-      		  <h1 class="title"><a href="/blog/2009/10/25/random-float-number-using-x86-asm-code.html">Random float number generator using x86 ASM code optimized in size</a></h1>
-      		
-          </div>
-          <div class="entry-content">
-          <div class="blog-post-meta">
-            <span class="fa fa-calendar"></span>
-            <span class="date"><time datetime="2009-10-25" itemprop="datePublished">October 25, 2009</time></span>
-            <i class="fa fa-tags"></i><a href="/blog/tag/assembler/">assembler</a>, <a href="/blog/tag/x86/">x86</a>
-        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-10-26-random-float-number-using-x86-asm-code.html">edit</a>
-          </div>
-            
-            
-            
-            
-            While I'm working on the next 4k-64k softsynth for FRequency, I need to implement a simple noise generator. In the past, i used to call directly the c rand() function without digging into the internals... Because i have to develop the softsynth using x86 ASM in order to keep it as small as possible, i went through revisiting the problem of generating a random uniform float number in the range [-1,1) or (-1,1], but with size optimization in mind. This is not a common problem as you'll more likely be able to easily find a speed optimized version other the Internet but not a sized one...<br /><br />I will focus mainly on 3 implementations, so i will not describe an exhaustive list of technique around. I would be glad if you are aware about a smaller implementation! I found quite some interesting results, like a poor performance of the c rand() function, both in terms of speed and uniformity.<br /><br />Let's recall one of the simplest C random function you can find around :<br />
-            <pre><code>float Rand() {<br />    return ((float)rand()/RAND_MAX) * 2.0f - 1.0f;<br />}<br /></code></pre>
-            <br />The rand() is generating an integer in the range [0, 32767]. RAND_MAX is equal to the max value 32767. The result is then scaled to the range [-1,1]. Let us first implement this in x86 ASM, just as an exercise.<br /><a name='more'></a><br />
-            <h3>Version 1: Using the c rand() function</h3>
-            <br />A straight implementation of the previous C in x86 ASM could be like this (thanks to <a href="http://www.blogger.com/asmhighlighter.codeplex.com">AsmHighlighter</a> for the syntax highlighting and the instruction size calculation ;) ) :<br />
-            <div><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">_Rand <span style="color: purple;">proc</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">call</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [_imp__rand]&nbsp;&nbsp; <span style="color: green;">;#6 Call c Rand</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">push</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 st(0)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(1) </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fild</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [<b><span style="color: maroon;">esp</span></b>]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ;<span style="color: green;">#3 rand&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fidiv</span> <span style="color: purple;">word</span> <span style="color: purple;">ptr</span> [RandMax]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#6 (-1,0]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fchs</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 </span></span><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;"><span style="color: green;">[0,1) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fadd</span> <b><span style="color: maroon;">st(0)</span></b>,<b><span style="color: maroon;">st(0)</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 [0,2) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fld1</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;"><span style="color: green;">[0,2)</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fsubp</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 [-1,+1]</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">pop</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 clean stack </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">ret</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ;<span style="color: green;">#1</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt; line-height: 115%;">_Rand <span style="color: purple;">endp</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#26 total bytes</span></span></div>
-            <br />There is a slight difference with the previous C version. I want to generate a number in the range [-1,1), so the RandMax is set to a short (or word) 32768, meaning that the integer value is -2^15. Because the c rand function generate a number in the range 0-32767, i have to scale it to the correct [-1,1) range. Dividing by -2^15 generate a number in the range (-1,0]. I just have to negate this result, multiply by 2 and minus 1 to get the correct range [-1,1) (although this in not critical to have this range. The range (-1,1] is fine as well).<br /><br />The number of bytes for this function is <code>26 bytes</code>. Although you have to add the cost of referencing the msvcrt runtime (this is not so much, but still...). The crinkler compressed size is around <code>20.5 bytes</code>. You will find attached to this article the <a href="http://groups.google.com/group/code4k/web/RandAsm.zip">RandAsm Visual C++ Project</a> using MASM and crinkler.<br /><br />The protocol to test the compressed size is to leave only one type of random function at a time when generating the code. The other implementations are disabled. This will give you a more accurate estimation of the compressed size (but this is not a true final compressed size in an intro exe, as context modeling from crinkler heavily depends on... context, previous code compressed... and so on...). But with this approach, you have at least something close to reality... I have also measure the execution time minus the code to fill the buckets (i have run an empty random function to get the reference time).<br /><br />I have implemented a basic checker of the uniformity of the random number generator. My friend ulrick advise me to use a simple <a href="http://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test">Kolmogorov-Smirnov (KS) test</a> to check the efficiency of the generator, but i found this too difficult (i didn't have time to implement such a test, with storing, sorting all random numbers...). He then suggest me to use a simpler test called <a href="http://en.wikipedia.org/wiki/Chi-square_test">Chi-Square Test</a> (check also this nice article from Dr Dobb's about <a href="http://www.ddj.com/cpp/184403185">Testing Random Number Generators</a> by Jerry Dwyer and K.B. Williams, June 1996 ). It's basically working on frequencies (and not on individual random number as for the KS test) using a limited amount of buckets to count the frequency of the random number. For this test, i'm using 100 buckets on the range [-1,1[ (bucket 0 is in the range [-1, -0.98] while the bucket number 99 is in the range [0.98, 1[), and generating 1,000,000,000 random float numbers with it. It means that by bucket, i should expect a perfect : 1,000,000,000 / 100 = 10,000,000 values. The Chi-Square Test computes a factor k that is checked against a <a href="http://www.medcalc.be/manual/chi-square-table.php">Chi-Square distribution table</a>.<br /><br />Be aware that this test (as well as the KS test) is mainly relevant for testing the uniformity of the random numbers, but they don't ensure that the numbers are truly random. We should implement another algo to test this "random-ability" but i don't have time to do this! ;)<br /><br />The results for the C-Rand ASM version are :<br /><br />
-            <table border="1" style="text-align: center;">
-               <tbody>
-                  <tr>
-                     <th>Rand Type</th>
-                     <th>Time(ms)</th>
-                     <th>Precision(bits)</th>
-                     <th>Code Size(bytes)</th>
-                     <th>Compressed Code Size(bytes)</th>
-                     <th>k-ChiSq</th>
-                  </tr>
-                  <tr>
-                     <td>Rand C ASM</td>
-                     <td>29890 ms</td>
-                     <td>15</td>
-                     <td>26</td>
-                     <td>20.5</td>
-                     <td>2066.67</td>
-                  </tr>
-               </tbody>
-            </table>
-            <br />You may notice that the k-ChiSquare factor is very high. This factor should be <b>below</b> 134.642! (column 0.01, line 99 in the ChiSquare table). A first look at these results tell us that they are quite poor. We are going to see that other x86 ASM implementation are performing much better than this one.<br /><br />For the curious, what's behind the c rand() function? Under Visual C++, you have the following code:<br />
-            <pre><code>int __cdecl rand (void)<br />{<br />    return( ((next = next * 214013L + 2531011L) &gt;&gt; 16) &amp; 0x7fff );<br />}<br /></code></pre>
-            We can see that the 0x7FFF truncation is hurting a lot the precision of the rand function. Only 15 bits are then used when converting to the float.<br /><br />
-            <h3>Version 2: Using iq's method</h3>
-            <br />iq wrote a couple of <a href="http://iquilezles.org/www/">very great article about coding, mainly for graphics</a>. But among them, there is an interesting article about the problem of random float numbers : <a href="http://iquilezles.org/www/articles/sfrand/sfrand.htm">float, small and random</a>.<br /><br />Read this article carefully, as it is going a little deeper in the internals of <a href="http://en.wikipedia.org/wiki/IEEE_floating-point_standard">IEEE-754</a> floating point representation (used by the FPU).<br />Finally, iq suggest a new efficient algorithm:<br />
-            <pre><code>float sfrand( int *seed )<br />{<br />    float res;<br />    seed[0] *= 16807;<br />    *((unsigned int *) &amp;res) = ( ((unsigned int)seed[0])&gt;&gt;9 ) | 0x40000000;<br />    return( res-3.0f );<br />}<br /></code></pre>
-            <br />A straight implementation of his algo in asm could be like this one:<br /><br /><span style="font-family: 'Courier New'; font-size: 10pt;">_Rand <span style="color: purple;">proc</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">imul</span> <b><span style="color: maroon;">eax</span></b>, <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed], <span style="color: navy;">16807</span>&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#A eax = RandSeed * 16807</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">mov</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed], <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#5  RandSeed = eax</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">mov</span> <b><span style="color: maroon;">al</span></b>, <span style="color: navy;">080h</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 eax: rrrrrr80h where r are bits from random seeds</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">ror</span> <b><span style="color: maroon;">eax</span></b>, <span style="color: navy;">8</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#3 eax: 80rrrrrrh. value = s * 2^(e-127). e is set to 128,  thus 040h value ( sEee eeee efff ffff ffff ffff ffff ffff)</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">shr</span> <b><span style="color: maroon;">eax</span></b>, <span style="color: navy;">1</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 eax: 40rrrrrrh</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">push</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 push eax on stack to load it as a float. rand [2,4)</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fld</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [<b><span style="color: maroon;">esp</span></b>]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#3  load rand st0 = rand [2,4)</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">push</span> <span style="color: navy;">3</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 load 3</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fisub</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [<b><span style="color: maroon;">esp</span></b>]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#3  st(0) = rand [2,4) - 3 = rand[-1, 1)</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">pop</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 free stack</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">pop</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 free stack&nbsp;&nbsp;&nbsp; </span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span style="color: blue; font-family: 'Courier New'; font-size: 10pt;">ret</span><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1  return to caller</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt; line-height: 115%;">_Rand <span style="color: purple;">endp</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#34 total bytes</span></span><br /><br />This is not probably the smallest x86 ASM implementation of iq's code, but from 1 to 2 bytes, this should be enough close... (hey, i don't claim to be a x86 expert anyway! ;) )<br /><br />This implementation gives the following results :<br /><br />
-            <table border="1" style="text-align: center;">
-               <tbody>
-                  <tr>
-                     <th>Rand Type</th>
-                     <th>Time(ms)</th>
-                     <th>Precision(bits)</th>
-                     <th>Code Size(bytes)</th>
-                     <th>Compressed Code Size(bytes)</th>
-                     <th>k-ChiSq</th>
-                  </tr>
-                  <tr>
-                     <td>iq's ASM</td>
-                     <td>13042 ms</td>
-                     <td>23</td>
-                     <td>34</td>
-                     <td>30</td>
-                     <td>7.36</td>
-                  </tr>
-               </tbody>
-            </table>
-            <br />They are significantly better than the previous one. Both in terms of execution time and uniform distribution. The k-ChiSqr factor is 7.36 much below the 134.642 limit. Although, the result is a function a bit larger, around 30 bytes compressed. Not a lot, but still, we need to have a smaller one.<br /><br />
-            <h3 id="v3">Version 3: Using simple int min divider (Park Miller-Carta's method)</h3>
-            <br />When there is a demo/intro that is using a cool hack or whatever, i'm always curious to see how they did it. Well, i should post someday an article about the fact that "demomaking... is a bit of hacking". So when i went around the code of the <a href="http://4klang.untergrund.net/">4klang</a> great synth from gopher, i found an interesting tiny random function. [Edit]After some research, i found the original authors are <a href="http://www.firstpr.com.au/dsp/rand31/">Payne, Rabung &amp; Bogyo (in 1969), then Park Miller (in 1988) and Carta (in 1990)</a>, this is a nice implementation and in fact, very simple.[/Edit]<br /><br />We are basically using the same random generator that iq's suggest at the beginning (other candidates are also good. 4klang is using 16007. I'm wondering if we should use a prime number?) :<br />
-            <pre><code>seed *= 16807;<br /></code></pre>
-            <code>seed</code> is an integer. So the range value is going from [-2^31, 2^31-1]. Following the simple C rand function, we just have to load this seed directly on the FPU as an integer, keeping all the 31 bits precision. Then, we just have to divide by the largest - absolute - value : -2^31 aka 080000000h in hex. In C, this is simple as :<br />
-            <pre><code>seed *= 16807;<br />    return ((float)seed) / (float)0x80000000;<br /></code></pre>
-            <br />or in x86 ASM:<br /><br />
-            <div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">_Rand <span style="color: purple;">proc</span></span></div>
-            <div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">imul</span> <b><span style="color: maroon;">eax</span></b>, <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed], <span style="color: navy;">16807</span> <span style="color: green;">;#A eax =  RandSeed * 16807</span></span></div>
-            <div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">mov</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed], <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#5  RandSeed = eax</span></span></div>
-            <div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fild</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#6 load RandSeed as  an integer</span></span></div>
-            <div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fidiv</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandDiv]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#6 div by max int value (absolute) = eax / (-2^31)</span></span></div>
-            <div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">ret</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 return to caller</span></span></div>
-            <span style="font-family: 'Courier New'; font-size: 10pt; line-height: 115%;">_Rand <span style="color: purple;">endp</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#28 total bytes</span></span><br /><br />We can see that this implementation return a result in the range (-1,1]. This implementation gives the following results :<br /><br />
-            <table border="1" style="text-align: center;">
-               <tbody>
-                  <tr>
-                     <th>Rand Type</th>
-                     <th>Time(ms)</th>
-                     <th>Precision(bits)</th>
-                     <th>Code Size(bytes)</th>
-                     <th>Compressed Code Size(bytes)</th>
-                     <th>k-ChiSq</th>
-                  </tr>
-                  <tr>
-                     <td>Int-Min Divider</td>
-                     <td>6006 ms</td>
-                     <td>31</td>
-                     <td>28</td>
-                     <td>19</td>
-                     <td>7.31</td>
-                  </tr>
-               </tbody>
-            </table>
-            <br />Results are of course significantly better than the C version, but they are also better in terms of execution time and size compare to iq's method. Not surprisingly, k-ChiSqr factor is 7.31 much below the 134.642 limit and comparable to iq. <br /><br />With 31 bits for the precision, This method is even better, as the seed is fully loaded on the fpu stack with it's 31 bits precision : because the FPU has a total of 80 bits to store a floating point number (with <a href="http://en.wikipedia.org/wiki/Extended_precision">extended precision</a>), it means that we have 64 bits available for the mantissa, large enough to store the 31 bits . The compression is working well on this, mainly due to the fact that we are using a simple memory addressing that is compressing well with crinkler. Yep, sometimes, it's better to have something like : <code>mov eax, [address1]; imul eax, dword ptr [address2]</code> than having to preload a base adress like <code>lea ebx, [address1]; mov eax, [ebx]; imul eax, [ebx+4];</code>. So with only 19 bytes compressed, this version is really cool and the execution time is impressive too!<br /><br />
-            <h3>Faster and better floating point generator</h3>
-            <br />Let's recap the results :<br /><br />
-            <table border="1" style="text-align: center;">
-               <tbody>
-                  <tr>
-                     <th>Rand Type</th>
-                     <th>Time(ms)</th>
-                     <th>Precision(bits)</th>
-                     <th>Code Size(bytes)</th>
-                     <th>Compressed Code Size(bytes)</th>
-                     <th>k-ChiSq</th>
-                  </tr>
-                  <tr>
-                     <td>Rand C ASM</td>
-                     <td>29890 ms</td>
-                     <td>15</td>
-                     <td>26</td>
-                     <td>20.5</td>
-                     <td>2066.67</td>
-                  </tr>
-                  <tr>
-                     <td>iq's ASM</td>
-                     <td>13042 ms</td>
-                     <td>23</td>
-                     <td>34</td>
-                     <td>30</td>
-                     <td>7.36</td>
-                  </tr>
-                  <tr>
-                     <td>Int-Min Divider</td>
-                     <td>6006 ms</td>
-                     <td>31</td>
-                     <td>28</td>
-                     <td>19</td>
-                     <td>7.31</td>
-                  </tr>
-               </tbody>
-            </table>
-            <br />We can see that the "Int-Min Divider" technique is by far the most efficient, both in terms of execution time and size. It's also a very good generator, as the distribution is quite uniform. <br /><br />This should be very useful when you need a fast random floating point generator!<br /><br />
-            <h3>A question of floor?</h3>
-            <br />Just a few words about truncating a float to an int. I needed such think in order to increments the frequecies for the bucket. I'm usually using a poor implementation using the fpu instructions couple <code>fld/fistp</code> but the results depends on the FPU rounding mode (and the default rounding mode is "nearest" and not "toward zero" as expected). You don't see this when you are using the msvcrt library, as they have implemented a true floor() conversion in the back. But when using the /QIfist option in VC++, you can't use anymore this function from the msvcrt.<br /><br />However, I found a straight function that may do the trick, using following SSE function :<br />
-            <pre><code>inline long floorSSE(double x) {<br />    __asm cvttsd2si eax,x<br />}<br /></code></pre>
-            The <a href="http://siyobik.info/index.php?module=x86&amp;id=66">cvttsd2si </a>SSE instruction is converting a double to an int (you can find about this an interesting discussion <a href="http://www.masm32.com/board/index.php?topic=9515.0">here</a>). This is actually working well if the double is coming originally from a float (moving from the FPU to SSE requires writing to memory). But this instruction seems to work well on float. Although, I should check more extensively the reliability of this function...<br /><b>Update 29/10/2009</b> : In fact, there is the FPU instruction <a href="http://software.intel.com/en-us/articles/how-to-implement-the-fisttp-streaming-simd-extensions-3-instruction/"><code>fisttp</code></a> in SSE3 that do also and is less restrictive than the <code>cvttsd2si</code> instruction (notice although they are more considered as "truncate" than "floor" as i mentioned).<br />________________________________________<br />Here is attached the VC++ 2008 <a href="http://xoofx.com/upload/RandAsm.zip">RandAsm </a>project i used for this article.
-            
-      
-          </div>
-        </article>
-      </div>
-      <div class="col-sm-3">
-        <nav class="js-toc toc sticky-top"></nav>
-      </div>
+
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2009/10/25/random-float-number-using-x86-asm-code.html">Random float number generator using x86 ASM code optimized in size</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="bi bi-calendar"></span>
+      <span class="date"><time datetime="2009-10-25" itemprop="datePublished">October 25, 2009</time></span>
+      <i class="bi bi-tags"></i><a href="/blog/tag/assembler/">assembler</a>, <a href="/blog/tag/x86/">x86</a>
+  	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-10-26-random-float-number-using-x86-asm-code.html">edit</a>
+    </div>
+
+
+
+
+While I'm working on the next 4k-64k softsynth for FRequency, I need to implement a simple noise generator. In the past, i used to call directly the c rand() function without digging into the internals... Because i have to develop the softsynth using x86 ASM in order to keep it as small as possible, i went through revisiting the problem of generating a random uniform float number in the range [-1,1) or (-1,1], but with size optimization in mind. This is not a common problem as you'll more likely be able to easily find a speed optimized version other the Internet but not a sized one...<br /><br />I will focus mainly on 3 implementations, so i will not describe an exhaustive list of technique around. I would be glad if you are aware about a smaller implementation! I found quite some interesting results, like a poor performance of the c rand() function, both in terms of speed and uniformity.<br /><br />Let's recall one of the simplest C random function you can find around :<br />
+<pre><code>float Rand() {<br />    return ((float)rand()/RAND_MAX) * 2.0f - 1.0f;<br />}<br /></code></pre>
+<br />The rand() is generating an integer in the range [0, 32767]. RAND_MAX is equal to the max value 32767. The result is then scaled to the range [-1,1]. Let us first implement this in x86 ASM, just as an exercise.<br /><a name='more'></a><br />
+<h3>Version 1: Using the c rand() function</h3>
+<br />A straight implementation of the previous C in x86 ASM could be like this (thanks to <a href="http://www.blogger.com/asmhighlighter.codeplex.com">AsmHighlighter</a> for the syntax highlighting and the instruction size calculation ;) ) :<br />
+<div><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">_Rand <span style="color: purple;">proc</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">call</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [_imp__rand]&nbsp;&nbsp; <span style="color: green;">;#6 Call c Rand</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">push</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 st(0)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(1) </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fild</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [<b><span style="color: maroon;">esp</span></b>]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ;<span style="color: green;">#3 rand&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fidiv</span> <span style="color: purple;">word</span> <span style="color: purple;">ptr</span> [RandMax]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#6 (-1,0]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fchs</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 </span></span><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;"><span style="color: green;">[0,1) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fadd</span> <b><span style="color: maroon;">st(0)</span></b>,<b><span style="color: maroon;">st(0)</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 [0,2) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fld1</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;"><span style="color: green;">[0,2)</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fsubp</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 [-1,+1]</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">pop</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 clean stack </span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">ret</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ;<span style="color: green;">#1</span></span><br /><span style="font-family: &quot;Courier New&quot;; font-size: 10pt; line-height: 115%;">_Rand <span style="color: purple;">endp</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#26 total bytes</span></span></div>
+<br />There is a slight difference with the previous C version. I want to generate a number in the range [-1,1), so the RandMax is set to a short (or word) 32768, meaning that the integer value is -2^15. Because the c rand function generate a number in the range 0-32767, i have to scale it to the correct [-1,1) range. Dividing by -2^15 generate a number in the range (-1,0]. I just have to negate this result, multiply by 2 and minus 1 to get the correct range [-1,1) (although this in not critical to have this range. The range (-1,1] is fine as well).<br /><br />The number of bytes for this function is <code>26 bytes</code>. Although you have to add the cost of referencing the msvcrt runtime (this is not so much, but still...). The crinkler compressed size is around <code>20.5 bytes</code>. You will find attached to this article the <a href="http://groups.google.com/group/code4k/web/RandAsm.zip">RandAsm Visual C++ Project</a> using MASM and crinkler.<br /><br />The protocol to test the compressed size is to leave only one type of random function at a time when generating the code. The other implementations are disabled. This will give you a more accurate estimation of the compressed size (but this is not a true final compressed size in an intro exe, as context modeling from crinkler heavily depends on... context, previous code compressed... and so on...). But with this approach, you have at least something close to reality... I have also measure the execution time minus the code to fill the buckets (i have run an empty random function to get the reference time).<br /><br />I have implemented a basic checker of the uniformity of the random number generator. My friend ulrick advise me to use a simple <a href="http://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test">Kolmogorov-Smirnov (KS) test</a> to check the efficiency of the generator, but i found this too difficult (i didn't have time to implement such a test, with storing, sorting all random numbers...). He then suggest me to use a simpler test called <a href="http://en.wikipedia.org/wiki/Chi-square_test">Chi-Square Test</a> (check also this nice article from Dr Dobb's about <a href="http://www.ddj.com/cpp/184403185">Testing Random Number Generators</a> by Jerry Dwyer and K.B. Williams, June 1996 ). It's basically working on frequencies (and not on individual random number as for the KS test) using a limited amount of buckets to count the frequency of the random number. For this test, i'm using 100 buckets on the range [-1,1[ (bucket 0 is in the range [-1, -0.98] while the bucket number 99 is in the range [0.98, 1[), and generating 1,000,000,000 random float numbers with it. It means that by bucket, i should expect a perfect : 1,000,000,000 / 100 = 10,000,000 values. The Chi-Square Test computes a factor k that is checked against a <a href="http://www.medcalc.be/manual/chi-square-table.php">Chi-Square distribution table</a>.<br /><br />Be aware that this test (as well as the KS test) is mainly relevant for testing the uniformity of the random numbers, but they don't ensure that the numbers are truly random. We should implement another algo to test this "random-ability" but i don't have time to do this! ;)<br /><br />The results for the C-Rand ASM version are :<br /><br />
+<table border="1" style="text-align: center;">
+   <tbody>
+      <tr>
+         <th>Rand Type</th>
+         <th>Time(ms)</th>
+         <th>Precision(bits)</th>
+         <th>Code Size(bytes)</th>
+         <th>Compressed Code Size(bytes)</th>
+         <th>k-ChiSq</th>
+      </tr>
+      <tr>
+         <td>Rand C ASM</td>
+         <td>29890 ms</td>
+         <td>15</td>
+         <td>26</td>
+         <td>20.5</td>
+         <td>2066.67</td>
+      </tr>
+   </tbody>
+</table>
+<br />You may notice that the k-ChiSquare factor is very high. This factor should be <b>below</b> 134.642! (column 0.01, line 99 in the ChiSquare table). A first look at these results tell us that they are quite poor. We are going to see that other x86 ASM implementation are performing much better than this one.<br /><br />For the curious, what's behind the c rand() function? Under Visual C++, you have the following code:<br />
+<pre><code>int __cdecl rand (void)<br />{<br />    return( ((next = next * 214013L + 2531011L) &gt;&gt; 16) &amp; 0x7fff );<br />}<br /></code></pre>
+We can see that the 0x7FFF truncation is hurting a lot the precision of the rand function. Only 15 bits are then used when converting to the float.<br /><br />
+<h3>Version 2: Using iq's method</h3>
+<br />iq wrote a couple of <a href="http://iquilezles.org/www/">very great article about coding, mainly for graphics</a>. But among them, there is an interesting article about the problem of random float numbers : <a href="http://iquilezles.org/www/articles/sfrand/sfrand.htm">float, small and random</a>.<br /><br />Read this article carefully, as it is going a little deeper in the internals of <a href="http://en.wikipedia.org/wiki/IEEE_floating-point_standard">IEEE-754</a> floating point representation (used by the FPU).<br />Finally, iq suggest a new efficient algorithm:<br />
+<pre><code>float sfrand( int *seed )<br />{<br />    float res;<br />    seed[0] *= 16807;<br />    *((unsigned int *) &amp;res) = ( ((unsigned int)seed[0])&gt;&gt;9 ) | 0x40000000;<br />    return( res-3.0f );<br />}<br /></code></pre>
+<br />A straight implementation of his algo in asm could be like this one:<br /><br /><span style="font-family: 'Courier New'; font-size: 10pt;">_Rand <span style="color: purple;">proc</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">imul</span> <b><span style="color: maroon;">eax</span></b>, <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed], <span style="color: navy;">16807</span>&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#A eax = RandSeed * 16807</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">mov</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed], <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#5  RandSeed = eax</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">mov</span> <b><span style="color: maroon;">al</span></b>, <span style="color: navy;">080h</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 eax: rrrrrr80h where r are bits from random seeds</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">ror</span> <b><span style="color: maroon;">eax</span></b>, <span style="color: navy;">8</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#3 eax: 80rrrrrrh. value = s * 2^(e-127). e is set to 128,  thus 040h value ( sEee eeee efff ffff ffff ffff ffff ffff)</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">shr</span> <b><span style="color: maroon;">eax</span></b>, <span style="color: navy;">1</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 eax: 40rrrrrrh</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">push</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 push eax on stack to load it as a float. rand [2,4)</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fld</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [<b><span style="color: maroon;">esp</span></b>]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#3  load rand st0 = rand [2,4)</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">push</span> <span style="color: navy;">3</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#2 load 3</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fisub</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [<b><span style="color: maroon;">esp</span></b>]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#3  st(0) = rand [2,4) - 3 = rand[-1, 1)</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">pop</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 free stack</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">pop</span> <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 free stack&nbsp;&nbsp;&nbsp; </span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span style="color: blue; font-family: 'Courier New'; font-size: 10pt;">ret</span><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1  return to caller</span></span><br /><span style="font-family: 'Courier New'; font-size: 10pt; line-height: 115%;">_Rand <span style="color: purple;">endp</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#34 total bytes</span></span><br /><br />This is not probably the smallest x86 ASM implementation of iq's code, but from 1 to 2 bytes, this should be enough close... (hey, i don't claim to be a x86 expert anyway! ;) )<br /><br />This implementation gives the following results :<br /><br />
+<table border="1" style="text-align: center;">
+   <tbody>
+      <tr>
+         <th>Rand Type</th>
+         <th>Time(ms)</th>
+         <th>Precision(bits)</th>
+         <th>Code Size(bytes)</th>
+         <th>Compressed Code Size(bytes)</th>
+         <th>k-ChiSq</th>
+      </tr>
+      <tr>
+         <td>iq's ASM</td>
+         <td>13042 ms</td>
+         <td>23</td>
+         <td>34</td>
+         <td>30</td>
+         <td>7.36</td>
+      </tr>
+   </tbody>
+</table>
+<br />They are significantly better than the previous one. Both in terms of execution time and uniform distribution. The k-ChiSqr factor is 7.36 much below the 134.642 limit. Although, the result is a function a bit larger, around 30 bytes compressed. Not a lot, but still, we need to have a smaller one.<br /><br />
+<h3 id="v3">Version 3: Using simple int min divider (Park Miller-Carta's method)</h3>
+<br />When there is a demo/intro that is using a cool hack or whatever, i'm always curious to see how they did it. Well, i should post someday an article about the fact that "demomaking... is a bit of hacking". So when i went around the code of the <a href="http://4klang.untergrund.net/">4klang</a> great synth from gopher, i found an interesting tiny random function. [Edit]After some research, i found the original authors are <a href="http://www.firstpr.com.au/dsp/rand31/">Payne, Rabung &amp; Bogyo (in 1969), then Park Miller (in 1988) and Carta (in 1990)</a>, this is a nice implementation and in fact, very simple.[/Edit]<br /><br />We are basically using the same random generator that iq's suggest at the beginning (other candidates are also good. 4klang is using 16007. I'm wondering if we should use a prime number?) :<br />
+<pre><code>seed *= 16807;<br /></code></pre>
+<code>seed</code> is an integer. So the range value is going from [-2^31, 2^31-1]. Following the simple C rand function, we just have to load this seed directly on the FPU as an integer, keeping all the 31 bits precision. Then, we just have to divide by the largest - absolute - value : -2^31 aka 080000000h in hex. In C, this is simple as :<br />
+<pre><code>seed *= 16807;<br />    return ((float)seed) / (float)0x80000000;<br /></code></pre>
+<br />or in x86 ASM:<br /><br />
+<div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">_Rand <span style="color: purple;">proc</span></span></div>
+<div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">imul</span> <b><span style="color: maroon;">eax</span></b>, <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed], <span style="color: navy;">16807</span> <span style="color: green;">;#A eax =  RandSeed * 16807</span></span></div>
+<div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">mov</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed], <b><span style="color: maroon;">eax</span></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#5  RandSeed = eax</span></span></div>
+<div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fild</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandSeed]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#6 load RandSeed as  an integer</span></span></div>
+<div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: teal;">fidiv</span> <span style="color: purple;">dword</span> <span style="color: purple;">ptr</span> [RandDiv]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#6 div by max int value (absolute) = eax / (-2^31)</span></span></div>
+<div style="line-height: normal;"><span style="font-family: 'Courier New'; font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: blue;">ret</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#1 return to caller</span></span></div>
+<span style="font-family: 'Courier New'; font-size: 10pt; line-height: 115%;">_Rand <span style="color: purple;">endp</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: green;">;#28 total bytes</span></span><br /><br />We can see that this implementation return a result in the range (-1,1]. This implementation gives the following results :<br /><br />
+<table border="1" style="text-align: center;">
+   <tbody>
+      <tr>
+         <th>Rand Type</th>
+         <th>Time(ms)</th>
+         <th>Precision(bits)</th>
+         <th>Code Size(bytes)</th>
+         <th>Compressed Code Size(bytes)</th>
+         <th>k-ChiSq</th>
+      </tr>
+      <tr>
+         <td>Int-Min Divider</td>
+         <td>6006 ms</td>
+         <td>31</td>
+         <td>28</td>
+         <td>19</td>
+         <td>7.31</td>
+      </tr>
+   </tbody>
+</table>
+<br />Results are of course significantly better than the C version, but they are also better in terms of execution time and size compare to iq's method. Not surprisingly, k-ChiSqr factor is 7.31 much below the 134.642 limit and comparable to iq. <br /><br />With 31 bits for the precision, This method is even better, as the seed is fully loaded on the fpu stack with it's 31 bits precision : because the FPU has a total of 80 bits to store a floating point number (with <a href="http://en.wikipedia.org/wiki/Extended_precision">extended precision</a>), it means that we have 64 bits available for the mantissa, large enough to store the 31 bits . The compression is working well on this, mainly due to the fact that we are using a simple memory addressing that is compressing well with crinkler. Yep, sometimes, it's better to have something like : <code>mov eax, [address1]; imul eax, dword ptr [address2]</code> than having to preload a base adress like <code>lea ebx, [address1]; mov eax, [ebx]; imul eax, [ebx+4];</code>. So with only 19 bytes compressed, this version is really cool and the execution time is impressive too!<br /><br />
+<h3>Faster and better floating point generator</h3>
+<br />Let's recap the results :<br /><br />
+<table border="1" style="text-align: center;">
+   <tbody>
+      <tr>
+         <th>Rand Type</th>
+         <th>Time(ms)</th>
+         <th>Precision(bits)</th>
+         <th>Code Size(bytes)</th>
+         <th>Compressed Code Size(bytes)</th>
+         <th>k-ChiSq</th>
+      </tr>
+      <tr>
+         <td>Rand C ASM</td>
+         <td>29890 ms</td>
+         <td>15</td>
+         <td>26</td>
+         <td>20.5</td>
+         <td>2066.67</td>
+      </tr>
+      <tr>
+         <td>iq's ASM</td>
+         <td>13042 ms</td>
+         <td>23</td>
+         <td>34</td>
+         <td>30</td>
+         <td>7.36</td>
+      </tr>
+      <tr>
+         <td>Int-Min Divider</td>
+         <td>6006 ms</td>
+         <td>31</td>
+         <td>28</td>
+         <td>19</td>
+         <td>7.31</td>
+      </tr>
+   </tbody>
+</table>
+<br />We can see that the "Int-Min Divider" technique is by far the most efficient, both in terms of execution time and size. It's also a very good generator, as the distribution is quite uniform. <br /><br />This should be very useful when you need a fast random floating point generator!<br /><br />
+<h3>A question of floor?</h3>
+<br />Just a few words about truncating a float to an int. I needed such think in order to increments the frequecies for the bucket. I'm usually using a poor implementation using the fpu instructions couple <code>fld/fistp</code> but the results depends on the FPU rounding mode (and the default rounding mode is "nearest" and not "toward zero" as expected). You don't see this when you are using the msvcrt library, as they have implemented a true floor() conversion in the back. But when using the /QIfist option in VC++, you can't use anymore this function from the msvcrt.<br /><br />However, I found a straight function that may do the trick, using following SSE function :<br />
+<pre><code>inline long floorSSE(double x) {<br />    __asm cvttsd2si eax,x<br />}<br /></code></pre>
+The <a href="http://siyobik.info/index.php?module=x86&amp;id=66">cvttsd2si </a>SSE instruction is converting a double to an int (you can find about this an interesting discussion <a href="http://www.masm32.com/board/index.php?topic=9515.0">here</a>). This is actually working well if the double is coming originally from a float (moving from the FPU to SSE requires writing to memory). But this instruction seems to work well on float. Although, I should check more extensively the reliability of this function...<br /><b>Update 29/10/2009</b> : In fact, there is the FPU instruction <a href="http://software.intel.com/en-us/articles/how-to-implement-the-fisttp-streaming-simd-extensions-3-instruction/"><code>fisttp</code></a> in SSE3 that do also and is less restrictive than the <code>cvttsd2si</code> instruction (notice although they are more considered as "truncate" than "floor" as i mentioned).<br />________________________________________<br />Here is attached the VC++ 2008 <a href="http://xoofx.com/upload/RandAsm.zip">RandAsm </a>project i used for this article.
+
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
     </div>
   </div>
 	<footer class="blog-footer">

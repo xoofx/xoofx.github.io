@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.5.0.0">
+    <meta name="generator" content="lunet 0.5.3.0">
     <title>A new managed .NET/C# Direct3D 11 API generated from DirectX SDK headers | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
@@ -21,9 +21,10 @@
 
   <div class="container">
     <div class="row">
-      <nav class="navbar navbar-expand-md navbar-light w-100">
+      <nav class="navbar navbar-expand-md">
+        <div class="container-fluid">
             <a class="xoofx-logo navbar-brand" href="/"></a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
             <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
@@ -34,759 +35,760 @@
     <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
   <li class='nav-item '>
     <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
-  <li class='nav-item  ml-auto'>
+  <li class='nav-item  ms-auto'>
     <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
 </ol>
             </div>            
+        </div>
       </nav>
     </div>
     <div class="row">
-      
-      <div class="col-sm-9 js-toc-content">
-        <p id="lunet-results"></p>
-        <article class="page">
-          <div class="title">
-      		  <h1 class="title"><a href="/blog/2010/10/19/managed-netc-direct3d-11-api-generated.html">A new managed .NET/C# Direct3D 11 API generated from DirectX SDK headers</a></h1>
-      		
-          </div>
-          <div class="entry-content">
-          <div class="blog-post-meta">
-            <span class="fa fa-calendar"></span>
-            <span class="date"><time datetime="2010-10-19" itemprop="datePublished">October 19, 2010</time></span>
-            <i class="fa fa-tags"></i><a href="/blog/tag/tools/">Tools</a>, <a href="/blog/tag/sharpdx/">SharpDX</a>, <a href="/blog/tag/slimdx/">SlimDX</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/d3d11/">D3D11</a>, <a href="/blog/tag/directx/">DirectX</a>, <a href="/blog/tag/net/">.Net</a>
-        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2010/2010-10-19-managed-netc-direct3d-11-api-generated.html">edit</a>
-          </div>
-            
-            
-            
-            
-            <a href="http://3.bp.blogspot.com/_dv_YkYWn3HA/TLxTDEgj3-I/AAAAAAAADNU/HnG9sWg_slU/s1600/SharpDXMiniTri.png" imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img border="0" height="156" src="http://3.bp.blogspot.com/_dv_YkYWn3HA/TLxTDEgj3-I/AAAAAAAADNU/HnG9sWg_slU/s200/SharpDXMiniTri.png" width="200" /></a>I have been quite busy since the end of august, personally because I'm proud to announce the birth of my daughter! (and his older brother, is somewhat, asking a lot more attention since ;) ) and also, working hard on an exciting new project based on .NET and Direct3D.<br /><br />What is it? Yet Another Triangle App? Nope, this is in fact an entirely new .NET API for Direct3D11, DXGI, D3DCompiler that is fully managed without using any mixed assemblies C++/CLI but having similar performance than a true C++/CLI API (like SlimDX). But the main characteristics and most exciting thing about this new wrapper is that<b> the whole code marshal/interop is fully generated from the DirectX SDK headers, including the MSDN documentation</b>.<br /><br />The current key features and benefits of this approach are:<br /><br />
-            <ul>
-               <li><b>API is generated from DirectX SDK headers </b><b> </b>: the mapping is able to perform "complex transformation", extracting all relevant information like enumerations, structures, interfaces, functions, macro definitions, guids from the C++ source headers. For example, the mapping process is able to generated properties for interfaces or inner group interface like the one you have in SlimDX : meaning that instead of having a "device.IASetInputLayout" you are able to write "device.InputAssembler.InputLayout = ...".</li>
-               <li><b>Full support of Direct3D 11, DXGI 1.0/1.1, D3DCompiler API </b>: Due to the whole auto-generated process, the actual coverage is 100%. Although, I have limited the generated code to those library but that could be extended to others API quite easily (like XAudio2, Direct2D, DirectWrite... etc.).</li>
-               <li><b>Pure managed .NET API </b>: assemblies are compiled with <b>AnyCpu target</b>. You can run your code on a x64 or a x86 machine with the same assemblies.&nbsp;</li>
-               <li><b>API Extensibility</b> The generated code is in C#, all the types are marked "partial" and are easily extensible to provide new helpers method. The code generator is able to hide some methods/types internally in order to use them in helper methods and to hide them from the public api.  </li>
-               <li><b>C++/CLI Speed </b>: the framework is using a genuine way to avoid any C++/CLI while still achieving comparable performance. </li>
-               <li><b>Separate assemblies </b>: a core assembly containing common classes and an assembly for each subgroup API (Direct3D, DXGI, D3DCompiler)</li>
-               <li><b>Lightweight assemblies </b>: generated assemblies are lightweight, 300Ko in total, 70Ko compressed in an archive (similar assemblies in C++/CLI would be closer to 1Mo, one for each architecture, and depend from MSVCRT10)</li>
-               <li><b>API naming convention very close to SlimDX API </b>(To make it 100% equals would just require to specify the correct mapping names while generating the code)</li>
-               <li><b>Raw DirectX object life management</b> : No overhead of ObjectTable or <a href="http://msdn.microsoft.com/en-us/library/8bwh56xe.aspx">RCW </a>mechanism, the API is using direct native management with classic COM method "Release". Currently, instead of calling Dispose, you should call Release (and call AddRef if you are duplicating references, like in C++). I might evaluate how to safely integrate Dispose method call.<b>&nbsp;</b></li>
-               <li><b>Easily obfuscatable</b> : Due to the fact the framework is not using any mixed assemblies</li>
-               <li><b>DirectX SDK Documentation integrated in the .NET xml comments </b>: The whole API is also generated with the MSDN documentation. Meaning that you have exactly the same documentation for DirectX and for this API (this is working even for method parameters, remarks, enum items...etc.). Reference to other types inside the documentation are correctly linked to the .NET API.&nbsp;</li>
-               <li><b>Prototype for a partial support of the Effects11 API in full managed .NET</b>.</li>
-            </ul>
-            <div class="separator" style="clear: both; text-align: center;"></div>
-            If you have been working with SlimDX, some of the features here could sound familiar and you may wonder why another .DirectX NET API while there is a great project like SlimDX? Before going further in the detail of this wrapper and how things are working in the background, I'm going to explain why this wrapper could be interesting.<br /><br />I'm also currently not in the position to release it for the reason that I don't want to compete with SlimDX. I want to see if SlimDX Team would be interested to work together with this system, a kind of joint-venture. There are still lots of things to do, improving the mapping, making it more reliable (the whole code here has been written in a urge since one month...) but I strongly believe that this could be a good starting point to SlimDX 2, but I might be wrong... also, SlimDX could think about another road map... So <b>this is a message to the SlimDX Team : Promit, Josh, Mike, I would be glad to hear some comments from you about this wrapper </b> (and if you want, I could send you the generated API so that you could look at it and test it!)<br /><br /><b>[Updated 30 November 2010]</b><br />This wrapper is now available from <a href="http://code.google.com/p/sharpdx/">SharpDX</a>. Check this <a href="/blog/2010/11/30/official-release-of-sharpdx-10">post</a>.<br /><b>[/Updated]</b><br /><br />This post is going to be quite long, so if you are not interested by all the internals, you could jump to the sample code at the end. <br /><br /><a name='more'></a>
-            <h3>An attempt to a SlimDX next gen</h3>
-            <br />First of all, is it related to 4k or 64k intros? (an usual question here, mostly question for myself :D) Well, while I'm still working to make things smaller, even in .NET, I would like to work on a demo based on .NET (but with lots of procedurally generated textures and music).&nbsp; I have been evaluating both XNA and SlimDX, and in September, I have even been working on a XNA like API other SlimDX / Direct3D 11 that was working great, simplifiying a lot the code, while still having benefits to use new D3D11 API (Geometry shaders, Compute Shaders...etc.). I will talk later about this "Demo" layer API.<br /><br />As a demo maker for tiny executable, even in .NET, I found that working with SlimDX was not the best option : even stripping the code, recompiling the SlimDX to keep only DirectX11/DXGI&amp;co, I had a roughly 1Mo dll (one for each architecture) + a dependency to MSVRT10 which is a bit annoying. Even if I would like to work on a demo (with less size constraint), I didn't want to have a 100Ko exe and a 1Mo compressed of external dlls...<br /><br />Also, I read some of <a href="http://scientificninja.com/tag/slimdx">Josh's thoughts about SlimDX 2</a> : I was convinced about the need for <a href="http://scientificninja.com/blog/thoughts-on-slimdx-2-assembly-design">separated assemblies </a>and <a href="http://scientificninja.com/blog/thoughts-on-slimdx-2-object-lifetime">simplified life object management</a>. But was not convinced by the need to <a href="http://scientificninja.com/blog/thoughts-on-slimdx-2-interfaces">use "interfaces" for the new API </a>and not really happy about still having some platform specific mixed-assemblies in order to support correctly 32/64 bit architecture (with a simple delay loading).<br /><br />What is supposed to address SlimDX 2 over SlimDX? <br />
-            <ul>
-               <li>Making object life management closer to the real thing (no Dispose but raw Release instead)&nbsp;</li>
-               <li>Multiple assemblies</li>
-               <li>Working on the API more with C# than in C++/CLI</li>
-               <li>Support automatic platform architecture switching (running transparently an executable on a x86 and x64 machine without recompiling anything).</li>
-            </ul>
-            Recall that I was slightly working around August on parsing the SDK headers based on <a href="http://www.boost.org/doc/libs/1_43_0/libs/wave/index.html">Boost::Wave V2.0</a>. My concern was that I have developed a SlimDX like interface in C++ for Ergon demo, but I found the process to be very laborious, although very straightforward, while staying in the same language as DirectX... Thinking more about it, and because I wanted to do more work in 3D and C# (damn it, this language is SOOO cool and powerful compared to C++)... I found that It would be a great opportunity to see if it's not possible to extract enough information from the SDK headers in order to generate a Direct3D 11 .NET/C# API.<br /><br />And everything has been surprisingly very fast : extraction of all the code information from the SDK C++ headers file was in fact quite easy to code, in few days... and generating the code was quite easy (I have to admit that I have a strong experience in this kind of process, and did similar work, around ten years ago, in Java, delivering an innovative Java/COM bridge layer for the company I was working at that time, much safer than Sun Java/COM layer that was buggy and much more powerfull, supporting early binding, inheritance, documentation... etc).<br /><br />In fact, with this generating process, I have been able to address almost all the issue that were expected to&nbsp; be solved in SlimDX 2, and moreover, It's going a bit further because the process is automated and It's supporting the platform x86/x64 without requiring any mixed assemblies.<br /><br />In the following sections, I'm going to deeply explain the architecture, features, internals and mapping rules used to generate this new .Net wrapper (which has currently the  "SharpDX" code name).<br /><br />
-            <h2>Overview </h2>
-            <br />
-            <div class="separator" style="clear: both; text-align: center;"><a href="http://3.bp.blogspot.com/_dv_YkYWn3HA/TLx1fGAO2QI/AAAAAAAADNY/ZBEQOl39ntA/s1600/SharpDXGeneral.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" height="520" src="http://3.bp.blogspot.com/_dv_YkYWn3HA/TLx1fGAO2QI/AAAAAAAADNY/ZBEQOl39ntA/s640/SharpDXGeneral.png" width="640" /></a></div>
-            In order to generate Managed .NET API for DirectX from the SDK headers, the process is composed of 3 main steps:<br />
-            <ol>
-               <li><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165#HeadersToXIDL">Convert from the DirectX SDK C++ Headers to an intermediate format called "XIDL" which is a mix of XML and "IDL"</a>. This first part is responsible to reverse engineering the headers, extract back all existing and useful information (more on the following section), and produce a kind of IDL (Intermediate Definition Language). In fact, If I had access to the IDL used internally at Microsoft, It wouldn't have been necessary to write this whole part, but sadly, the DirectX 11 IDL is not available, although you can clearly verify from the D3D11.h that this file is generated from an IDL. This module is also responsible to access MSDN website and crawl the needed documentation, and associate it with all the languages elements (structures, structures fields, enums, enum items, interfaces, interfaces methods, method parameters...etc.). Once a documentation has been retrieved, It's stored on the disk and is not retrieved next time the conversion process is re-runned.</li>
-               <li><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165#XIDLToCSharp">Convert from the XIDL file to several C# files</a>. This part is responsible to perform from a set of mapping rules a translation of C++ definition to C# definition. The mapping is as complex as identifying which include would map to assembly/namespace, which type could be moved to an assembly/namespace, how to rename the types,functions, fields, parameters, how to add missing information from the XIDL file...etc. The current mapping rules are express in less then 600 lines of C# code... There is also a trick here not described in the picture. This process is also generating a small interop assembly which is only used at compile time, dynamically generated at runtime and responsible for filling the gap between what is possible in C# and what you can do in C++/CLI (there are lots of small usefull IL bytecode instructions generated in C++/CLI that are not accessible from C#, this assembly is here for that....more on this in the Convert to XIDL section).</li>
-               <li><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165#CSharpToFiles">Integrate the generated files in several Visual Studio projects and a global solution</a>. Each project is generating an assembly. It is where you can add custom code that could not be generated (like Vector3 math functions, or general framework objects like a ComObject). The generated code is also fully marked with "partial" class, one of the cool things of C# : you can have multiple files contributing to the same class declaration... making things easy to have generated code on the side of custom hand made code.&nbsp;</li>
-            </ol>
-            <br /><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165" name="HeadersToXIDL"></a><br />
-            <h2>Revert DirectX IDL from headers</h2>
-            <br />Unfortunately, I have not found a workable C preprocessor written in .NET, and this part has been a bit laborious to make it work. The good thing is that I have found <a href="http://www.boost.org/doc/libs/1_43_0/libs/wave/index.html">Boost Wave 2.0</a> in C++. The bad thing is that this library, written in a heavy boost-STL-templatizer philosophy was really hard to manage to work under a C++/CLI DLL. Well, the principle was to embed Boost Wave in a managed DLL, in order to use it from C#... after several attempts, I was not able to build it with C++/CLI .NET 4.0. So I ended up in a small dll COM wrapper around BoostWave, and a thin wrapper in .NET calling this dll. Compiling Boost-Wave was also sometimes a nightmare : I tried to implement my own provider of stream for Wave... but dealing with a linker error that was freezing VS2010 for 5s to display the error (several Ko of a single template cascaded error)... I have found somewhere on the Wave release that It was in fact not supported... but wow, templates are supposed to make life easier... but the way It is used gives a really bad feeling... (and I'm not a beginner in C++ template...)<br /><br />Anyway, after succeeding to wrap BoostWave API, I had a bunch of tokens to process. I started to wrote a handwritten C/C++ parser, which is targeted to read well-formed DirectX headers and nothing else. It was quite tricky sometimes, the code is far from being failsafe, but I succeed to parse correctly most of the DirectX headers. During the mapping to C#, I was able to find a couple of errors in the parser that were easy to fix.<br /><br />In the end, this parser is able to extract from the headers:<br />
-            <ul>
-               <li>Enumerations, Structures, Interfaces, Functions, Typedefs</li>
-               <li>Macros definitions</li>
-               <li>GUIDs</li>
-               <li>Include dependency</li>
-            </ul>
-            The whole data is stored in a C# model that is marshaled in XML using WCF (DataMember, DataContract), which make the code really easy to write, not much intrusive and you can serialize and deserialize to XML. For example, a CppType is defined like this:<br /><br />
-            <pre class="language-csharp"><code>//
-            using System.Runtime.Serialization;
-            using System.Text;
-            
-            namespace SharpDX.Tools.XIDL
+
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2010/10/19/managed-netc-direct3d-11-api-generated.html">A new managed .NET/C# Direct3D 11 API generated from DirectX SDK headers</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="bi bi-calendar"></span>
+      <span class="date"><time datetime="2010-10-19" itemprop="datePublished">October 19, 2010</time></span>
+      <i class="bi bi-tags"></i><a href="/blog/tag/tools/">Tools</a>, <a href="/blog/tag/sharpdx/">SharpDX</a>, <a href="/blog/tag/slimdx/">SlimDX</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/d3d11/">D3D11</a>, <a href="/blog/tag/directx/">DirectX</a>, <a href="/blog/tag/net/">.Net</a>
+  	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2010/2010-10-19-managed-netc-direct3d-11-api-generated.html">edit</a>
+    </div>
+
+
+
+
+<a href="http://3.bp.blogspot.com/_dv_YkYWn3HA/TLxTDEgj3-I/AAAAAAAADNU/HnG9sWg_slU/s1600/SharpDXMiniTri.png" imageanchor="1" style="clear: right; float: right; margin-bottom: 1em; margin-left: 1em;"><img border="0" height="156" src="http://3.bp.blogspot.com/_dv_YkYWn3HA/TLxTDEgj3-I/AAAAAAAADNU/HnG9sWg_slU/s200/SharpDXMiniTri.png" width="200" /></a>I have been quite busy since the end of august, personally because I'm proud to announce the birth of my daughter! (and his older brother, is somewhat, asking a lot more attention since ;) ) and also, working hard on an exciting new project based on .NET and Direct3D.<br /><br />What is it? Yet Another Triangle App? Nope, this is in fact an entirely new .NET API for Direct3D11, DXGI, D3DCompiler that is fully managed without using any mixed assemblies C++/CLI but having similar performance than a true C++/CLI API (like SlimDX). But the main characteristics and most exciting thing about this new wrapper is that<b> the whole code marshal/interop is fully generated from the DirectX SDK headers, including the MSDN documentation</b>.<br /><br />The current key features and benefits of this approach are:<br /><br />
+<ul>
+   <li><b>API is generated from DirectX SDK headers </b><b> </b>: the mapping is able to perform "complex transformation", extracting all relevant information like enumerations, structures, interfaces, functions, macro definitions, guids from the C++ source headers. For example, the mapping process is able to generated properties for interfaces or inner group interface like the one you have in SlimDX : meaning that instead of having a "device.IASetInputLayout" you are able to write "device.InputAssembler.InputLayout = ...".</li>
+   <li><b>Full support of Direct3D 11, DXGI 1.0/1.1, D3DCompiler API </b>: Due to the whole auto-generated process, the actual coverage is 100%. Although, I have limited the generated code to those library but that could be extended to others API quite easily (like XAudio2, Direct2D, DirectWrite... etc.).</li>
+   <li><b>Pure managed .NET API </b>: assemblies are compiled with <b>AnyCpu target</b>. You can run your code on a x64 or a x86 machine with the same assemblies.&nbsp;</li>
+   <li><b>API Extensibility</b> The generated code is in C#, all the types are marked "partial" and are easily extensible to provide new helpers method. The code generator is able to hide some methods/types internally in order to use them in helper methods and to hide them from the public api.  </li>
+   <li><b>C++/CLI Speed </b>: the framework is using a genuine way to avoid any C++/CLI while still achieving comparable performance. </li>
+   <li><b>Separate assemblies </b>: a core assembly containing common classes and an assembly for each subgroup API (Direct3D, DXGI, D3DCompiler)</li>
+   <li><b>Lightweight assemblies </b>: generated assemblies are lightweight, 300Ko in total, 70Ko compressed in an archive (similar assemblies in C++/CLI would be closer to 1Mo, one for each architecture, and depend from MSVCRT10)</li>
+   <li><b>API naming convention very close to SlimDX API </b>(To make it 100% equals would just require to specify the correct mapping names while generating the code)</li>
+   <li><b>Raw DirectX object life management</b> : No overhead of ObjectTable or <a href="http://msdn.microsoft.com/en-us/library/8bwh56xe.aspx">RCW </a>mechanism, the API is using direct native management with classic COM method "Release". Currently, instead of calling Dispose, you should call Release (and call AddRef if you are duplicating references, like in C++). I might evaluate how to safely integrate Dispose method call.<b>&nbsp;</b></li>
+   <li><b>Easily obfuscatable</b> : Due to the fact the framework is not using any mixed assemblies</li>
+   <li><b>DirectX SDK Documentation integrated in the .NET xml comments </b>: The whole API is also generated with the MSDN documentation. Meaning that you have exactly the same documentation for DirectX and for this API (this is working even for method parameters, remarks, enum items...etc.). Reference to other types inside the documentation are correctly linked to the .NET API.&nbsp;</li>
+   <li><b>Prototype for a partial support of the Effects11 API in full managed .NET</b>.</li>
+</ul>
+<div class="separator" style="clear: both; text-align: center;"></div>
+If you have been working with SlimDX, some of the features here could sound familiar and you may wonder why another .DirectX NET API while there is a great project like SlimDX? Before going further in the detail of this wrapper and how things are working in the background, I'm going to explain why this wrapper could be interesting.<br /><br />I'm also currently not in the position to release it for the reason that I don't want to compete with SlimDX. I want to see if SlimDX Team would be interested to work together with this system, a kind of joint-venture. There are still lots of things to do, improving the mapping, making it more reliable (the whole code here has been written in a urge since one month...) but I strongly believe that this could be a good starting point to SlimDX 2, but I might be wrong... also, SlimDX could think about another road map... So <b>this is a message to the SlimDX Team : Promit, Josh, Mike, I would be glad to hear some comments from you about this wrapper </b> (and if you want, I could send you the generated API so that you could look at it and test it!)<br /><br /><b>[Updated 30 November 2010]</b><br />This wrapper is now available from <a href="http://code.google.com/p/sharpdx/">SharpDX</a>. Check this <a href="/blog/2010/11/30/official-release-of-sharpdx-10">post</a>.<br /><b>[/Updated]</b><br /><br />This post is going to be quite long, so if you are not interested by all the internals, you could jump to the sample code at the end. <br /><br /><a name='more'></a>
+<h3>An attempt to a SlimDX next gen</h3>
+<br />First of all, is it related to 4k or 64k intros? (an usual question here, mostly question for myself :D) Well, while I'm still working to make things smaller, even in .NET, I would like to work on a demo based on .NET (but with lots of procedurally generated textures and music).&nbsp; I have been evaluating both XNA and SlimDX, and in September, I have even been working on a XNA like API other SlimDX / Direct3D 11 that was working great, simplifiying a lot the code, while still having benefits to use new D3D11 API (Geometry shaders, Compute Shaders...etc.). I will talk later about this "Demo" layer API.<br /><br />As a demo maker for tiny executable, even in .NET, I found that working with SlimDX was not the best option : even stripping the code, recompiling the SlimDX to keep only DirectX11/DXGI&amp;co, I had a roughly 1Mo dll (one for each architecture) + a dependency to MSVRT10 which is a bit annoying. Even if I would like to work on a demo (with less size constraint), I didn't want to have a 100Ko exe and a 1Mo compressed of external dlls...<br /><br />Also, I read some of <a href="http://scientificninja.com/tag/slimdx">Josh's thoughts about SlimDX 2</a> : I was convinced about the need for <a href="http://scientificninja.com/blog/thoughts-on-slimdx-2-assembly-design">separated assemblies </a>and <a href="http://scientificninja.com/blog/thoughts-on-slimdx-2-object-lifetime">simplified life object management</a>. But was not convinced by the need to <a href="http://scientificninja.com/blog/thoughts-on-slimdx-2-interfaces">use "interfaces" for the new API </a>and not really happy about still having some platform specific mixed-assemblies in order to support correctly 32/64 bit architecture (with a simple delay loading).<br /><br />What is supposed to address SlimDX 2 over SlimDX? <br />
+<ul>
+   <li>Making object life management closer to the real thing (no Dispose but raw Release instead)&nbsp;</li>
+   <li>Multiple assemblies</li>
+   <li>Working on the API more with C# than in C++/CLI</li>
+   <li>Support automatic platform architecture switching (running transparently an executable on a x86 and x64 machine without recompiling anything).</li>
+</ul>
+Recall that I was slightly working around August on parsing the SDK headers based on <a href="http://www.boost.org/doc/libs/1_43_0/libs/wave/index.html">Boost::Wave V2.0</a>. My concern was that I have developed a SlimDX like interface in C++ for Ergon demo, but I found the process to be very laborious, although very straightforward, while staying in the same language as DirectX... Thinking more about it, and because I wanted to do more work in 3D and C# (damn it, this language is SOOO cool and powerful compared to C++)... I found that It would be a great opportunity to see if it's not possible to extract enough information from the SDK headers in order to generate a Direct3D 11 .NET/C# API.<br /><br />And everything has been surprisingly very fast : extraction of all the code information from the SDK C++ headers file was in fact quite easy to code, in few days... and generating the code was quite easy (I have to admit that I have a strong experience in this kind of process, and did similar work, around ten years ago, in Java, delivering an innovative Java/COM bridge layer for the company I was working at that time, much safer than Sun Java/COM layer that was buggy and much more powerfull, supporting early binding, inheritance, documentation... etc).<br /><br />In fact, with this generating process, I have been able to address almost all the issue that were expected to&nbsp; be solved in SlimDX 2, and moreover, It's going a bit further because the process is automated and It's supporting the platform x86/x64 without requiring any mixed assemblies.<br /><br />In the following sections, I'm going to deeply explain the architecture, features, internals and mapping rules used to generate this new .Net wrapper (which has currently the  "SharpDX" code name).<br /><br />
+<h2>Overview </h2>
+<br />
+<div class="separator" style="clear: both; text-align: center;"><a href="http://3.bp.blogspot.com/_dv_YkYWn3HA/TLx1fGAO2QI/AAAAAAAADNY/ZBEQOl39ntA/s1600/SharpDXGeneral.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" height="520" src="http://3.bp.blogspot.com/_dv_YkYWn3HA/TLx1fGAO2QI/AAAAAAAADNY/ZBEQOl39ntA/s640/SharpDXGeneral.png" width="640" /></a></div>
+In order to generate Managed .NET API for DirectX from the SDK headers, the process is composed of 3 main steps:<br />
+<ol>
+   <li><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165#HeadersToXIDL">Convert from the DirectX SDK C++ Headers to an intermediate format called "XIDL" which is a mix of XML and "IDL"</a>. This first part is responsible to reverse engineering the headers, extract back all existing and useful information (more on the following section), and produce a kind of IDL (Intermediate Definition Language). In fact, If I had access to the IDL used internally at Microsoft, It wouldn't have been necessary to write this whole part, but sadly, the DirectX 11 IDL is not available, although you can clearly verify from the D3D11.h that this file is generated from an IDL. This module is also responsible to access MSDN website and crawl the needed documentation, and associate it with all the languages elements (structures, structures fields, enums, enum items, interfaces, interfaces methods, method parameters...etc.). Once a documentation has been retrieved, It's stored on the disk and is not retrieved next time the conversion process is re-runned.</li>
+   <li><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165#XIDLToCSharp">Convert from the XIDL file to several C# files</a>. This part is responsible to perform from a set of mapping rules a translation of C++ definition to C# definition. The mapping is as complex as identifying which include would map to assembly/namespace, which type could be moved to an assembly/namespace, how to rename the types,functions, fields, parameters, how to add missing information from the XIDL file...etc. The current mapping rules are express in less then 600 lines of C# code... There is also a trick here not described in the picture. This process is also generating a small interop assembly which is only used at compile time, dynamically generated at runtime and responsible for filling the gap between what is possible in C# and what you can do in C++/CLI (there are lots of small usefull IL bytecode instructions generated in C++/CLI that are not accessible from C#, this assembly is here for that....more on this in the Convert to XIDL section).</li>
+   <li><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165#CSharpToFiles">Integrate the generated files in several Visual Studio projects and a global solution</a>. Each project is generating an assembly. It is where you can add custom code that could not be generated (like Vector3 math functions, or general framework objects like a ComObject). The generated code is also fully marked with "partial" class, one of the cool things of C# : you can have multiple files contributing to the same class declaration... making things easy to have generated code on the side of custom hand made code.&nbsp;</li>
+</ol>
+<br /><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165" name="HeadersToXIDL"></a><br />
+<h2>Revert DirectX IDL from headers</h2>
+<br />Unfortunately, I have not found a workable C preprocessor written in .NET, and this part has been a bit laborious to make it work. The good thing is that I have found <a href="http://www.boost.org/doc/libs/1_43_0/libs/wave/index.html">Boost Wave 2.0</a> in C++. The bad thing is that this library, written in a heavy boost-STL-templatizer philosophy was really hard to manage to work under a C++/CLI DLL. Well, the principle was to embed Boost Wave in a managed DLL, in order to use it from C#... after several attempts, I was not able to build it with C++/CLI .NET 4.0. So I ended up in a small dll COM wrapper around BoostWave, and a thin wrapper in .NET calling this dll. Compiling Boost-Wave was also sometimes a nightmare : I tried to implement my own provider of stream for Wave... but dealing with a linker error that was freezing VS2010 for 5s to display the error (several Ko of a single template cascaded error)... I have found somewhere on the Wave release that It was in fact not supported... but wow, templates are supposed to make life easier... but the way It is used gives a really bad feeling... (and I'm not a beginner in C++ template...)<br /><br />Anyway, after succeeding to wrap BoostWave API, I had a bunch of tokens to process. I started to wrote a handwritten C/C++ parser, which is targeted to read well-formed DirectX headers and nothing else. It was quite tricky sometimes, the code is far from being failsafe, but I succeed to parse correctly most of the DirectX headers. During the mapping to C#, I was able to find a couple of errors in the parser that were easy to fix.<br /><br />In the end, this parser is able to extract from the headers:<br />
+<ul>
+   <li>Enumerations, Structures, Interfaces, Functions, Typedefs</li>
+   <li>Macros definitions</li>
+   <li>GUIDs</li>
+   <li>Include dependency</li>
+</ul>
+The whole data is stored in a C# model that is marshaled in XML using WCF (DataMember, DataContract), which make the code really easy to write, not much intrusive and you can serialize and deserialize to XML. For example, a CppType is defined like this:<br /><br />
+<pre class="language-csharp"><code>//
+using System.Runtime.Serialization;
+using System.Text;
+
+namespace SharpDX.Tools.XIDL
+{
+    [DataContract]
+    public class CppType : CppElement
+    {
+        [DataMember(Order=0)]
+        public string Type { get; set;}
+        [DataMember(Order=1)]
+        public string Specifier { get; set; }
+        [DataMember(Order=2)]
+        public bool Const { get; set; }
+        [DataMember(Order = 3)]
+        public bool IsArray { get; set; }
+        [DataMember(Order=4)]
+        public string ArrayDimension { get; set; }
+</code></pre>
+<br />The model is really lightweight, no fancy methods and easy to navigate in.<br /><br />The process is also responsible to get documentation for each C++ items (enumerations, structures, interfaces, functions). The documentation is requested to MSDN while generating all the types. That was also a bit tricky to parse, but in the end, the class is very small (less than 200 lines of C# code). Downloaded documentation is stored on the disk and is used for later re-generation of the parsing. <br /><br />The generated XML model is taking around 1.7Mo for DXGI, D3D11, D3DX11, D3DCompiler includes and looks like this:
+<interfaces></interfaces>
+<br /><br />
+<pre style="font-family: consolas;"><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Interfaces</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">CppInterface</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span>ID3D11DeviceChild<span style="color: blue;"><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span>A&nbsp;device-child&nbsp;interface&nbsp;accesses&nbsp;data&nbsp;used&nbsp;by&nbsp;a&nbsp;device.<span style="color: blue;"><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Remarks</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Parent</span><span style="color: blue;">&gt;</span>IUnknown<span style="color: blue;"><span style="color: #a31515;">Parent</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Methods</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">CppMethod</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span>GetDevice<span style="color: blue;"><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span>Get&nbsp;a&nbsp;pointer&nbsp;to&nbsp;the&nbsp;device&nbsp;that&nbsp;created&nbsp;this&nbsp;interface.<span style="color: blue;"><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Remarks</span><span style="color: blue;">&gt;</span>Any&nbsp;returned&nbsp;interfaces&nbsp;will&nbsp;have&nbsp;their&nbsp;reference&nbsp;count&nbsp;incremented&nbsp;by&nbsp;one,&nbsp;so&nbsp;be&nbsp;sure&nbsp;to&nbsp;call&nbsp;::release()&nbsp;on&nbsp;the&nbsp;returned&nbsp;pointer(s)&nbsp;before&nbsp;they&nbsp;are&nbsp;freed&nbsp;or&nbsp;else&nbsp;you&nbsp;will&nbsp;have&nbsp;a&nbsp;memory&nbsp;leak.<span style="color: blue;"><span style="color: #a31515;">Remarks</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">ReturnType</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Name</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span>voidReturns&nbsp;nothing.<span style="color: blue;"><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Remarks</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Type</span><span style="color: blue;">&gt;</span>void<span style="color: blue;"><span style="color: #a31515;">Type</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Specifier</span><span style="color: blue;">&gt;<span style="color: #a31515;">Specifier</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Const</span><span style="color: blue;">&gt;</span>false<span style="color: blue;"><span style="color: #a31515;">Const</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">IsArray</span><span style="color: blue;">&gt;</span>false<span style="color: blue;"><span style="color: #a31515;">IsArray</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">ArrayDimension</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a31515;">ReturnType</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">CallingConvention</span><span style="color: blue;">&gt;</span>StdCall<span style="color: blue;"><span style="color: #a31515;">CallingConvention</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Offset</span><span style="color: blue;">&gt;</span>3<span style="color: blue;"><span style="color: #a31515;">Offset</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Parameters</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">CppParameter</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span>ppDevice<span style="color: blue;"><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span>Address&nbsp;of&nbsp;a&nbsp;pointer&nbsp;to&nbsp;a&nbsp;device&nbsp;(see&nbsp;{{ID3D11Device}}).<span style="color: blue;"><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Remarks</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Type</span><span style="color: blue;">&gt;</span>ID3D11Device<span style="color: blue;"><span style="color: #a31515;">Type</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Specifier</span><span style="color: blue;">&gt;</span>**<span style="color: blue;"><span style="color: #a31515;">Specifier</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Const</span><span style="color: blue;">&gt;</span>false<span style="color: blue;"><span style="color: #a31515;">Const</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">IsArray</span><span style="color: blue;">&gt;</span>false<span style="color: blue;"><span style="color: #a31515;">IsArray</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">ArrayDimension</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Attribute</span><span style="color: blue;">&gt;</span>Out<span style="color: blue;"><span style="color: #a31515;">Attribute</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a31515;">CppParameter</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a31515;">Parameters</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a31515;">CppMethod</span><span style="color: blue;">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+<br />One of the most important thing in the DirectX headers that are required <b>to develop a reliable code generator is the presence of C+ windows specific attributes</b> : all the methods are prefix by macros __out __in __out_opt , __out_buffer... etc. All those attributes are similar to C# attributes and are explaining how to interpret the parameter. If you take the previous code, there is a method GetDevice that is returning a ID3D11Device through a [out] parameter. The [Out] parameter is extremely important here, as we know exactly how to use it. Same thing when you have a pointer which is in fact a buffer : with the attributes, you know that this is an array of elements behind the pointer...<br /><br />Although, I have discovered that some functions/methods sometimes are lacking some attributes.... but hopefully, the next process (the mapping from XIDL to C#) is able to add missing information like this.<br /><br /><br />As I said, the current implementation is far from being failsafe and would probably require more testing on other headers files. At least, the process is correctly working on a subset of the DirectX headers.<br /><br /><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165" name="XIDLToCSharp"></a><br />
+<h2>Generate C# from IDL </h2>
+<br />This part of the process has been a lot more time consuming. I started with enums, which were quite straightforward to manage. Structures were asking a bit more work, as there is some need for some custom marshalling for some structures that cannot marshal easily... Then interfaces methods were the most difficult part, correctly handling all parameters case was not easy...<br /><br />The process of generating the C# code is done in 3 steps:<br />
+<ol>
+   <li><b>Reading XIDL model and prepare the model for mapping</b>: remove types, add information to some methods.&nbsp;</li>
+   <li><b>Generate a C# model with the XIDL model and a set of mapping rules</b></li>
+   <li><b>Generate C# files from the C# model</b>. I have used <a href="http://www.olegsych.com/2007/12/text-template-transformation-toolkit/">T4 "Text Template Transformation Toolkit" </a>engine as a text templatizer, which is part of VS2010 and is really easy to use, integrated in VS2010 with a third party syntax highlighting plugin.&nbsp;</li>
+</ol>
+This step is also responsible to <b>generate an interop assembly </b>which is emiting directly some .NET IL bytecodes through the System.Reflection.Emit. This interop assembly is the trick to avoid the usage of a C++/CLI mixed assembly<br /><br />
+<h3>Preamble) How to avoid the usage of C++/CLI in C#</h3>
+<br />If you look at some generated C++/CLI code with Reflector, you will see that most of the code is in fact a pure IL bytecode, even when there is a call to a native function or native methods...<br /><br />The trick here is that there are a couple of IL instructions that are used internally by C# but not exposed to the language. <br /><br />1) The <b>instruction "<a href="http://msdn.microsoft.com/en-us/library/system.reflection.emit.opcodes.calli.aspx">calli</a>" </b><br /><br />This instruction is responsible to call directly an unmanaged function, without going through the pinvoke/interop&nbsp; layer (in fact, pinvoke is calling in the end "calli", but is performing a much more complex marshaling of the parameters, structures...)<br /><br />What I need was a way to call an umanaged function/methods without going through the pinvoke layer, and "calli" is exactly here for this. Now, suppose that we could generate a small assembly at compile time and at runtime that would be responsible for handling those calli function, we would not have to use anymore C++/CLI for this.<br /><br />For example, suppose that I want to call a C++ method of an interface which takes an integer as a parameter, something like :<br />
+<pre class="language-csharp"><code>interface IDevice : IUnknown {
+    void Draw(int count);
+}
+</code></pre>
+I only need a function in C# that is able to directly call this method, without going the pinvoke layer, with a pointer to the C++ IDevice object and the offset of the method in the vtbl (offset will be expressed in bytes, for a x86 architecture here) :<br />
+<pre class="language-csharp"><code>class Interop {
+    public static unsafe void CalliVoid(void* thisObject, int vtblOffset, int arg0);
+}
+
+// A call to IDevice
+void* ptrToIDevice = ...;
+
+// A Call to the method Draw, number 3 in the vtbl order (starting at 0 to 2 for IUnknown methods)
+Interop.CalliVoid(ptrToIDevice, /* 3 * sizeof(void* in x86) */ 3 * 4 , /* count */4 );
+
+</code></pre>
+<br />The IL bytecode content of this method for a x64 architecture would be typically in C++/CLI like this:<br />
+<pre class="language-csharp"><code>.method public hidebysig static void CalliVoid(void* arg0, int32 arg1, int32 arg2) cil managed
+{
+    .maxstack 4
+    L_0000: ldarg.0      // Load (0) this arg (1st parameter for native method)
+    L_0001: ldarg.2      // Load (1) count arg
+    L_0002: ldarg.1      // Offset in vtbl
+    L_0003: conv.i       // Convert to native int
+    L_0004: dup          //
+    L_0005: add          // Offset = offset * 2 (only for x64 architecture)
+    L_0006: ldarg.0      // 
+    L_0007: ldind.i      // Load vtbl poointer
+    L_0008: add          // pVtbl = pVtbl + offset
+    L_0009: ldind.i      // load function from the vtbl fointer
+    L_000a: calli method unmanaged stdcall void *(void*, int32)
+    L_000f: ret 
+}
+</code></pre>
+<br />This kind of code will be automatically inlined by the JIT (which is, from SCCLI/Rotor sourcecode, inlining functions that are taking less than 25 bytes of bytecode).<br /><br />If you look at a C++/CLI assembly, you will see lots of "calli" instructions.<br /><br />So in the end, how this trick is used? Because the generator knows all the methods from all the interfaces, it is able to generate a set of all possible calling conventions to unmanaged object. In fact, the XIDLToCSharp generator is responsible to generate an assembly containing all the interop methods (around 66 methods using Calli) :<br />
+<pre class="language-csharp"><code>public class Interop
+{
+    private Interop();
+    public static unsafe float CalliFloat(void* arg0, int arg1, void* arg2);
+    public static unsafe int CalliInt(void* arg0, int arg1);
+    public static unsafe int CalliInt(void* arg0, int arg1, int arg2);
+    public static unsafe int CalliInt(void* arg0, int arg1, void* arg2);
+    public static unsafe int CalliInt(void* arg0, int arg1, long arg2);
+    public static unsafe int CalliInt(void* arg0, int arg1, int arg2, int arg3);
+    public static unsafe int CalliInt(void* arg0, int arg1, long arg2, int arg3);
+    public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, int arg3);
+    public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, void* arg3);
+    public static unsafe int CalliInt(void* arg0, int arg1, int arg2, void* arg3);
+    public static unsafe int CalliInt(void* arg0, int arg1, IntPtr arg2, void* arg3);
+    public static unsafe int CalliInt(void* arg0, int arg1, IntPtr arg2, int arg3);
+    public static unsafe int CalliInt(void* arg0, int arg1, int arg2, void* arg3, int arg4);
+    public static unsafe int CalliInt(void* arg0, int arg1, int arg2, void* arg3, void* arg4);
+    public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, int arg3, void* arg4);
+    public static unsafe int CalliInt(void* arg0, int arg1, int arg2, int arg3, void* arg4);
+    public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, void* arg3, void* arg4);
+    public static unsafe int CalliInt(void* arg0, int arg1, IntPtr arg2, void* arg3, void* arg4);
+    public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, void* arg3, int arg4);
+    public static unsafe int CalliInt(void* arg0, int arg1, int arg2, int arg3, void* arg4, void* arg5);
+    public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, void* arg3, int arg4, int arg5);
+    //
+    // ...[stripping Calli x methods here]...
+    //
+    public static unsafe void CalliVoid(void* arg0, int arg1, int arg2, void* arg3, void* arg4, int arg5, int arg6, void* arg7);
+    public static unsafe void CalliVoid(void* arg0, int arg1, void* arg2, float arg3, float arg4, float arg5, float arg6, void* arg7);
+    public static unsafe void CalliVoid(void* arg0, int arg1, int arg2, void* arg3, void* arg4, int arg5, int arg6, void* arg7, void* arg8);
+    public static unsafe void CalliVoid(void* arg0, int arg1, void* arg2, int arg3, int arg4, int arg5, int arg6, void* arg7, int arg8, void* arg9);
+    public static unsafe void* Read&lt;T&gt;(void* pSrc, ref T data) where T: struct;
+    public static unsafe void* Read&lt;T&gt;(void* pSrc, T[] data, int offset, int count) where T: struct;
+    public static unsafe void* Write&lt;T&gt;(void* pDest, ref T data) where T: struct;
+    public static unsafe void* Write&lt;T&gt;(void* pDest, T[] data, int offset, int count) where T: struct;
+    public static void memcpy(void* pDest, void* pSrc, int Count);
+}
+</code></pre>
+<br />This assembly is used at compile time but is not distributed at runtime. Instead, this assembly is dynamically generated at runtime in order to support difference in bytecode between x86 and x64 (in the calli example, we need to multiply by 2 the offset into the vtbl table, because the sizeof of a pointer in x64 is 8 bytes).<br /><br />2) The <b>instruction "<a href="http://msdn.microsoft.com/en-us/library/system.reflection.emit.opcodes.sizeof.aspx">sizeof</a>" for generic</b><br /><br />Although the Calli is the real trick that makes it possible to have a managed way to call unmanaged method without using pinvoke, I have found a couple of other IL bytecode that is necessary to have the same features than in C++/CLI.<br /><br />The other one is sizeof for generic. In C#, we know that there is a sizeof, but while trying to replicate the DataStream class from SlimDX in pure C#, I was not able to write this kind code :<br />
+<pre class="language-csharp"><code>public class DataStream
+{
+    // Unmarshal a struct from a memory location
+    public T Read&lt;T&gt;() where T: struct {
+        T myStruct = default(T);
+        memcpy(&amp;mystruct, &amp;m_buffer, sizeof(T));
+        return myStruct;
+    }
+}
+</code></pre>
+<br />In fact, under C#, the sizeof is not working for a generic, even if you specify that the generic is a struct. Because C# cannot constraint the struct to contains only blittable fields (I mean, It could, but It doesn't try to do it), they don't allow to take the size of a generic struct... that was annoying, but because with pure IL instruction, It's working well and I was already generating the Interop assembly, I was free to add whatever methods with custom bytecode to fill the gap...<br /><br />In the end, the interop code to read a generic struct from a memory location looks like this :<br />
+<pre class="language-csharp"><code>// This method is reading a T struct from pSrc and returning the address : pSrc + sizeof(T)
+.method public hidebysig static void* Read&lt;valuetype .ctor T&gt;(void* pSrc, !!T&amp; data) cil managed
+{
+    .maxstack 3
+    .locals init (
+        [0] int32 num,
+        [1] !!T* pinned localPtr)
+    L_0000: ldarg.1 
+    L_0001: stloc.1 
+    L_0002: ldloc.1 
+    L_0003: ldarg.0 
+    L_0004: sizeof !!T
+    L_000a: conv.i4 
+    L_000b: stloc.0 
+    L_000c: ldloc.0 
+    L_000d: unaligned 1        // Mandatory for x64 architecture
+    L_0010: nop 
+    L_0011: nop 
+    L_0012: nop 
+    L_0013: cpblk              // Memcpy
+    L_0015: ldloc.0 
+    L_0016: conv.i 
+    L_0017: ldarg.0 
+    L_0018: add 
+    L_0019: ret 
+}
+</code></pre>
+<br />3) The <b>instruction "<a href="http://msdn.microsoft.com/en-us/library/system.reflection.emit.opcodes.cpblk.aspx">cpblk</a>", memcpy in IL</b><br /><br />In the previous function, you can see the use of "cpblk" bytecode instruction. In fact, when you are looking at a C++/CLI method using a memcpy, It will not use the memcpy from the C CRT but directly the IL instruction performing the same task. This IL instruction is faster than using anykind of interop, so I made it available to C# through the Interop assembly<br /><br />
+<h3>I) Prepare XIDL model for mapping</h3>
+<br />So the 1st step in the XIDLToCSharp process is to prepare the XIDL model to be more mapping friendly. This step is essentially responsible to:<br />
+<ul>
+   <li><b>Add missing C++ attributes </b>(In, InOut, Buffer) information to some method's parameter</li>
+   <li><b>Replace the type of some method parameters </b>: for example in DirectX, there are lots of parameter that are taking a flags, which is in fact an already declared enum... but for some unknown reason, they are declaring the method with an "int" instead of using the enum... </li>
+   <li><b>Remove some types</b>. For example,&nbsp; the D3D_PRIMITIVE_TOPOLOGY is holding a bunch of D3D11 and D3D10 enum, duplicating D3D_PRIMITIVE enums... So I'm removing them. </li>
+   <li><b>Add some tag directly on the XIDL</b> model in order to ease the next mapping process : those tags are for example used for tagging the C# visibility of the method, or forcing a method to not be interpreted&nbsp; as a "property")</li>
+</ul>
+<pre class="language-csharp"><code>// Read the XIDL model
+    CppIncludeGroup group = CppIncludeGroup.Read("directx_idl.xml");
+
+    group.Modify&lt;CppParameter&gt;("^D3DX11.*?::pDefines", Modifiers.ParameterAttribute(CppAttribute.In | CppAttribute.Buffer | CppAttribute.Optional));
+
+    // Modify device Flags for D3D11CreateDevice to use D3D11_CREATE_DEVICE_FLAG
+    group.Modify&lt;CppParameter&gt;("^D3D11CreateDevice.*?::Flags$", Modifiers.Type("D3D11_CREATE_DEVICE_FLAG"));
+
+    // ppFactory on CreateDXGIFactory.* should be Attribute.Out
+    group.Modify&lt;CppParameter&gt;("^CreateDXGIFactory.*?::ppFactory$", Modifiers.ParameterAttribute(CppAttribute.Out));
+
+    // pDefines is an array of Macro (and not just In)
+    group.Modify&lt;CppParameter&gt;("^D3DCompile::pDefines", Modifiers.ParameterAttribute(CppAttribute.In | CppAttribute.Buffer | CppAttribute.Optional));
+    group.Modify&lt;CppParameter&gt;("^D3DPreprocess::pDefines", Modifiers.ParameterAttribute(CppAttribute.In | CppAttribute.Buffer | CppAttribute.Optional));
+
+    // SwapChain description is mandatory In and not optional
+    group.Modify&lt;CppParameter&gt;("^D3D11CreateDeviceAndSwapChain::pSwapChainDesc", Modifiers.ParameterAttribute(CppAttribute.In));
+
+    // Remove all enums ending with _FORCE_DWORD, FORCE_UINT
+    group.Modify&lt;CppEnumItem&gt;("^.*_FORCE_DWORD$", Modifiers.Remove);
+    group.Modify&lt;CppEnumItem&gt;("^.*_FORCE_UINT$", Modifiers.Remove);
+</code></pre>
+<br />You can see that the pre-mapping (and the mapping) is using intensively regular expression for matching names, which is a very convenient way to perform some kind of XPATH request with Regex expressions.<br /><br />
+<h3>II) Generate C# model from XIDL and mapping rules</h3>
+<br />This process is taking the pre-process XIDL and is generating a C# model (a subset of the C# model in memory), adding mapping information and preparing things to make it easier to use it from the T4 templatizer engine.<br /><br />In order to generate the C# model from DirectX, the generator needs a couple of mapping rules. <br /><br />1) <b>Mapping an include to an assembly / namespace</b><br /><br />This rules is defining a default dispatching of types to assembly / namespace. It will associate source headers include (the name of the .h, without the extension).<br />
+<pre class="language-csharp"><code>// Namespace mapping 
+
+  // Map dxgi include to assembly SharpDX.DXGI, namespace SharpDX.DXGI
+  gen.MapIncludeToNamespace("dxgi", "SharpDX.DXGI");
+  gen.MapIncludeToNamespace("dxgiformat", "SharpDX.DXGI");
+  gen.MapIncludeToNamespace("dxgitype", "SharpDX.DXGI");
+
+  // Map D3DCommon include to assembly SharpDX, namespace SharpDX.Direct3D
+  gen.MapIncludeToNamespace("d3dcommon", "SharpDX.Direct3D", "SharpDX");
+
+  gen.MapIncludeToNamespace("d3d11", "SharpDX.Direct3D11");
+  gen.MapIncludeToNamespace("d3dx11", "SharpDX.Direct3D11");
+  gen.MapIncludeToNamespace("d3dx11core", "SharpDX.Direct3D11");
+  gen.MapIncludeToNamespace("d3dx11tex", "SharpDX.Direct3D11");
+  gen.MapIncludeToNamespace("d3dx11async", "SharpDX.Direct3D11");
+  gen.MapIncludeToNamespace("d3d11shader", "SharpDX.D3DCompiler");
+  gen.MapIncludeToNamespace("d3dcompiler", "SharpDX.D3DCompiler");
+</code></pre>
+<br />2) <b>Mapping a particular type to an assembly / namespace</b><br /><br />It is also necessary to override the default include to assembly/namespace dispatching for some particular types. This rules is doing this.<br />
+<pre class="language-csharp"><code>gen.MapTypeToNamespace("^D3D_PRIMITIVE$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_CBUFFER_TYPE$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_RESOURCE_RETURN_TYPE$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_SHADER_CBUFFER_FLAGS$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_SHADER_INPUT_TYPE$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_SHADER_VARIABLE_CLASS$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_SHADER_VARIABLE_FLAG$S", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_SHADER_VARIABLE_TYPE$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_TESSELLATOR_DOMAIN$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_TESSELLATOR_PARTITIONING$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_TESSELLATOR_OUTPUT_PRIMITIVE$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_SHADER_INPUT_FLAGS$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_NAME$", "SharpDX.D3DCompiler");
+    gen.MapTypeToNamespace("^D3D_REGISTER_COMPONENT_TYPE$", "SharpDX.D3DCompiler");
+</code></pre>
+<br />The previous code is instructing the generator to move some D3D types to the SharpDX.D3DCompiler namespace (and assembly). Those types are in fact more related to Shader reflection and are associated with the D3DCompiler assembly (I took the same design choice from SlimDX, although we could think about another mapping).<br /><br />3) <b>Mapping a C++ type to a custom C# type</b><br /><br />It is sometimes necessary to map a C++ type to a non generated C# type. For example, there is the C++ "RECT" structure which is not stritcly equivalent to the System.Drawing.Rectangle (the RECT struct is using the Left,Top,Right,Bottom fields instead of Left,Top,Width,Height for System.Drawing.Rectangle). This mapping is able to define a custom mapping. The SharpDX.Rectangle is not generated by the generator but is defined in the SharpDX assembly project (last part).<br />
+<pre class="language-csharp"><code>var rectType = new CSharpStruct();
+ rectType.Name = "SharpDX.Rectangle";
+ rectType.SizeOf = 4*4;
+ gen.MapCppTypeToCSharpType("RECT", rectType); //"SharpDX.Rectangle", 4 * 4, false, true);
+</code></pre>
+<br />4) <b>Mapping a C++ name to a C# name</b><br />The renaming rules are quite rich. The XIDLToCSharp provides a default renaming mechanism that respect the CamelCase convention, but there are some exceptions that need to be addressed. For example:<br />
+<pre class="language-csharp"><code>// Rename DXGI_MODE_ROTATION to DisplayModeRotation
+  gen.RenameType(@"^DXGI_MODE_ROTATION$","DisplayModeRotation");
+  gen.RenameType(@"^DXGI_MODE_SCALING$", "DisplayModeScaling");
+  gen.RenameType(@"^DXGI_MODE_SCANLINE_ORDER$", "DisplayModeScanlineOrder");
+
+  // Use regular expression to take the part of some names...
+  gen.RenameType(@"^D3D_SVC_(.*)", "$1");
+  gen.RenameType(@"^D3D_SVF_(.*)", "$1");
+  gen.RenameType(@"^D3D_SVT_(.*)", "$1");
+  gen.RenameType(@"^D3D_SIF_(.*)", "$1");
+  gen.RenameType(@"^D3D_SIT_(.*)", "$1");
+  gen.RenameType(@"^D3D_CT_(.*)", "$1");
+</code></pre>
+<br />For structures and enums that are using the "_" underscore to separate name subpart, you can let XIDLToCSharp rename correctly each subpart, while still being able to specify how a subpart can be rename:<br />
+<pre class="language-csharp"><code>// Expand sub part between underscore
+ gen.RenameTypePart("^DESC$", "Description");
+ gen.RenameTypePart("^CBUFFER$", "ConstantBuffer");
+ gen.RenameTypePart("^TBUFFER$", "TextureBuffer");
+ gen.RenameTypePart("^BUFFEREX$", "ExtendedBuffer");
+ gen.RenameTypePart("^FUNC$", "Function");
+ gen.RenameTypePart("^FLAG$", "Flags");
+ gen.RenameTypePart("^SRV$", "ShaderResourceView");
+ gen.RenameTypePart("^DSV$", "DepthStencilView");
+ gen.RenameTypePart("^RTV$", "RenderTargetView");
+ gen.RenameTypePart("^UAV$", "UnorderedAccessView");
+ gen.RenameTypePart("^TEXTURE1D$", "Texture1D");
+ gen.RenameTypePart("^TEXTURE2D$", "Texture2D");
+ gen.RenameTypePart("^TEXTURE3D$", "Texture3D");
+</code></pre>
+<br />With this rules, for example with a struct named as "BLABLA_DESC", the DESC part will be expand to "Description", resulting in the C# name "BlablaDescription".<br /><br />5) <b>Change Field type mapping in C#</b><br /><br />Again, there are lots of enums in DirectX that are not used in the structures. For example, if you take the D3D11_BUFFER_DESC, all enums are declared as int instead of using their respective enums. <br /><br />This mapping rules is responsible to change the destination type for a field:<br />
+<pre class="language-csharp"><code>gen.ChangeStructFieldTypeToNative("D3D11_BUFFER_DESC", "BindFlags", "D3D11_BIND_FLAG");
+ gen.ChangeStructFieldTypeToNative("D3D11_BUFFER_DESC", "CPUAccessFlags", "D3D11_CPU_ACCESS_FLAG");
+ gen.ChangeStructFieldTypeToNative("D3D11_BUFFER_DESC", "MiscFlags", "D3D11_RESOURCE_MISC_FLAG");
+</code></pre>
+<br />6) <b>Generate enums from C++ macros, improving enums</b><br /><br />Again, DirectX SDK is not consistent with enums. Sometimes there are some enums that are in fact defined with some macro definition, which makes intellisense experience inexistent...<br /><br />XIDLToCSharp is able to create an enum from a set of macros definitions<br />
+<pre class="language-csharp"><code>// Create enums from macro definitions
+ // Create the D3DCOMPILE_SHADER_FLAGS C++ type from the D3DCOMPILE_.* macros
+ gen.CreateEnumFromMacros(@"^D3DCOMPILE_[^E][^F].*", "D3DCOMPILE_SHADER_FLAGS");
+ gen.CreateEnumFromMacros(@"^D3DCOMPILE_EFFECT_.*", "D3DCOMPILE_EFFECT_FLAGS");
+ gen.CreateEnumFromMacros(@"^D3D_DISASM_.*", "D3DCOMPILE_DISASM_FLAGS");
+</code></pre>
+<br />There are also some tiny things to adjust to existing enums, like adding a "None=0" enum item for some flags. <br /><br />7) <b>Move interface methods to inner interfaces in C#</b><br /><br />If you have been using Direct3D 11, you have notice that all methods for each stages are prefix with the stage abbreviation, making for example the <a href="http://msdn.microsoft.com/en-us/library/ff476385%28v=VS.85%29.aspx">ID3D11DeviceContext interface</a> quite ugly to use, ending in some code like this:<br />
+<pre class="language-csharp"><code>deviceContext.IASetInputLayout(inputlayout); 
+</code></pre>
+<br />SlimDX did something really nice : they have created for each pipeline stage (IA for InputAssembler, VS for VertexShader) a property accessor to an interface that is exposing the method of this stage, resulting in an improved readability and a much better intellisense experience.<br />
+<pre class="language-csharp"><code>deviceContext.InputAssembler.InputLayout = inputlayout; 
+</code></pre>
+<br />In the XIDL2CSharp, there is a rules to handle such a case, and is simple as writing this:<br />
+<pre class="language-csharp"><code>// Map all IA* methods to the internal interface InputAssemblerStage with the acessor property InputAssembler, using the method name $1 (extract from the regexp)
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::IA(.*)", "InputAssemblerStage", "InputAssembler", "$1");
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::VS(.*)", "VertexShaderStage", "VertexShader", "$1");
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::PS(.*)", "PixelShaderStage", "PixelShader", "$1");
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::GS(.*)", "GeometryShaderStage", "GeometryShader", "$1");
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::SO(.*)", "StreamOutputStage", "StreamOutput", "$1");
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::DS(.*)", "DomainShaderStage", "DomainShader", "$1");
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::HS(.*)", "HullShaderStage", "HullShader", "$1");
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::RS(.*)", "RasterizerStage", "Rasterizer", "$1");
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::OM(.*)", "OutputMergerStage", "OutputMerger", "$1");
+ gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::CS(.*)", "ComputeShaderStage", "ComputeShader", "$1");
+</code></pre>
+<br />8) <b>Dispatch method to function group</b><br /><br />DirectX C++ functions are mapped to a set of function group and an associated DLL. For example, it is possible to specify that all D3D11.* methods will map to a class D3D11 containing all the associated methods.<br />
+<pre class="language-csharp"><code>// Function group
+  var d3dCommonFunctionGroup = gen.CreateFunctionGroup("SharpDX", "SharpDX.Direct3D", "D3DCommon");
+  var dxgiFunctionGroup = gen.CreateFunctionGroup("SharpDX.DXGI", "SharpDX.DXGI", "DXGI");
+  var d3dFunctionGroup = gen.CreateFunctionGroup("SharpDX.D3DCompiler", "SharpDX.D3DCompiler", "D3D");
+  var d3d11FunctionGroup = gen.CreateFunctionGroup("SharpDX.Direct3D11", "SharpDX.Direct3D11", "D3D11");
+  var d3dx11FunctionGroup = gen.CreateFunctionGroup("SharpDX.Direct3D11", "SharpDX.Direct3D11", "D3DX11");
+
+  // Map All D3D11 functions to D3D11 Function Group
+  gen.MapFunctionToFunctionGroup(@"^D3D11.*", "d3d11.dll", d3d11FunctionGroup);
+
+  // Map All D3DX11 functions to D3DX11 Function Group
+  gen.MapFunctionToFunctionGroup(@"^D3DX11.*", group.Find&lt;cppmacrodefinition&gt;("D3DX11_DLL_A").FirstOrDefault().StripStringValue, d3dx11FunctionGroup);
+
+  // Map All D3D11 functions to D3D11 Function Group
+  string d3dCompilerDll =
+      group.Find&lt;cppmacrodefinition&gt;("D3DCOMPILER_DLL_A").FirstOrDefault().StripStringValue;
+  gen.MapFunctionToFunctionGroup(@"^D3DCreateBlob$", d3dCompilerDll, d3dCommonFunctionGroup);
+</code></pre>
+<br />If a DLL has a versionned name (like for D3DXX_xx.dll or D3DCompiler_xx.dll), we are directly retreiving the dll name from a macro!<br /><br /><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165" name="CSharpToFiles"></a><br />
+<h2>Generate C# code from C# model and adding custom classes</h2>
+<br />Once an internal C# model is built, we are calling the T4 text template toolkit engine for each group of types : Enumerations, Structures, Interfaces, Functions. Those classes are then integrated in several VS project, with some custom code added and some non generated core classes.<br /><br />
+<h3>The generated C# interop code</h3>
+<br />Meaning that for each assembly, each namespace, there will be an Enumerations.cs, Structures.cs, Interfaces.cs and Functions.cs files generated.<br /><br />For each types, there is a custom mapping done:<br />
+<ul>
+   <li><b>For enums, the mapping is straightforward</b>, resulting in an almost one-to-one mapping</li>
+   <li><b>For structures, the mapping is quite straightforward</b>, resulting in an almost one-to-one mapping for most of the types. Although there are a couple of case where the mapping need to generate some marshalling code, essentially when there is a bool in the struct, or when there is a string pointer, or a fixed array of struct inside a struct.</li>
+</ul>
+For example, one of the most complex mapping for a structure is generated like this:<br /><br />
+<pre class="language-csharp"><code>/// &lt;summary&gt; 
+/// Describes the blend state. 
+/// &lt;/summary&gt; 
+/// &lt;remarks&gt; 
+/// These are the default values for blend state.StateDefault ValueAlphaToCoverageEnableFALSEIndependentBlendEnableFALSERenderTarget[0].BlendEnableFALSERenderTarget[0].SrcBlendD3D11_BLEND_ONERenderTarget[0].DestBlendD3D11_BLEND_ZERORenderTarget[0].BlendOpD3D11_BLEND_OP_ADDRenderTarget[0].SrcBlendAlphaD3D11_BLEND_ONERenderTarget[0].DestBlendAlphaD3D11_BLEND_ZERORenderTarget[0].BlendOpAlphaD3D11_BLEND_OP_ADDRenderTarget[0].RenderTargetWriteMaskD3D11_COLOR_WRITE_ENABLE_ALL Note that D3D11_BLEND_DESC is identical to {{D3D10_BLEND_DESC1}}.If the driver type is set to &lt;see cref="SharpDX.Direct3D.DriverType.Hardware"/&gt;, the feature level is set to less than or equal to &lt;see cref="SharpDX.Direct3D.FeatureLevel.Level_9_3"/&gt;, and the pixel formatofthe render target is set to &lt;see cref="SharpDX.DXGI.Format.R8G8B8A8_UNorm_SRgb"/&gt;, DXGI_FORMAT_B8G8R8A8_UNORM_SRGB, or DXGI_FORMAT_B8G8R8X8_UNORM_SRGB, the display device performs the blend in standard RGB (sRGB) space and not in linear space. However, if the feature level is set to greater thanD3D_FEATURE_LEVEL_9_3, the display device performs the blend in linear space. 
+/// &lt;/remarks&gt; 
+/// &lt;unmanaged&gt;D3D11_BLEND_DESC&lt;/unmanaged&gt;
+public  partial struct BlendDescription { 
+    
+    /// &lt;summary&gt; 
+    /// Determines whether or not to use alpha-to-coverage as a multisampling technique when setting a pixel to a rendertarget. 
+    /// &lt;/summary&gt; 
+    /// &lt;unmanaged&gt;BOOL AlphaToCoverageEnable&lt;/unmanaged&gt;
+    public bool AlphaToCoverageEnable { 
+        get { 
+            return (_AlphaToCoverageEnable!=0)?true:false; 
+        }
+        set { 
+            _AlphaToCoverageEnable = value?1:0;
+        }
+    }
+    internal int _AlphaToCoverageEnable;
+    
+    /// &lt;summary&gt; 
+    /// Set to TRUE to enable independent blending in simultaneous render targets.  If set to FALSE, only the RenderTarget[0] members are used. RenderTarget[1..7] are ignored. 
+    /// &lt;/summary&gt; 
+    /// &lt;unmanaged&gt;BOOL IndependentBlendEnable&lt;/unmanaged&gt;
+    public bool IndependentBlendEnable { 
+        get { 
+            return (_IndependentBlendEnable!=0)?true:false; 
+        }
+        set { 
+            _IndependentBlendEnable = value?1:0;
+        }
+    }
+    internal int _IndependentBlendEnable;
+    
+    /// &lt;summary&gt; 
+    /// An array of render-target-blend descriptions (see &lt;see cref="SharpDX.Direct3D11.RenderTargetBlendDescription"/&gt;); these correspond to the eight rendertargets  that can be set to the output-merger stage at one time. 
+    /// &lt;/summary&gt; 
+    /// &lt;unmanaged&gt;D3D11_RENDER_TARGET_BLEND_DESC RenderTarget[8]&lt;/unmanaged&gt;
+    public SharpDX.Direct3D11.RenderTargetBlendDescription[] RenderTarget { 
+        get { 
+            if (_RenderTarget == null) {
+                _RenderTarget = new SharpDX.Direct3D11.RenderTargetBlendDescription[8];
+            }
+            return _RenderTarget; 
+        }
+    }
+    internal SharpDX.Direct3D11.RenderTargetBlendDescription[] _RenderTarget;
+
+    // Internal native struct used for marshalling
+    [StructLayout(LayoutKind.Sequential, Pack = 0 )]
+    internal unsafe partial struct __Native { 
+        public int _AlphaToCoverageEnable;
+        public int _IndependentBlendEnable;
+        public SharpDX.Direct3D11.RenderTargetBlendDescription RenderTarget;
+        SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget1;
+        SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget2;
+        SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget3;
+        SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget4;
+        SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget5;
+        SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget6;
+        SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget7;
+    // Method to free native struct
+        internal unsafe void __MarshalFree()
+        {
+        }
+    }
+
+    // Method to marshal from native to managed struct
+    internal unsafe void __MarshalFrom(ref __Native @ref)
+    {            
+        this._AlphaToCoverageEnable = @ref._AlphaToCoverageEnable;
+        this._IndependentBlendEnable = @ref._IndependentBlendEnable;
+        fixed (void* __to = &amp;this.RenderTarget[0]) fixed (void* __from = &amp;@ref.RenderTarget) SharpDX.Utilities.CopyMemory((IntPtr) __to, (IntPtr) __from, 8*sizeof ( SharpDX.Direct3D11.RenderTargetBlendDescription));
+    }
+    // Method to marshal from managed struct tot native
+    internal unsafe void __MarshalTo(ref __Native @ref)
+    {
+        @ref._AlphaToCoverageEnable = this._AlphaToCoverageEnable;
+        @ref._IndependentBlendEnable = this._IndependentBlendEnable;
+        fixed (void* __to = &amp;@ref.RenderTarget) fixed (void* __from = &amp;this.RenderTarget[0]) SharpDX.Utilities.CopyMemory((IntPtr) __to, (IntPtr) __from, 8*sizeof ( SharpDX.Direct3D11.RenderTargetBlendDescription));
+
+}
+}
+</code></pre>
+<br />
+<ul>
+   <li><b>For Interfaces the mapping is quite complex</b>, because it is necessary to handle lost of different cases:
+    <ul>
+        <li>Optionnal structure in input </li>
+        <li>Optionnal parameters</li>
+        <li>Output an array of interface</li>
+        <li>Perform some custom marshaling (for example, with the previous BlendDescription structure)</li>
+        <li> Generating properties for methods that are property elligible</li>
+        <li>...etc.</li>
+    </ul>
+    </li>
+</ul>
+For example, the method using the BlendDescription is like this:<br />
+<pre class="language-csharp"><code>/// &lt;summary&gt; 
+/// Create a blend-state object that encapsules blend state for the output-merger stage. 
+/// &lt;/summary&gt; 
+/// &lt;remarks&gt; 
+/// An application can create up to 4096 unique blend-state objects. For each object created, the runtime checks to see if a previous object  has the same state. If such a previous object exists, the runtime will return a pointer to previous instance instead of creating a duplicate object. 
+/// &lt;/remarks&gt; 
+/// &lt;param name="blendStateDescRef"&gt;Pointer to a blend-state description (see &lt;see cref="SharpDX.Direct3D11.BlendDescription"/&gt;).&lt;/param&gt;
+/// &lt;param name="blendStateRef"&gt;Address of a pointer to the blend-state object created (see &lt;see cref="SharpDX.Direct3D11.BlendState"/&gt;).&lt;/param&gt;
+/// &lt;returns&gt;This method returns E_OUTOFMEMORY if there is insufficient memory to create the blend-state object.   See {{Direct3D 11 Return Codes}} for other possible return values.&lt;/returns&gt;
+/// &lt;unmanaged&gt;HRESULT CreateBlendState([In] const D3D11_BLEND_DESC* pBlendStateDesc,[Out, Optional] ID3D11BlendState** ppBlendState)&lt;/unmanaged&gt;
+public SharpDX.Result CreateBlendState(ref SharpDX.Direct3D11.BlendDescription blendStateDescRef, out SharpDX.Direct3D11.BlendState blendStateRef){
+    unsafe {
+        SharpDX.Direct3D11.BlendDescription.__Native blendStateDescRef_ = new SharpDX.Direct3D11.BlendDescription.__Native();
+        blendStateDescRef.__MarshalTo(ref blendStateDescRef_);
+        IntPtr blendStateRef_ = IntPtr.Zero;
+        SharpDX.Result __result__;
+        __result__= (SharpDX.Result)SharpDX.Interop.CalliInt(_nativePointer, 20 * 4, &amp;blendStateDescRef_, &amp;blendStateRef_);&nbsp;
+        blendStateDescRef.__MarshalFree();
+        blendStateRef = (blendStateRef_ == IntPtr.Zero)?null:new SharpDX.Direct3D11.BlendState(blendStateRef_);
+        __result__.CheckError();
+        return __result__;
+    }
+}
+</code></pre>
+<br />In the previous example, you can see that the input BlendDescription structure is in fact marshalled to an intermediate native structure suitable for unmanaged code (internal __Native struct for BlendDescription). The&nbsp; marshall code is also responsible to free the native struct (if there are any allocations, like for strings).<br /><br />The marshalling has some nice optimizations, like for passing struct by value or by reference : All the methods in C++ are using a pointer for a struct (for getting and setting), but with the marshaller, we can decide if we want to have a struct passed by value or by ref. Currently, the generator is calculating the size of the valuetype. If the valuetype is less or equal 16 bytes, the valuetype is passed by value, otherwise it's passed by ref.<br /><br />A more standard interface with simple marshalling is like this: (Note for example the GUID integrated, the properties auto-generated from methods, and methods that are hidden from the public API)<br /><br />
+<pre class="language-csharp"><code>/// &lt;summary&gt; 
+/// This interface is used to return arbitrary length data. 
+/// &lt;/summary&gt; 
+/// &lt;unmanaged&gt;ID3D10Blob&lt;/unmanaged&gt;
+[Guid("8ba5fb08-5195-40e2-ac58-0d989c3a0102")]
+public partial class Blob : SharpDX.ComObject {
+
+    public Blob(IntPtr basePtr) : base(basePtr) {
+    }
+    
+    
+    /// &lt;summary&gt; 
+    /// Get a pointer to the data. 
+    /// &lt;/summary&gt; 
+    /// &lt;unmanaged&gt;void* GetBufferPointer()&lt;/unmanaged&gt;
+    public IntPtr BufferPointer {
+            get { return GetBufferPointer(); }
+    }
+    
+    /// &lt;summary&gt; 
+    /// Get the size. 
+    /// &lt;/summary&gt; 
+    /// &lt;unmanaged&gt;SIZE_T GetBufferSize()&lt;/unmanaged&gt;
+    public SharpDX.Size BufferSize {
+            get { return GetBufferSize(); }
+    }
+    
+    /// &lt;summary&gt; 
+    /// Get a pointer to the data. 
+    /// &lt;/summary&gt; 
+    /// &lt;returns&gt;Returns a pointer.&lt;/returns&gt;
+    /// &lt;unmanaged&gt;void* GetBufferPointer()&lt;/unmanaged&gt;
+    internal IntPtr GetBufferPointer() {
+        unsafe {
+            IntPtr __result__;
+            __result__= (IntPtr)SharpDX.Interop.CalliPtr(_nativePointer, 3 * 4);
+            return __result__;
+        }
+    }
+    
+    /// &lt;summary&gt; 
+    /// Get the size. 
+    /// &lt;/summary&gt; 
+    /// &lt;returns&gt;The size of the data, in bytes.&lt;/returns&gt;
+    /// &lt;unmanaged&gt;SIZE_T GetBufferSize()&lt;/unmanaged&gt;
+    internal SharpDX.Size GetBufferSize() {
+        unsafe {
+            SharpDX.Size __result__;
+            __result__= (SharpDX.Size)SharpDX.Interop.CalliPtr(_nativePointer, 4 * 4);
+            return __result__;
+        }
+    }
+}
+</code></pre>
+<br /><br />
+<ul>
+   <li><b>For functions, the mapping is quite straightforward</b>, because we are relying on a plain pinvoke interop. This was the easiest choice and easier to generate. Although pInvoke calls are still hidden in order to perform some parameter transformation, mostly in order to support the custom COM Object model generated. </li>
+</ul>
+<br />A function call is generated like this:<br />
+<pre class="language-csharp"><code>/// &lt;unmanaged&gt;HRESULT D3D11CreateDevice([In, Optional] IDXGIAdapter* pAdapter,[None] D3D_DRIVER_TYPE DriverType,[None] HMODULE Software,[None] D3D11_CREATE_DEVICE_FLAG Flags,[In, Buffer, Optional] const D3D_FEATURE_LEVEL* pFeatureLevels,[None] UINT FeatureLevels,[None] UINT SDKVersion,[Out,Optional] ID3D11Device** ppDevice,[Out, Optional] D3D_FEATURE_LEVEL* pFeatureLevel,[Out, Optional] ID3D11DeviceContext** ppImmediateContext)&lt;/unmanaged&gt;
+public static SharpDX.Result CreateDevice(SharpDX.DXGI.Adapter adapterRef, SharpDX.Direct3D.DriverType driverType, IntPtr software, SharpDX.Direct3D11.DeviceCreationFlags flags, SharpDX.Direct3D.FeatureLevel[] featureLevelsRef, int featureLevels, int sDKVersion, out SharpDX.Direct3D11.Device deviceRef, out SharpDX.Direct3D.FeatureLevel featureLevelRef, out SharpDX.Direct3D11.DeviceContext immediateContextRef) {
+    unsafe {
+        IntPtr deviceRef_ = IntPtr.Zero;
+        IntPtr immediateContextRef_ = IntPtr.Zero;
+        SharpDX.Result __result__;
+        __result__= (SharpDX.Result)D3D11CreateDevice_((adapterRef == null)?IntPtr.Zero:adapterRef.NativePointer,  driverType,  software,  flags, featureLevelsRef,  featureLevels,  sDKVersion, out deviceRef_, out featureLevelRef, out immediateContextRef_);
+        deviceRef = (deviceRef_ == IntPtr.Zero)?null:new SharpDX.Direct3D11.Device(deviceRef_);
+        immediateContextRef = (immediateContextRef_ == IntPtr.Zero)?null:new SharpDX.Direct3D11.DeviceContext(immediateContextRef_);
+        __result__.CheckError();
+        return __result__;
+    }
+}
+
+/// &lt;summary&gt;Native Interop Function&lt;/summary&gt;
+/// &lt;unmanaged&gt;HRESULT D3D11CreateDevice([In, Optional] IDXGIAdapter* pAdapter,[None] D3D_DRIVER_TYPE DriverType,[None] HMODULE Software,[None] D3D11_CREATE_DEVICE_FLAG Flags,[In, Buffer, Optional] const D3D_FEATURE_LEVEL* pFeatureLevels,[None] UINT FeatureLevels,[None] UINT SDKVersion,[Out,Optional] ID3D11Device** ppDevice,[Out, Optional] D3D_FEATURE_LEVEL* pFeatureLevel,[Out, Optional] ID3D11DeviceContext** ppImmediateContext)&lt;/unmanaged&gt;
+[DllImport("d3d11.dll", EntryPoint = "D3D11CreateDevice", CallingConvention = CallingConvention.StdCall, PreserveSig = true), SuppressUnmanagedCodeSecurityAttribute]
+private extern static SharpDX.Result D3D11CreateDevice_(IntPtr adapterRef, SharpDX.Direct3D.DriverType driverType, IntPtr software, SharpDX.Direct3D11.DeviceCreationFlags flags, SharpDX.Direct3D.FeatureLevel[] featureLevelsRef, int featureLevels, int sDKVersion, out IntPtr deviceRef, out SharpDX.Direct3D.FeatureLevel featureLevelRef, out IntPtr immediateContextRef); 
+</code></pre>
+<h3>Extend the model in C#</h3>
+<br />All those classes are then integrated in a VS solution with 4 assemblies:<br />
+<ul>
+   <li>A core assembly that contains non generated code (ComObject, DataStream, Vectors, Utilities...) and common enumeration and structs for Direct3D (structures that are usually shared between D3D10, D3D10.1 and D3D11).</li>
+   <li>An assembly for DXGI that has a dependency to the core assembly</li>
+   <li>An assembly for D3DCompiler that has a dependency to the core assembly</li>
+   <li>An assembly for D3D11 that has a dependency to the core, DXGI and D3DCompiler</li>
+</ul>
+In order to quickly develop this new Wrapper, I have taken lots of portion of code from SlimDX, using the same design philosophy, mainly the <a href="http://code.google.com/p/slimmath/">Slim.Math </a>assembly in order to have all the Vectors and math functions ready-to-use. The only difference is that I have moved Vectors*/Matrix class to the main core, while still leaving higher level math classes to a separate Math assembly (BoudingSphere, Plain, intersection calculation... etc.)<br /><br /><br />You may have noticed that all the generated class are tagged with the C# keyword "partial", making extension quite easy to integrate.<br /><br />Why do we need extensions? Well, Direct3D 11 API is sometimes not easy to use, there are a couple of redundancy that doesn't map well to C#. For example, methods are taking an array of structure + the size of this array =&gt; In C#, you would pass the array, and the size will be inferred from that... this is not strictly equivalent to C++, because you could pass an array larger than the number of elements you want to effectively pass, but this is the most common way the API is going to be used... so... <br /><br />For example, to create a DXGI Factory, you should have to call DXGICreateFactory... because we don't need to expose directly those functions, the DXGICreateFactory are tagged with internal keyword and I have added a new constructor to the DXGI Factory like this:<br />
+<pre class="language-csharp"><code>using System;
+using System.Runtime.InteropServices;
+
+namespace SharpDX.DXGI
+{
+    public partial class Factory
+    {
+        /// &lt;summary>
+        /// Default Constructor for Factory
+        /// &lt;/summary>
+        public Factory() : base(IntPtr.Zero)
+        {
+            IntPtr factoryPtr;
+            DXGI.CreateDXGIFactory(GetType().GUID, out factoryPtr);
+            NativePointer = factoryPtr;
+        }
+</code></pre>
+<br />Finally in a assembly project, you have:<br />
+<ul>
+   <li>Generated classes : Enumerations.cs, Structures.cs, Interfaces.cs, Functions.cs</li>
+   <li> Extension classes : They are placed in a subdirectory Extension with the filename of the extended class .e.g. Factory.cs</li>
+   <li>Non generated classes : For example, VertexBufferBinding which is used by a custom SetVertexBuffers in order to set strides, offsets and buffers in a more friendly way like :</li>
+</ul>
+<pre class="language-csharp"><code>context.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertices, 32, 0));
+</code></pre>
+<h3>Example of ported SlimDX MiniTri sample</h3>
+
+Here is a port of <a href="http://code.google.com/p/slimdx/source/browse/trunk/samples/Direct3D11/MiniTri11/Program.cs">MiniTri D3D11 sample </a>to this new API. You could verify that the API is really close to SlimDX experience...
+
+<pre class="language-csharp"><code>using System;
+using SharpDX;
+using SharpDX.Direct3D;
+using SharpDX.Direct3D11;
+using SharpDX.DXGI;
+using SharpDX.Windows;
+using SharpDX.D3DCompiler;
+using Buffer = SharpDX.Direct3D11.Buffer;
+using Device = SharpDX.Direct3D11.Device;
+
+namespace MiniTri
+{
+    /// &lt;summary&gt;
+    /// SharpDX port of SlimDX-MiniTri Direct3D 11 Sample
+    /// &lt;/summary&gt;
+    static class Program
+    {
+        [STAThread]
+        static void Main()
+        {
+            var form = new RenderForm("SharpDX - MiniTri Direct3D 11 Sample");
+
+            // SwapChain description
+            var desc = new SwapChainDescription()
             {
-                [DataContract]
-                public class CppType : CppElement
-                {
-                    [DataMember(Order=0)]
-                    public string Type { get; set;}
-                    [DataMember(Order=1)]
-                    public string Specifier { get; set; }
-                    [DataMember(Order=2)]
-                    public bool Const { get; set; }
-                    [DataMember(Order = 3)]
-                    public bool IsArray { get; set; }
-                    [DataMember(Order=4)]
-                    public string ArrayDimension { get; set; }
-            </code></pre>
-            <br />The model is really lightweight, no fancy methods and easy to navigate in.<br /><br />The process is also responsible to get documentation for each C++ items (enumerations, structures, interfaces, functions). The documentation is requested to MSDN while generating all the types. That was also a bit tricky to parse, but in the end, the class is very small (less than 200 lines of C# code). Downloaded documentation is stored on the disk and is used for later re-generation of the parsing. <br /><br />The generated XML model is taking around 1.7Mo for DXGI, D3D11, D3DX11, D3DCompiler includes and looks like this:
-            <interfaces></interfaces>
-            <br /><br />
-            <pre style="font-family: consolas;"><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Interfaces</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">CppInterface</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span>ID3D11DeviceChild<span style="color: blue;"><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span>A&nbsp;device-child&nbsp;interface&nbsp;accesses&nbsp;data&nbsp;used&nbsp;by&nbsp;a&nbsp;device.<span style="color: blue;"><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Remarks</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Parent</span><span style="color: blue;">&gt;</span>IUnknown<span style="color: blue;"><span style="color: #a31515;">Parent</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Methods</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">CppMethod</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span>GetDevice<span style="color: blue;"><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span>Get&nbsp;a&nbsp;pointer&nbsp;to&nbsp;the&nbsp;device&nbsp;that&nbsp;created&nbsp;this&nbsp;interface.<span style="color: blue;"><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Remarks</span><span style="color: blue;">&gt;</span>Any&nbsp;returned&nbsp;interfaces&nbsp;will&nbsp;have&nbsp;their&nbsp;reference&nbsp;count&nbsp;incremented&nbsp;by&nbsp;one,&nbsp;so&nbsp;be&nbsp;sure&nbsp;to&nbsp;call&nbsp;::release()&nbsp;on&nbsp;the&nbsp;returned&nbsp;pointer(s)&nbsp;before&nbsp;they&nbsp;are&nbsp;freed&nbsp;or&nbsp;else&nbsp;you&nbsp;will&nbsp;have&nbsp;a&nbsp;memory&nbsp;leak.<span style="color: blue;"><span style="color: #a31515;">Remarks</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">ReturnType</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Name</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span>voidReturns&nbsp;nothing.<span style="color: blue;"><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Remarks</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Type</span><span style="color: blue;">&gt;</span>void<span style="color: blue;"><span style="color: #a31515;">Type</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Specifier</span><span style="color: blue;">&gt;<span style="color: #a31515;">Specifier</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Const</span><span style="color: blue;">&gt;</span>false<span style="color: blue;"><span style="color: #a31515;">Const</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">IsArray</span><span style="color: blue;">&gt;</span>false<span style="color: blue;"><span style="color: #a31515;">IsArray</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">ArrayDimension</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a31515;">ReturnType</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">CallingConvention</span><span style="color: blue;">&gt;</span>StdCall<span style="color: blue;"><span style="color: #a31515;">CallingConvention</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Offset</span><span style="color: blue;">&gt;</span>3<span style="color: blue;"><span style="color: #a31515;">Offset</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Parameters</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">CppParameter</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span>ppDevice<span style="color: blue;"><span style="color: #a31515;">Name</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span>Address&nbsp;of&nbsp;a&nbsp;pointer&nbsp;to&nbsp;a&nbsp;device&nbsp;(see&nbsp;{{ID3D11Device}}).<span style="color: blue;"><span style="color: #a31515;">Description</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Remarks</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Type</span><span style="color: blue;">&gt;</span>ID3D11Device<span style="color: blue;"><span style="color: #a31515;">Type</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Specifier</span><span style="color: blue;">&gt;</span>**<span style="color: blue;"><span style="color: #a31515;">Specifier</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Const</span><span style="color: blue;">&gt;</span>false<span style="color: blue;"><span style="color: #a31515;">Const</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">IsArray</span><span style="color: blue;">&gt;</span>false<span style="color: blue;"><span style="color: #a31515;">IsArray</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">ArrayDimension</span><span style="color: blue;">&nbsp;</span><span style="color: red;">i:nil</span><span style="color: blue;">=</span>"<span style="color: blue;">true</span>"<span style="color: blue;">&nbsp;/&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;</span><span style="color: #a31515;">Attribute</span><span style="color: blue;">&gt;</span>Out<span style="color: blue;"><span style="color: #a31515;">Attribute</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a31515;">CppParameter</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a31515;">Parameters</span><span style="color: blue;">&gt;</span><br /><span style="color: blue;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a31515;">CppMethod</span><span style="color: blue;">&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
-            <br />One of the most important thing in the DirectX headers that are required <b>to develop a reliable code generator is the presence of C+ windows specific attributes</b> : all the methods are prefix by macros __out __in __out_opt , __out_buffer... etc. All those attributes are similar to C# attributes and are explaining how to interpret the parameter. If you take the previous code, there is a method GetDevice that is returning a ID3D11Device through a [out] parameter. The [Out] parameter is extremely important here, as we know exactly how to use it. Same thing when you have a pointer which is in fact a buffer : with the attributes, you know that this is an array of elements behind the pointer...<br /><br />Although, I have discovered that some functions/methods sometimes are lacking some attributes.... but hopefully, the next process (the mapping from XIDL to C#) is able to add missing information like this.<br /><br /><br />As I said, the current implementation is far from being failsafe and would probably require more testing on other headers files. At least, the process is correctly working on a subset of the DirectX headers.<br /><br /><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165" name="XIDLToCSharp"></a><br />
-            <h2>Generate C# from IDL </h2>
-            <br />This part of the process has been a lot more time consuming. I started with enums, which were quite straightforward to manage. Structures were asking a bit more work, as there is some need for some custom marshalling for some structures that cannot marshal easily... Then interfaces methods were the most difficult part, correctly handling all parameters case was not easy...<br /><br />The process of generating the C# code is done in 3 steps:<br />
-            <ol>
-               <li><b>Reading XIDL model and prepare the model for mapping</b>: remove types, add information to some methods.&nbsp;</li>
-               <li><b>Generate a C# model with the XIDL model and a set of mapping rules</b></li>
-               <li><b>Generate C# files from the C# model</b>. I have used <a href="http://www.olegsych.com/2007/12/text-template-transformation-toolkit/">T4 "Text Template Transformation Toolkit" </a>engine as a text templatizer, which is part of VS2010 and is really easy to use, integrated in VS2010 with a third party syntax highlighting plugin.&nbsp;</li>
-            </ol>
-            This step is also responsible to <b>generate an interop assembly </b>which is emiting directly some .NET IL bytecodes through the System.Reflection.Emit. This interop assembly is the trick to avoid the usage of a C++/CLI mixed assembly<br /><br />
-            <h3>Preamble) How to avoid the usage of C++/CLI in C#</h3>
-            <br />If you look at some generated C++/CLI code with Reflector, you will see that most of the code is in fact a pure IL bytecode, even when there is a call to a native function or native methods...<br /><br />The trick here is that there are a couple of IL instructions that are used internally by C# but not exposed to the language. <br /><br />1) The <b>instruction "<a href="http://msdn.microsoft.com/en-us/library/system.reflection.emit.opcodes.calli.aspx">calli</a>" </b><br /><br />This instruction is responsible to call directly an unmanaged function, without going through the pinvoke/interop&nbsp; layer (in fact, pinvoke is calling in the end "calli", but is performing a much more complex marshaling of the parameters, structures...)<br /><br />What I need was a way to call an umanaged function/methods without going through the pinvoke layer, and "calli" is exactly here for this. Now, suppose that we could generate a small assembly at compile time and at runtime that would be responsible for handling those calli function, we would not have to use anymore C++/CLI for this.<br /><br />For example, suppose that I want to call a C++ method of an interface which takes an integer as a parameter, something like :<br />
-            <pre class="language-csharp"><code>interface IDevice : IUnknown {
-                void Draw(int count);
-            }
-            </code></pre>
-            I only need a function in C# that is able to directly call this method, without going the pinvoke layer, with a pointer to the C++ IDevice object and the offset of the method in the vtbl (offset will be expressed in bytes, for a x86 architecture here) :<br />
-            <pre class="language-csharp"><code>class Interop {
-                public static unsafe void CalliVoid(void* thisObject, int vtblOffset, int arg0);
-            }
+                BufferCount = 1,
+                BufferDescription =  new ModeDescription(form.ClientSize.Width, form.ClientSize.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
+                Windowed = true,
+                OutputWindow = form.Handle,
+                SampleDescription = new SampleDescription(1,0),
+                SwapEffect = SwapEffect.Discard,
+                BufferUsage = Usage.RenderTargetOutput
+            };
+                                                    
+
+            // Create Device and SwapChain
+            Device device;
+            SwapChain swapChain;
+            Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.Debug, desc, out device, out swapChain);            
+            var context = device.ImmediateContext;
             
-            // A call to IDevice
-            void* ptrToIDevice = ...;
-            
-            // A Call to the method Draw, number 3 in the vtbl order (starting at 0 to 2 for IUnknown methods)
-            Interop.CalliVoid(ptrToIDevice, /* 3 * sizeof(void* in x86) */ 3 * 4 , /* count */4 );
-            
-            </code></pre>
-            <br />The IL bytecode content of this method for a x64 architecture would be typically in C++/CLI like this:<br />
-            <pre class="language-csharp"><code>.method public hidebysig static void CalliVoid(void* arg0, int32 arg1, int32 arg2) cil managed
+            // Ignore all windows events
+            Factory factory = swapChain.GetParent&lt;Factory&gt;();
+            factory.MakeWindowAssociation(form.Handle, WindowAssociationFlags.IgnoreAll);
+
+            // New RenderTargetView from the backbuffer
+            Texture2D backBuffer = Texture2D.FromSwapChain&lt;Texture2D&gt;(swapChain, 0);
+            var renderView = new RenderTargetView(device, backBuffer);
+
+            // Compile Vertex and Pixel shaders
+            var vertexShaderByteCode = ShaderBytecode.CompileFromFile("MiniTri.fx", "VS", "vs_4_0", ShaderFlags.None, EffectFlags.None);
+            var vertexShader = new VertexShader(device, vertexShaderByteCode);
+
+            var pixelShaderByteCode = ShaderBytecode.CompileFromFile("MiniTri.fx", "PS", "ps_4_0", ShaderFlags.None, EffectFlags.None);
+            var pixelShader = new PixelShader(device, pixelShaderByteCode);
+
+            // Layout from VertexShader input signature
+            var layout = new InputLayout(device, ShaderSignature.GetInputSignature(vertexShaderByteCode), new[] {
+                new InputElement("POSITION", 0, Format.R32G32B32A32_Float, 0, 0),
+                new InputElement("COLOR", 0, Format.R32G32B32A32_Float, 16, 0) 
+            });
+
+            // Write vertex data to a datastream
+            var stream = new DataStream(32 * 3, true, true);
+            stream.WriteRange(new[] {
+                new Vector4(0.0f, 0.5f, 0.5f, 1.0f), new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+                new Vector4(0.5f, -0.5f, 0.5f, 1.0f), new Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+                new Vector4(-0.5f, -0.5f, 0.5f, 1.0f), new Vector4(0.0f, 0.0f, 1.0f, 1.0f)
+            });
+            stream.Position = 0;
+
+            // Instantiate Vertex buiffer from vertex data
+            var vertices = new Buffer(device, stream, new BufferDescription()
             {
-                .maxstack 4
-                L_0000: ldarg.0      // Load (0) this arg (1st parameter for native method)
-                L_0001: ldarg.2      // Load (1) count arg
-                L_0002: ldarg.1      // Offset in vtbl
-                L_0003: conv.i       // Convert to native int
-                L_0004: dup          //
-                L_0005: add          // Offset = offset * 2 (only for x64 architecture)
-                L_0006: ldarg.0      // 
-                L_0007: ldind.i      // Load vtbl poointer
-                L_0008: add          // pVtbl = pVtbl + offset
-                L_0009: ldind.i      // load function from the vtbl fointer
-                L_000a: calli method unmanaged stdcall void *(void*, int32)
-                L_000f: ret 
-            }
-            </code></pre>
-            <br />This kind of code will be automatically inlined by the JIT (which is, from SCCLI/Rotor sourcecode, inlining functions that are taking less than 25 bytes of bytecode).<br /><br />If you look at a C++/CLI assembly, you will see lots of "calli" instructions.<br /><br />So in the end, how this trick is used? Because the generator knows all the methods from all the interfaces, it is able to generate a set of all possible calling conventions to unmanaged object. In fact, the XIDLToCSharp generator is responsible to generate an assembly containing all the interop methods (around 66 methods using Calli) :<br />
-            <pre class="language-csharp"><code>public class Interop
+                BindFlags = BindFlags.VertexBuffer,
+                CPUAccessFlags = CpuAccessFlags.None,
+                MiscFlags = ResourceOptionFlags.None,
+                SizeInBytes = 32 * 3,
+                Usage = ResourceUsage.Default,
+                StructureByteStride = 0
+            });
+            stream.Release();
+
+            // Prepare All the stages
+            context.InputAssembler.InputLayout = layout;
+            context.InputAssembler.PrimitiveTopology = PrimitiveTopology.Trianglelist;
+            context.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertices, 32, 0));
+            context.VertexShader.Set(vertexShader);
+            context.Rasterizer.SetViewports(new Viewport(0, 0, form.ClientSize.Width, form.ClientSize.Height, 0.0f, 1.0f));
+            context.PixelShader.Set(pixelShader);
+            context.OutputMerger.SetTargets(renderView);
+
+            // Main loop
+            MessagePump.Run(form, () =&gt;
             {
-                private Interop();
-                public static unsafe float CalliFloat(void* arg0, int arg1, void* arg2);
-                public static unsafe int CalliInt(void* arg0, int arg1);
-                public static unsafe int CalliInt(void* arg0, int arg1, int arg2);
-                public static unsafe int CalliInt(void* arg0, int arg1, void* arg2);
-                public static unsafe int CalliInt(void* arg0, int arg1, long arg2);
-                public static unsafe int CalliInt(void* arg0, int arg1, int arg2, int arg3);
-                public static unsafe int CalliInt(void* arg0, int arg1, long arg2, int arg3);
-                public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, int arg3);
-                public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, void* arg3);
-                public static unsafe int CalliInt(void* arg0, int arg1, int arg2, void* arg3);
-                public static unsafe int CalliInt(void* arg0, int arg1, IntPtr arg2, void* arg3);
-                public static unsafe int CalliInt(void* arg0, int arg1, IntPtr arg2, int arg3);
-                public static unsafe int CalliInt(void* arg0, int arg1, int arg2, void* arg3, int arg4);
-                public static unsafe int CalliInt(void* arg0, int arg1, int arg2, void* arg3, void* arg4);
-                public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, int arg3, void* arg4);
-                public static unsafe int CalliInt(void* arg0, int arg1, int arg2, int arg3, void* arg4);
-                public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, void* arg3, void* arg4);
-                public static unsafe int CalliInt(void* arg0, int arg1, IntPtr arg2, void* arg3, void* arg4);
-                public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, void* arg3, int arg4);
-                public static unsafe int CalliInt(void* arg0, int arg1, int arg2, int arg3, void* arg4, void* arg5);
-                public static unsafe int CalliInt(void* arg0, int arg1, void* arg2, void* arg3, int arg4, int arg5);
-                //
-                // ...[stripping Calli x methods here]...
-                //
-                public static unsafe void CalliVoid(void* arg0, int arg1, int arg2, void* arg3, void* arg4, int arg5, int arg6, void* arg7);
-                public static unsafe void CalliVoid(void* arg0, int arg1, void* arg2, float arg3, float arg4, float arg5, float arg6, void* arg7);
-                public static unsafe void CalliVoid(void* arg0, int arg1, int arg2, void* arg3, void* arg4, int arg5, int arg6, void* arg7, void* arg8);
-                public static unsafe void CalliVoid(void* arg0, int arg1, void* arg2, int arg3, int arg4, int arg5, int arg6, void* arg7, int arg8, void* arg9);
-                public static unsafe void* Read&lt;T&gt;(void* pSrc, ref T data) where T: struct;
-                public static unsafe void* Read&lt;T&gt;(void* pSrc, T[] data, int offset, int count) where T: struct;
-                public static unsafe void* Write&lt;T&gt;(void* pDest, ref T data) where T: struct;
-                public static unsafe void* Write&lt;T&gt;(void* pDest, T[] data, int offset, int count) where T: struct;
-                public static void memcpy(void* pDest, void* pSrc, int Count);
-            }
-            </code></pre>
-            <br />This assembly is used at compile time but is not distributed at runtime. Instead, this assembly is dynamically generated at runtime in order to support difference in bytecode between x86 and x64 (in the calli example, we need to multiply by 2 the offset into the vtbl table, because the sizeof of a pointer in x64 is 8 bytes).<br /><br />2) The <b>instruction "<a href="http://msdn.microsoft.com/en-us/library/system.reflection.emit.opcodes.sizeof.aspx">sizeof</a>" for generic</b><br /><br />Although the Calli is the real trick that makes it possible to have a managed way to call unmanaged method without using pinvoke, I have found a couple of other IL bytecode that is necessary to have the same features than in C++/CLI.<br /><br />The other one is sizeof for generic. In C#, we know that there is a sizeof, but while trying to replicate the DataStream class from SlimDX in pure C#, I was not able to write this kind code :<br />
-            <pre class="language-csharp"><code>public class DataStream
-            {
-                // Unmarshal a struct from a memory location
-                public T Read&lt;T&gt;() where T: struct {
-                    T myStruct = default(T);
-                    memcpy(&amp;mystruct, &amp;m_buffer, sizeof(T));
-                    return myStruct;
-                }
-            }
-            </code></pre>
-            <br />In fact, under C#, the sizeof is not working for a generic, even if you specify that the generic is a struct. Because C# cannot constraint the struct to contains only blittable fields (I mean, It could, but It doesn't try to do it), they don't allow to take the size of a generic struct... that was annoying, but because with pure IL instruction, It's working well and I was already generating the Interop assembly, I was free to add whatever methods with custom bytecode to fill the gap...<br /><br />In the end, the interop code to read a generic struct from a memory location looks like this :<br />
-            <pre class="language-csharp"><code>// This method is reading a T struct from pSrc and returning the address : pSrc + sizeof(T)
-            .method public hidebysig static void* Read&lt;valuetype .ctor T&gt;(void* pSrc, !!T&amp; data) cil managed
-            {
-                .maxstack 3
-                .locals init (
-                    [0] int32 num,
-                    [1] !!T* pinned localPtr)
-                L_0000: ldarg.1 
-                L_0001: stloc.1 
-                L_0002: ldloc.1 
-                L_0003: ldarg.0 
-                L_0004: sizeof !!T
-                L_000a: conv.i4 
-                L_000b: stloc.0 
-                L_000c: ldloc.0 
-                L_000d: unaligned 1        // Mandatory for x64 architecture
-                L_0010: nop 
-                L_0011: nop 
-                L_0012: nop 
-                L_0013: cpblk              // Memcpy
-                L_0015: ldloc.0 
-                L_0016: conv.i 
-                L_0017: ldarg.0 
-                L_0018: add 
-                L_0019: ret 
-            }
-            </code></pre>
-            <br />3) The <b>instruction "<a href="http://msdn.microsoft.com/en-us/library/system.reflection.emit.opcodes.cpblk.aspx">cpblk</a>", memcpy in IL</b><br /><br />In the previous function, you can see the use of "cpblk" bytecode instruction. In fact, when you are looking at a C++/CLI method using a memcpy, It will not use the memcpy from the C CRT but directly the IL instruction performing the same task. This IL instruction is faster than using anykind of interop, so I made it available to C# through the Interop assembly<br /><br />
-            <h3>I) Prepare XIDL model for mapping</h3>
-            <br />So the 1st step in the XIDLToCSharp process is to prepare the XIDL model to be more mapping friendly. This step is essentially responsible to:<br />
-            <ul>
-               <li><b>Add missing C++ attributes </b>(In, InOut, Buffer) information to some method's parameter</li>
-               <li><b>Replace the type of some method parameters </b>: for example in DirectX, there are lots of parameter that are taking a flags, which is in fact an already declared enum... but for some unknown reason, they are declaring the method with an "int" instead of using the enum... </li>
-               <li><b>Remove some types</b>. For example,&nbsp; the D3D_PRIMITIVE_TOPOLOGY is holding a bunch of D3D11 and D3D10 enum, duplicating D3D_PRIMITIVE enums... So I'm removing them. </li>
-               <li><b>Add some tag directly on the XIDL</b> model in order to ease the next mapping process : those tags are for example used for tagging the C# visibility of the method, or forcing a method to not be interpreted&nbsp; as a "property")</li>
-            </ul>
-            <pre class="language-csharp"><code>// Read the XIDL model
-                CppIncludeGroup group = CppIncludeGroup.Read("directx_idl.xml");
-            
-                group.Modify&lt;CppParameter&gt;("^D3DX11.*?::pDefines", Modifiers.ParameterAttribute(CppAttribute.In | CppAttribute.Buffer | CppAttribute.Optional));
-            
-                // Modify device Flags for D3D11CreateDevice to use D3D11_CREATE_DEVICE_FLAG
-                group.Modify&lt;CppParameter&gt;("^D3D11CreateDevice.*?::Flags$", Modifiers.Type("D3D11_CREATE_DEVICE_FLAG"));
-            
-                // ppFactory on CreateDXGIFactory.* should be Attribute.Out
-                group.Modify&lt;CppParameter&gt;("^CreateDXGIFactory.*?::ppFactory$", Modifiers.ParameterAttribute(CppAttribute.Out));
-            
-                // pDefines is an array of Macro (and not just In)
-                group.Modify&lt;CppParameter&gt;("^D3DCompile::pDefines", Modifiers.ParameterAttribute(CppAttribute.In | CppAttribute.Buffer | CppAttribute.Optional));
-                group.Modify&lt;CppParameter&gt;("^D3DPreprocess::pDefines", Modifiers.ParameterAttribute(CppAttribute.In | CppAttribute.Buffer | CppAttribute.Optional));
-            
-                // SwapChain description is mandatory In and not optional
-                group.Modify&lt;CppParameter&gt;("^D3D11CreateDeviceAndSwapChain::pSwapChainDesc", Modifiers.ParameterAttribute(CppAttribute.In));
-            
-                // Remove all enums ending with _FORCE_DWORD, FORCE_UINT
-                group.Modify&lt;CppEnumItem&gt;("^.*_FORCE_DWORD$", Modifiers.Remove);
-                group.Modify&lt;CppEnumItem&gt;("^.*_FORCE_UINT$", Modifiers.Remove);
-            </code></pre>
-            <br />You can see that the pre-mapping (and the mapping) is using intensively regular expression for matching names, which is a very convenient way to perform some kind of XPATH request with Regex expressions.<br /><br />
-            <h3>II) Generate C# model from XIDL and mapping rules</h3>
-            <br />This process is taking the pre-process XIDL and is generating a C# model (a subset of the C# model in memory), adding mapping information and preparing things to make it easier to use it from the T4 templatizer engine.<br /><br />In order to generate the C# model from DirectX, the generator needs a couple of mapping rules. <br /><br />1) <b>Mapping an include to an assembly / namespace</b><br /><br />This rules is defining a default dispatching of types to assembly / namespace. It will associate source headers include (the name of the .h, without the extension).<br />
-            <pre class="language-csharp"><code>// Namespace mapping 
-            
-              // Map dxgi include to assembly SharpDX.DXGI, namespace SharpDX.DXGI
-              gen.MapIncludeToNamespace("dxgi", "SharpDX.DXGI");
-              gen.MapIncludeToNamespace("dxgiformat", "SharpDX.DXGI");
-              gen.MapIncludeToNamespace("dxgitype", "SharpDX.DXGI");
-            
-              // Map D3DCommon include to assembly SharpDX, namespace SharpDX.Direct3D
-              gen.MapIncludeToNamespace("d3dcommon", "SharpDX.Direct3D", "SharpDX");
-            
-              gen.MapIncludeToNamespace("d3d11", "SharpDX.Direct3D11");
-              gen.MapIncludeToNamespace("d3dx11", "SharpDX.Direct3D11");
-              gen.MapIncludeToNamespace("d3dx11core", "SharpDX.Direct3D11");
-              gen.MapIncludeToNamespace("d3dx11tex", "SharpDX.Direct3D11");
-              gen.MapIncludeToNamespace("d3dx11async", "SharpDX.Direct3D11");
-              gen.MapIncludeToNamespace("d3d11shader", "SharpDX.D3DCompiler");
-              gen.MapIncludeToNamespace("d3dcompiler", "SharpDX.D3DCompiler");
-            </code></pre>
-            <br />2) <b>Mapping a particular type to an assembly / namespace</b><br /><br />It is also necessary to override the default include to assembly/namespace dispatching for some particular types. This rules is doing this.<br />
-            <pre class="language-csharp"><code>gen.MapTypeToNamespace("^D3D_PRIMITIVE$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_CBUFFER_TYPE$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_RESOURCE_RETURN_TYPE$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_SHADER_CBUFFER_FLAGS$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_SHADER_INPUT_TYPE$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_SHADER_VARIABLE_CLASS$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_SHADER_VARIABLE_FLAG$S", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_SHADER_VARIABLE_TYPE$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_TESSELLATOR_DOMAIN$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_TESSELLATOR_PARTITIONING$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_TESSELLATOR_OUTPUT_PRIMITIVE$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_SHADER_INPUT_FLAGS$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_NAME$", "SharpDX.D3DCompiler");
-                gen.MapTypeToNamespace("^D3D_REGISTER_COMPONENT_TYPE$", "SharpDX.D3DCompiler");
-            </code></pre>
-            <br />The previous code is instructing the generator to move some D3D types to the SharpDX.D3DCompiler namespace (and assembly). Those types are in fact more related to Shader reflection and are associated with the D3DCompiler assembly (I took the same design choice from SlimDX, although we could think about another mapping).<br /><br />3) <b>Mapping a C++ type to a custom C# type</b><br /><br />It is sometimes necessary to map a C++ type to a non generated C# type. For example, there is the C++ "RECT" structure which is not stritcly equivalent to the System.Drawing.Rectangle (the RECT struct is using the Left,Top,Right,Bottom fields instead of Left,Top,Width,Height for System.Drawing.Rectangle). This mapping is able to define a custom mapping. The SharpDX.Rectangle is not generated by the generator but is defined in the SharpDX assembly project (last part).<br />
-            <pre class="language-csharp"><code>var rectType = new CSharpStruct();
-             rectType.Name = "SharpDX.Rectangle";
-             rectType.SizeOf = 4*4;
-             gen.MapCppTypeToCSharpType("RECT", rectType); //"SharpDX.Rectangle", 4 * 4, false, true);
-            </code></pre>
-            <br />4) <b>Mapping a C++ name to a C# name</b><br />The renaming rules are quite rich. The XIDLToCSharp provides a default renaming mechanism that respect the CamelCase convention, but there are some exceptions that need to be addressed. For example:<br />
-            <pre class="language-csharp"><code>// Rename DXGI_MODE_ROTATION to DisplayModeRotation
-              gen.RenameType(@"^DXGI_MODE_ROTATION$","DisplayModeRotation");
-              gen.RenameType(@"^DXGI_MODE_SCALING$", "DisplayModeScaling");
-              gen.RenameType(@"^DXGI_MODE_SCANLINE_ORDER$", "DisplayModeScanlineOrder");
-            
-              // Use regular expression to take the part of some names...
-              gen.RenameType(@"^D3D_SVC_(.*)", "$1");
-              gen.RenameType(@"^D3D_SVF_(.*)", "$1");
-              gen.RenameType(@"^D3D_SVT_(.*)", "$1");
-              gen.RenameType(@"^D3D_SIF_(.*)", "$1");
-              gen.RenameType(@"^D3D_SIT_(.*)", "$1");
-              gen.RenameType(@"^D3D_CT_(.*)", "$1");
-            </code></pre>
-            <br />For structures and enums that are using the "_" underscore to separate name subpart, you can let XIDLToCSharp rename correctly each subpart, while still being able to specify how a subpart can be rename:<br />
-            <pre class="language-csharp"><code>// Expand sub part between underscore
-             gen.RenameTypePart("^DESC$", "Description");
-             gen.RenameTypePart("^CBUFFER$", "ConstantBuffer");
-             gen.RenameTypePart("^TBUFFER$", "TextureBuffer");
-             gen.RenameTypePart("^BUFFEREX$", "ExtendedBuffer");
-             gen.RenameTypePart("^FUNC$", "Function");
-             gen.RenameTypePart("^FLAG$", "Flags");
-             gen.RenameTypePart("^SRV$", "ShaderResourceView");
-             gen.RenameTypePart("^DSV$", "DepthStencilView");
-             gen.RenameTypePart("^RTV$", "RenderTargetView");
-             gen.RenameTypePart("^UAV$", "UnorderedAccessView");
-             gen.RenameTypePart("^TEXTURE1D$", "Texture1D");
-             gen.RenameTypePart("^TEXTURE2D$", "Texture2D");
-             gen.RenameTypePart("^TEXTURE3D$", "Texture3D");
-            </code></pre>
-            <br />With this rules, for example with a struct named as "BLABLA_DESC", the DESC part will be expand to "Description", resulting in the C# name "BlablaDescription".<br /><br />5) <b>Change Field type mapping in C#</b><br /><br />Again, there are lots of enums in DirectX that are not used in the structures. For example, if you take the D3D11_BUFFER_DESC, all enums are declared as int instead of using their respective enums. <br /><br />This mapping rules is responsible to change the destination type for a field:<br />
-            <pre class="language-csharp"><code>gen.ChangeStructFieldTypeToNative("D3D11_BUFFER_DESC", "BindFlags", "D3D11_BIND_FLAG");
-             gen.ChangeStructFieldTypeToNative("D3D11_BUFFER_DESC", "CPUAccessFlags", "D3D11_CPU_ACCESS_FLAG");
-             gen.ChangeStructFieldTypeToNative("D3D11_BUFFER_DESC", "MiscFlags", "D3D11_RESOURCE_MISC_FLAG");
-            </code></pre>
-            <br />6) <b>Generate enums from C++ macros, improving enums</b><br /><br />Again, DirectX SDK is not consistent with enums. Sometimes there are some enums that are in fact defined with some macro definition, which makes intellisense experience inexistent...<br /><br />XIDLToCSharp is able to create an enum from a set of macros definitions<br />
-            <pre class="language-csharp"><code>// Create enums from macro definitions
-             // Create the D3DCOMPILE_SHADER_FLAGS C++ type from the D3DCOMPILE_.* macros
-             gen.CreateEnumFromMacros(@"^D3DCOMPILE_[^E][^F].*", "D3DCOMPILE_SHADER_FLAGS");
-             gen.CreateEnumFromMacros(@"^D3DCOMPILE_EFFECT_.*", "D3DCOMPILE_EFFECT_FLAGS");
-             gen.CreateEnumFromMacros(@"^D3D_DISASM_.*", "D3DCOMPILE_DISASM_FLAGS");
-            </code></pre>
-            <br />There are also some tiny things to adjust to existing enums, like adding a "None=0" enum item for some flags. <br /><br />7) <b>Move interface methods to inner interfaces in C#</b><br /><br />If you have been using Direct3D 11, you have notice that all methods for each stages are prefix with the stage abbreviation, making for example the <a href="http://msdn.microsoft.com/en-us/library/ff476385%28v=VS.85%29.aspx">ID3D11DeviceContext interface</a> quite ugly to use, ending in some code like this:<br />
-            <pre class="language-csharp"><code>deviceContext.IASetInputLayout(inputlayout); 
-            </code></pre>
-            <br />SlimDX did something really nice : they have created for each pipeline stage (IA for InputAssembler, VS for VertexShader) a property accessor to an interface that is exposing the method of this stage, resulting in an improved readability and a much better intellisense experience.<br />
-            <pre class="language-csharp"><code>deviceContext.InputAssembler.InputLayout = inputlayout; 
-            </code></pre>
-            <br />In the XIDL2CSharp, there is a rules to handle such a case, and is simple as writing this:<br />
-            <pre class="language-csharp"><code>// Map all IA* methods to the internal interface InputAssemblerStage with the acessor property InputAssembler, using the method name $1 (extract from the regexp)
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::IA(.*)", "InputAssemblerStage", "InputAssembler", "$1");
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::VS(.*)", "VertexShaderStage", "VertexShader", "$1");
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::PS(.*)", "PixelShaderStage", "PixelShader", "$1");
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::GS(.*)", "GeometryShaderStage", "GeometryShader", "$1");
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::SO(.*)", "StreamOutputStage", "StreamOutput", "$1");
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::DS(.*)", "DomainShaderStage", "DomainShader", "$1");
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::HS(.*)", "HullShaderStage", "HullShader", "$1");
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::RS(.*)", "RasterizerStage", "Rasterizer", "$1");
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::OM(.*)", "OutputMergerStage", "OutputMerger", "$1");
-             gen.MoveMethodsToInnerInterface("ID3D11DeviceContext::CS(.*)", "ComputeShaderStage", "ComputeShader", "$1");
-            </code></pre>
-            <br />8) <b>Dispatch method to function group</b><br /><br />DirectX C++ functions are mapped to a set of function group and an associated DLL. For example, it is possible to specify that all D3D11.* methods will map to a class D3D11 containing all the associated methods.<br />
-            <pre class="language-csharp"><code>// Function group
-              var d3dCommonFunctionGroup = gen.CreateFunctionGroup("SharpDX", "SharpDX.Direct3D", "D3DCommon");
-              var dxgiFunctionGroup = gen.CreateFunctionGroup("SharpDX.DXGI", "SharpDX.DXGI", "DXGI");
-              var d3dFunctionGroup = gen.CreateFunctionGroup("SharpDX.D3DCompiler", "SharpDX.D3DCompiler", "D3D");
-              var d3d11FunctionGroup = gen.CreateFunctionGroup("SharpDX.Direct3D11", "SharpDX.Direct3D11", "D3D11");
-              var d3dx11FunctionGroup = gen.CreateFunctionGroup("SharpDX.Direct3D11", "SharpDX.Direct3D11", "D3DX11");
-            
-              // Map All D3D11 functions to D3D11 Function Group
-              gen.MapFunctionToFunctionGroup(@"^D3D11.*", "d3d11.dll", d3d11FunctionGroup);
-            
-              // Map All D3DX11 functions to D3DX11 Function Group
-              gen.MapFunctionToFunctionGroup(@"^D3DX11.*", group.Find&lt;cppmacrodefinition&gt;("D3DX11_DLL_A").FirstOrDefault().StripStringValue, d3dx11FunctionGroup);
-            
-              // Map All D3D11 functions to D3D11 Function Group
-              string d3dCompilerDll =
-                  group.Find&lt;cppmacrodefinition&gt;("D3DCOMPILER_DLL_A").FirstOrDefault().StripStringValue;
-              gen.MapFunctionToFunctionGroup(@"^D3DCreateBlob$", d3dCompilerDll, d3dCommonFunctionGroup);
-            </code></pre>
-            <br />If a DLL has a versionned name (like for D3DXX_xx.dll or D3DCompiler_xx.dll), we are directly retreiving the dll name from a macro!<br /><br /><a href="http://www.blogger.com/post-edit.g?blogID=1076643699683521890&amp;postID=4432054582300394165" name="CSharpToFiles"></a><br />
-            <h2>Generate C# code from C# model and adding custom classes</h2>
-            <br />Once an internal C# model is built, we are calling the T4 text template toolkit engine for each group of types : Enumerations, Structures, Interfaces, Functions. Those classes are then integrated in several VS project, with some custom code added and some non generated core classes.<br /><br />
-            <h3>The generated C# interop code</h3>
-            <br />Meaning that for each assembly, each namespace, there will be an Enumerations.cs, Structures.cs, Interfaces.cs and Functions.cs files generated.<br /><br />For each types, there is a custom mapping done:<br />
-            <ul>
-               <li><b>For enums, the mapping is straightforward</b>, resulting in an almost one-to-one mapping</li>
-               <li><b>For structures, the mapping is quite straightforward</b>, resulting in an almost one-to-one mapping for most of the types. Although there are a couple of case where the mapping need to generate some marshalling code, essentially when there is a bool in the struct, or when there is a string pointer, or a fixed array of struct inside a struct.</li>
-            </ul>
-            For example, one of the most complex mapping for a structure is generated like this:<br /><br />
-            <pre class="language-csharp"><code>/// &lt;summary&gt; 
-            /// Describes the blend state. 
-            /// &lt;/summary&gt; 
-            /// &lt;remarks&gt; 
-            /// These are the default values for blend state.StateDefault ValueAlphaToCoverageEnableFALSEIndependentBlendEnableFALSERenderTarget[0].BlendEnableFALSERenderTarget[0].SrcBlendD3D11_BLEND_ONERenderTarget[0].DestBlendD3D11_BLEND_ZERORenderTarget[0].BlendOpD3D11_BLEND_OP_ADDRenderTarget[0].SrcBlendAlphaD3D11_BLEND_ONERenderTarget[0].DestBlendAlphaD3D11_BLEND_ZERORenderTarget[0].BlendOpAlphaD3D11_BLEND_OP_ADDRenderTarget[0].RenderTargetWriteMaskD3D11_COLOR_WRITE_ENABLE_ALL Note that D3D11_BLEND_DESC is identical to {{D3D10_BLEND_DESC1}}.If the driver type is set to &lt;see cref="SharpDX.Direct3D.DriverType.Hardware"/&gt;, the feature level is set to less than or equal to &lt;see cref="SharpDX.Direct3D.FeatureLevel.Level_9_3"/&gt;, and the pixel formatofthe render target is set to &lt;see cref="SharpDX.DXGI.Format.R8G8B8A8_UNorm_SRgb"/&gt;, DXGI_FORMAT_B8G8R8A8_UNORM_SRGB, or DXGI_FORMAT_B8G8R8X8_UNORM_SRGB, the display device performs the blend in standard RGB (sRGB) space and not in linear space. However, if the feature level is set to greater thanD3D_FEATURE_LEVEL_9_3, the display device performs the blend in linear space. 
-            /// &lt;/remarks&gt; 
-            /// &lt;unmanaged&gt;D3D11_BLEND_DESC&lt;/unmanaged&gt;
-            public  partial struct BlendDescription { 
-                
-                /// &lt;summary&gt; 
-                /// Determines whether or not to use alpha-to-coverage as a multisampling technique when setting a pixel to a rendertarget. 
-                /// &lt;/summary&gt; 
-                /// &lt;unmanaged&gt;BOOL AlphaToCoverageEnable&lt;/unmanaged&gt;
-                public bool AlphaToCoverageEnable { 
-                    get { 
-                        return (_AlphaToCoverageEnable!=0)?true:false; 
-                    }
-                    set { 
-                        _AlphaToCoverageEnable = value?1:0;
-                    }
-                }
-                internal int _AlphaToCoverageEnable;
-                
-                /// &lt;summary&gt; 
-                /// Set to TRUE to enable independent blending in simultaneous render targets.  If set to FALSE, only the RenderTarget[0] members are used. RenderTarget[1..7] are ignored. 
-                /// &lt;/summary&gt; 
-                /// &lt;unmanaged&gt;BOOL IndependentBlendEnable&lt;/unmanaged&gt;
-                public bool IndependentBlendEnable { 
-                    get { 
-                        return (_IndependentBlendEnable!=0)?true:false; 
-                    }
-                    set { 
-                        _IndependentBlendEnable = value?1:0;
-                    }
-                }
-                internal int _IndependentBlendEnable;
-                
-                /// &lt;summary&gt; 
-                /// An array of render-target-blend descriptions (see &lt;see cref="SharpDX.Direct3D11.RenderTargetBlendDescription"/&gt;); these correspond to the eight rendertargets  that can be set to the output-merger stage at one time. 
-                /// &lt;/summary&gt; 
-                /// &lt;unmanaged&gt;D3D11_RENDER_TARGET_BLEND_DESC RenderTarget[8]&lt;/unmanaged&gt;
-                public SharpDX.Direct3D11.RenderTargetBlendDescription[] RenderTarget { 
-                    get { 
-                        if (_RenderTarget == null) {
-                            _RenderTarget = new SharpDX.Direct3D11.RenderTargetBlendDescription[8];
-                        }
-                        return _RenderTarget; 
-                    }
-                }
-                internal SharpDX.Direct3D11.RenderTargetBlendDescription[] _RenderTarget;
-            
-                // Internal native struct used for marshalling
-                [StructLayout(LayoutKind.Sequential, Pack = 0 )]
-                internal unsafe partial struct __Native { 
-                    public int _AlphaToCoverageEnable;
-                    public int _IndependentBlendEnable;
-                    public SharpDX.Direct3D11.RenderTargetBlendDescription RenderTarget;
-                    SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget1;
-                    SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget2;
-                    SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget3;
-                    SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget4;
-                    SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget5;
-                    SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget6;
-                    SharpDX.Direct3D11.RenderTargetBlendDescription __RenderTarget7;
-                // Method to free native struct
-                    internal unsafe void __MarshalFree()
-                    {
-                    }
-                }
-            
-                // Method to marshal from native to managed struct
-                internal unsafe void __MarshalFrom(ref __Native @ref)
-                {            
-                    this._AlphaToCoverageEnable = @ref._AlphaToCoverageEnable;
-                    this._IndependentBlendEnable = @ref._IndependentBlendEnable;
-                    fixed (void* __to = &amp;this.RenderTarget[0]) fixed (void* __from = &amp;@ref.RenderTarget) SharpDX.Utilities.CopyMemory((IntPtr) __to, (IntPtr) __from, 8*sizeof ( SharpDX.Direct3D11.RenderTargetBlendDescription));
-                }
-                // Method to marshal from managed struct tot native
-                internal unsafe void __MarshalTo(ref __Native @ref)
-                {
-                    @ref._AlphaToCoverageEnable = this._AlphaToCoverageEnable;
-                    @ref._IndependentBlendEnable = this._IndependentBlendEnable;
-                    fixed (void* __to = &amp;@ref.RenderTarget) fixed (void* __from = &amp;this.RenderTarget[0]) SharpDX.Utilities.CopyMemory((IntPtr) __to, (IntPtr) __from, 8*sizeof ( SharpDX.Direct3D11.RenderTargetBlendDescription));
-            
-            }
-            }
-            </code></pre>
-            <br />
-            <ul>
-               <li><b>For Interfaces the mapping is quite complex</b>, because it is necessary to handle lost of different cases:
-                <ul>
-                    <li>Optionnal structure in input </li>
-                    <li>Optionnal parameters</li>
-                    <li>Output an array of interface</li>
-                    <li>Perform some custom marshaling (for example, with the previous BlendDescription structure)</li>
-                    <li> Generating properties for methods that are property elligible</li>
-                    <li>...etc.</li>
-                </ul>
-                </li>
-            </ul>
-            For example, the method using the BlendDescription is like this:<br />
-            <pre class="language-csharp"><code>/// &lt;summary&gt; 
-            /// Create a blend-state object that encapsules blend state for the output-merger stage. 
-            /// &lt;/summary&gt; 
-            /// &lt;remarks&gt; 
-            /// An application can create up to 4096 unique blend-state objects. For each object created, the runtime checks to see if a previous object  has the same state. If such a previous object exists, the runtime will return a pointer to previous instance instead of creating a duplicate object. 
-            /// &lt;/remarks&gt; 
-            /// &lt;param name="blendStateDescRef"&gt;Pointer to a blend-state description (see &lt;see cref="SharpDX.Direct3D11.BlendDescription"/&gt;).&lt;/param&gt;
-            /// &lt;param name="blendStateRef"&gt;Address of a pointer to the blend-state object created (see &lt;see cref="SharpDX.Direct3D11.BlendState"/&gt;).&lt;/param&gt;
-            /// &lt;returns&gt;This method returns E_OUTOFMEMORY if there is insufficient memory to create the blend-state object.   See {{Direct3D 11 Return Codes}} for other possible return values.&lt;/returns&gt;
-            /// &lt;unmanaged&gt;HRESULT CreateBlendState([In] const D3D11_BLEND_DESC* pBlendStateDesc,[Out, Optional] ID3D11BlendState** ppBlendState)&lt;/unmanaged&gt;
-            public SharpDX.Result CreateBlendState(ref SharpDX.Direct3D11.BlendDescription blendStateDescRef, out SharpDX.Direct3D11.BlendState blendStateRef){
-                unsafe {
-                    SharpDX.Direct3D11.BlendDescription.__Native blendStateDescRef_ = new SharpDX.Direct3D11.BlendDescription.__Native();
-                    blendStateDescRef.__MarshalTo(ref blendStateDescRef_);
-                    IntPtr blendStateRef_ = IntPtr.Zero;
-                    SharpDX.Result __result__;
-                    __result__= (SharpDX.Result)SharpDX.Interop.CalliInt(_nativePointer, 20 * 4, &amp;blendStateDescRef_, &amp;blendStateRef_);&nbsp;
-                    blendStateDescRef.__MarshalFree();
-                    blendStateRef = (blendStateRef_ == IntPtr.Zero)?null:new SharpDX.Direct3D11.BlendState(blendStateRef_);
-                    __result__.CheckError();
-                    return __result__;
-                }
-            }
-            </code></pre>
-            <br />In the previous example, you can see that the input BlendDescription structure is in fact marshalled to an intermediate native structure suitable for unmanaged code (internal __Native struct for BlendDescription). The&nbsp; marshall code is also responsible to free the native struct (if there are any allocations, like for strings).<br /><br />The marshalling has some nice optimizations, like for passing struct by value or by reference : All the methods in C++ are using a pointer for a struct (for getting and setting), but with the marshaller, we can decide if we want to have a struct passed by value or by ref. Currently, the generator is calculating the size of the valuetype. If the valuetype is less or equal 16 bytes, the valuetype is passed by value, otherwise it's passed by ref.<br /><br />A more standard interface with simple marshalling is like this: (Note for example the GUID integrated, the properties auto-generated from methods, and methods that are hidden from the public API)<br /><br />
-            <pre class="language-csharp"><code>/// &lt;summary&gt; 
-            /// This interface is used to return arbitrary length data. 
-            /// &lt;/summary&gt; 
-            /// &lt;unmanaged&gt;ID3D10Blob&lt;/unmanaged&gt;
-            [Guid("8ba5fb08-5195-40e2-ac58-0d989c3a0102")]
-            public partial class Blob : SharpDX.ComObject {
-            
-                public Blob(IntPtr basePtr) : base(basePtr) {
-                }
-                
-                
-                /// &lt;summary&gt; 
-                /// Get a pointer to the data. 
-                /// &lt;/summary&gt; 
-                /// &lt;unmanaged&gt;void* GetBufferPointer()&lt;/unmanaged&gt;
-                public IntPtr BufferPointer {
-                        get { return GetBufferPointer(); }
-                }
-                
-                /// &lt;summary&gt; 
-                /// Get the size. 
-                /// &lt;/summary&gt; 
-                /// &lt;unmanaged&gt;SIZE_T GetBufferSize()&lt;/unmanaged&gt;
-                public SharpDX.Size BufferSize {
-                        get { return GetBufferSize(); }
-                }
-                
-                /// &lt;summary&gt; 
-                /// Get a pointer to the data. 
-                /// &lt;/summary&gt; 
-                /// &lt;returns&gt;Returns a pointer.&lt;/returns&gt;
-                /// &lt;unmanaged&gt;void* GetBufferPointer()&lt;/unmanaged&gt;
-                internal IntPtr GetBufferPointer() {
-                    unsafe {
-                        IntPtr __result__;
-                        __result__= (IntPtr)SharpDX.Interop.CalliPtr(_nativePointer, 3 * 4);
-                        return __result__;
-                    }
-                }
-                
-                /// &lt;summary&gt; 
-                /// Get the size. 
-                /// &lt;/summary&gt; 
-                /// &lt;returns&gt;The size of the data, in bytes.&lt;/returns&gt;
-                /// &lt;unmanaged&gt;SIZE_T GetBufferSize()&lt;/unmanaged&gt;
-                internal SharpDX.Size GetBufferSize() {
-                    unsafe {
-                        SharpDX.Size __result__;
-                        __result__= (SharpDX.Size)SharpDX.Interop.CalliPtr(_nativePointer, 4 * 4);
-                        return __result__;
-                    }
-                }
-            }
-            </code></pre>
-            <br /><br />
-            <ul>
-               <li><b>For functions, the mapping is quite straightforward</b>, because we are relying on a plain pinvoke interop. This was the easiest choice and easier to generate. Although pInvoke calls are still hidden in order to perform some parameter transformation, mostly in order to support the custom COM Object model generated. </li>
-            </ul>
-            <br />A function call is generated like this:<br />
-            <pre class="language-csharp"><code>/// &lt;unmanaged&gt;HRESULT D3D11CreateDevice([In, Optional] IDXGIAdapter* pAdapter,[None] D3D_DRIVER_TYPE DriverType,[None] HMODULE Software,[None] D3D11_CREATE_DEVICE_FLAG Flags,[In, Buffer, Optional] const D3D_FEATURE_LEVEL* pFeatureLevels,[None] UINT FeatureLevels,[None] UINT SDKVersion,[Out,Optional] ID3D11Device** ppDevice,[Out, Optional] D3D_FEATURE_LEVEL* pFeatureLevel,[Out, Optional] ID3D11DeviceContext** ppImmediateContext)&lt;/unmanaged&gt;
-            public static SharpDX.Result CreateDevice(SharpDX.DXGI.Adapter adapterRef, SharpDX.Direct3D.DriverType driverType, IntPtr software, SharpDX.Direct3D11.DeviceCreationFlags flags, SharpDX.Direct3D.FeatureLevel[] featureLevelsRef, int featureLevels, int sDKVersion, out SharpDX.Direct3D11.Device deviceRef, out SharpDX.Direct3D.FeatureLevel featureLevelRef, out SharpDX.Direct3D11.DeviceContext immediateContextRef) {
-                unsafe {
-                    IntPtr deviceRef_ = IntPtr.Zero;
-                    IntPtr immediateContextRef_ = IntPtr.Zero;
-                    SharpDX.Result __result__;
-                    __result__= (SharpDX.Result)D3D11CreateDevice_((adapterRef == null)?IntPtr.Zero:adapterRef.NativePointer,  driverType,  software,  flags, featureLevelsRef,  featureLevels,  sDKVersion, out deviceRef_, out featureLevelRef, out immediateContextRef_);
-                    deviceRef = (deviceRef_ == IntPtr.Zero)?null:new SharpDX.Direct3D11.Device(deviceRef_);
-                    immediateContextRef = (immediateContextRef_ == IntPtr.Zero)?null:new SharpDX.Direct3D11.DeviceContext(immediateContextRef_);
-                    __result__.CheckError();
-                    return __result__;
-                }
-            }
-            
-            /// &lt;summary&gt;Native Interop Function&lt;/summary&gt;
-            /// &lt;unmanaged&gt;HRESULT D3D11CreateDevice([In, Optional] IDXGIAdapter* pAdapter,[None] D3D_DRIVER_TYPE DriverType,[None] HMODULE Software,[None] D3D11_CREATE_DEVICE_FLAG Flags,[In, Buffer, Optional] const D3D_FEATURE_LEVEL* pFeatureLevels,[None] UINT FeatureLevels,[None] UINT SDKVersion,[Out,Optional] ID3D11Device** ppDevice,[Out, Optional] D3D_FEATURE_LEVEL* pFeatureLevel,[Out, Optional] ID3D11DeviceContext** ppImmediateContext)&lt;/unmanaged&gt;
-            [DllImport("d3d11.dll", EntryPoint = "D3D11CreateDevice", CallingConvention = CallingConvention.StdCall, PreserveSig = true), SuppressUnmanagedCodeSecurityAttribute]
-            private extern static SharpDX.Result D3D11CreateDevice_(IntPtr adapterRef, SharpDX.Direct3D.DriverType driverType, IntPtr software, SharpDX.Direct3D11.DeviceCreationFlags flags, SharpDX.Direct3D.FeatureLevel[] featureLevelsRef, int featureLevels, int sDKVersion, out IntPtr deviceRef, out SharpDX.Direct3D.FeatureLevel featureLevelRef, out IntPtr immediateContextRef); 
-            </code></pre>
-            <h3>Extend the model in C#</h3>
-            <br />All those classes are then integrated in a VS solution with 4 assemblies:<br />
-            <ul>
-               <li>A core assembly that contains non generated code (ComObject, DataStream, Vectors, Utilities...) and common enumeration and structs for Direct3D (structures that are usually shared between D3D10, D3D10.1 and D3D11).</li>
-               <li>An assembly for DXGI that has a dependency to the core assembly</li>
-               <li>An assembly for D3DCompiler that has a dependency to the core assembly</li>
-               <li>An assembly for D3D11 that has a dependency to the core, DXGI and D3DCompiler</li>
-            </ul>
-            In order to quickly develop this new Wrapper, I have taken lots of portion of code from SlimDX, using the same design philosophy, mainly the <a href="http://code.google.com/p/slimmath/">Slim.Math </a>assembly in order to have all the Vectors and math functions ready-to-use. The only difference is that I have moved Vectors*/Matrix class to the main core, while still leaving higher level math classes to a separate Math assembly (BoudingSphere, Plain, intersection calculation... etc.)<br /><br /><br />You may have noticed that all the generated class are tagged with the C# keyword "partial", making extension quite easy to integrate.<br /><br />Why do we need extensions? Well, Direct3D 11 API is sometimes not easy to use, there are a couple of redundancy that doesn't map well to C#. For example, methods are taking an array of structure + the size of this array =&gt; In C#, you would pass the array, and the size will be inferred from that... this is not strictly equivalent to C++, because you could pass an array larger than the number of elements you want to effectively pass, but this is the most common way the API is going to be used... so... <br /><br />For example, to create a DXGI Factory, you should have to call DXGICreateFactory... because we don't need to expose directly those functions, the DXGICreateFactory are tagged with internal keyword and I have added a new constructor to the DXGI Factory like this:<br />
-            <pre class="language-csharp"><code>using System;
-            using System.Runtime.InteropServices;
-            
-            namespace SharpDX.DXGI
-            {
-                public partial class Factory
-                {
-                    /// &lt;summary>
-                    /// Default Constructor for Factory
-                    /// &lt;/summary>
-                    public Factory() : base(IntPtr.Zero)
-                    {
-                        IntPtr factoryPtr;
-                        DXGI.CreateDXGIFactory(GetType().GUID, out factoryPtr);
-                        NativePointer = factoryPtr;
-                    }
-            </code></pre>
-            <br />Finally in a assembly project, you have:<br />
-            <ul>
-               <li>Generated classes : Enumerations.cs, Structures.cs, Interfaces.cs, Functions.cs</li>
-               <li> Extension classes : They are placed in a subdirectory Extension with the filename of the extended class .e.g. Factory.cs</li>
-               <li>Non generated classes : For example, VertexBufferBinding which is used by a custom SetVertexBuffers in order to set strides, offsets and buffers in a more friendly way like :</li>
-            </ul>
-            <pre class="language-csharp"><code>context.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertices, 32, 0));
-            </code></pre>
-            <h3>Example of ported SlimDX MiniTri sample</h3>
-            
-            Here is a port of <a href="http://code.google.com/p/slimdx/source/browse/trunk/samples/Direct3D11/MiniTri11/Program.cs">MiniTri D3D11 sample </a>to this new API. You could verify that the API is really close to SlimDX experience...
-            
-            <pre class="language-csharp"><code>using System;
-            using SharpDX;
-            using SharpDX.Direct3D;
-            using SharpDX.Direct3D11;
-            using SharpDX.DXGI;
-            using SharpDX.Windows;
-            using SharpDX.D3DCompiler;
-            using Buffer = SharpDX.Direct3D11.Buffer;
-            using Device = SharpDX.Direct3D11.Device;
-            
-            namespace MiniTri
-            {
-                /// &lt;summary&gt;
-                /// SharpDX port of SlimDX-MiniTri Direct3D 11 Sample
-                /// &lt;/summary&gt;
-                static class Program
-                {
-                    [STAThread]
-                    static void Main()
-                    {
-                        var form = new RenderForm("SharpDX - MiniTri Direct3D 11 Sample");
-            
-                        // SwapChain description
-                        var desc = new SwapChainDescription()
-                        {
-                            BufferCount = 1,
-                            BufferDescription =  new ModeDescription(form.ClientSize.Width, form.ClientSize.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm),
-                            Windowed = true,
-                            OutputWindow = form.Handle,
-                            SampleDescription = new SampleDescription(1,0),
-                            SwapEffect = SwapEffect.Discard,
-                            BufferUsage = Usage.RenderTargetOutput
-                        };
-                                                                
-            
-                        // Create Device and SwapChain
-                        Device device;
-                        SwapChain swapChain;
-                        Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.Debug, desc, out device, out swapChain);            
-                        var context = device.ImmediateContext;
-                        
-                        // Ignore all windows events
-                        Factory factory = swapChain.GetParent&lt;Factory&gt;();
-                        factory.MakeWindowAssociation(form.Handle, WindowAssociationFlags.IgnoreAll);
-            
-                        // New RenderTargetView from the backbuffer
-                        Texture2D backBuffer = Texture2D.FromSwapChain&lt;Texture2D&gt;(swapChain, 0);
-                        var renderView = new RenderTargetView(device, backBuffer);
-            
-                        // Compile Vertex and Pixel shaders
-                        var vertexShaderByteCode = ShaderBytecode.CompileFromFile("MiniTri.fx", "VS", "vs_4_0", ShaderFlags.None, EffectFlags.None);
-                        var vertexShader = new VertexShader(device, vertexShaderByteCode);
-            
-                        var pixelShaderByteCode = ShaderBytecode.CompileFromFile("MiniTri.fx", "PS", "ps_4_0", ShaderFlags.None, EffectFlags.None);
-                        var pixelShader = new PixelShader(device, pixelShaderByteCode);
-            
-                        // Layout from VertexShader input signature
-                        var layout = new InputLayout(device, ShaderSignature.GetInputSignature(vertexShaderByteCode), new[] {
-                            new InputElement("POSITION", 0, Format.R32G32B32A32_Float, 0, 0),
-                            new InputElement("COLOR", 0, Format.R32G32B32A32_Float, 16, 0) 
-                        });
-            
-                        // Write vertex data to a datastream
-                        var stream = new DataStream(32 * 3, true, true);
-                        stream.WriteRange(new[] {
-                            new Vector4(0.0f, 0.5f, 0.5f, 1.0f), new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
-                            new Vector4(0.5f, -0.5f, 0.5f, 1.0f), new Vector4(0.0f, 1.0f, 0.0f, 1.0f),
-                            new Vector4(-0.5f, -0.5f, 0.5f, 1.0f), new Vector4(0.0f, 0.0f, 1.0f, 1.0f)
-                        });
-                        stream.Position = 0;
-            
-                        // Instantiate Vertex buiffer from vertex data
-                        var vertices = new Buffer(device, stream, new BufferDescription()
-                        {
-                            BindFlags = BindFlags.VertexBuffer,
-                            CPUAccessFlags = CpuAccessFlags.None,
-                            MiscFlags = ResourceOptionFlags.None,
-                            SizeInBytes = 32 * 3,
-                            Usage = ResourceUsage.Default,
-                            StructureByteStride = 0
-                        });
-                        stream.Release();
-            
-                        // Prepare All the stages
-                        context.InputAssembler.InputLayout = layout;
-                        context.InputAssembler.PrimitiveTopology = PrimitiveTopology.Trianglelist;
-                        context.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertices, 32, 0));
-                        context.VertexShader.Set(vertexShader);
-                        context.Rasterizer.SetViewports(new Viewport(0, 0, form.ClientSize.Width, form.ClientSize.Height, 0.0f, 1.0f));
-                        context.PixelShader.Set(pixelShader);
-                        context.OutputMerger.SetTargets(renderView);
-            
-                        // Main loop
-                        MessagePump.Run(form, () =&gt;
-                        {
-                            context.ClearRenderTargetView(renderView, new Color4(1.0f, 0.0f, 0.0f, 0.0f));
-                            context.Draw(3, 0);
-                            swapChain.Present(0, PresentFlags.None);
-                        });
-            
-                        // Release all resources
-                        vertexShaderByteCode.Release();
-                        vertexShader.Release();
-                        pixelShaderByteCode.Release();
-                        pixelShader.Release();
-                        vertices.Release();
-                        layout.Release();
-                        renderView.Release();
-                        backBuffer.Release();
-                        context.ClearState();
-                        context.Flush();
-                        device.Release();
-                        context.Release();
-                        swapChain.Release();
-                        factory.Release();
-                    }
-                }
-            }
-            </code></pre>
-            <h2>Next?</h2>
-            <br />Wow, this was not supposed to be a so long post! I have been a bit into the internals of the generator and It may not be interesting for a general audience, but at least I have taken some time to put this down on a paper, to clarify things.<br /><br />Although, I have not detailled everything. For example, you have probably noticed from the previous example that I'm still not using the D3D11 Effects11 API. Well, the problem is that Microsoft has removed the Effects API from D3D11. Why? Probably because the code is hidding too much about how you could interact properly (and more effitiently) with D3D11 API. But this is one decision I don't fully agree : Look at XNA 4.0 : They have removed the used of VertexShader, PixelShader directly in favor of Effects classes... In one API, they are no longer supporting it, in another, they are making it the only and mandatory one... Some could argue that XNA doesn't have the same target... but still, from a software design perspective, I'm quite <span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">doubtful.</span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">&nbsp;</span></span><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">&nbsp;</span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">The great news is that looking at the C++ Effects11 sample, I have been able to port the most interesting part : decoding an Effect bytecode to extract usefull information, like constant buffers, techniques, stages, shader's bytecodes...etc. I'm not going to support the whole fx_5_0 profile, because I'm usually using a subset of this : for example, I don't find practical to declare samplers state, blending...etc. in the shader and I do prefer to have them instantiated from the C# code. On the other hand, I like a lot the way the Effects library is encapsulating constant buffer and shader resource view binding to shader stages. This is one of the most laborious things to do if you are going with the raw Direct3D 11 interface. So if I could have an Effect framework supporting at least techniques, pass and proper automatic constant buffer and SRV bindings, I would be very happy. This part will deserve another post!</span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">&nbsp; </span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">Also, working more with SlimDX and this new API wrapper, I have been working with a XNA like API on top of a Direct3D 11 API, and It was in fact really easy to achieve (of course, without the content pipeline, which is the true benefit of XNA). Why do we need such a higher API? Well, Direct3D 11 is really powerful with its buffer/resource management, but the fact is that it's <i>much&nbsp; </i>more verbose. But think about it : When you use a Texture2D, you will need most of the time a ShaderResourceView on it.... If you want a texture2D as a render target, you will probably need a RenderTargetView, and because It's a RenderTarget, you will probably use this RenderTarget as a ShaderResourceView for another pass... So in the end, there are lots of things that can be handled in the background, even if you are using a Direct3D 11 API. The nice thing about this kind of API is that you can play with some geometry or compute shaders, while still having the pleasure to work with a high level API. This will also probably be part of a post!</span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title=""><br /></span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">So, what's next? I just finished the mapping and the port of the MiniTri yesterday. The current wrapper is probably not yet fully usable and doesn't have the same level of API richness than SlimDX. Threre are still lots of -small- extensions code to add to make the coding experience better than a somewhat raw D3D11 API. Within the next days, I'm going to play much more with this new wrapper and see how far can it go...</span></span><br /><br /><span style="font-size: x-small;"><i>(note: 1st draft version of this document)</i></span>
-            
-      
-          </div>
-        </article>
-      </div>
-      <div class="col-sm-3">
-        <nav class="js-toc toc sticky-top"></nav>
-      </div>
+                context.ClearRenderTargetView(renderView, new Color4(1.0f, 0.0f, 0.0f, 0.0f));
+                context.Draw(3, 0);
+                swapChain.Present(0, PresentFlags.None);
+            });
+
+            // Release all resources
+            vertexShaderByteCode.Release();
+            vertexShader.Release();
+            pixelShaderByteCode.Release();
+            pixelShader.Release();
+            vertices.Release();
+            layout.Release();
+            renderView.Release();
+            backBuffer.Release();
+            context.ClearState();
+            context.Flush();
+            device.Release();
+            context.Release();
+            swapChain.Release();
+            factory.Release();
+        }
+    }
+}
+</code></pre>
+<h2>Next?</h2>
+<br />Wow, this was not supposed to be a so long post! I have been a bit into the internals of the generator and It may not be interesting for a general audience, but at least I have taken some time to put this down on a paper, to clarify things.<br /><br />Although, I have not detailled everything. For example, you have probably noticed from the previous example that I'm still not using the D3D11 Effects11 API. Well, the problem is that Microsoft has removed the Effects API from D3D11. Why? Probably because the code is hidding too much about how you could interact properly (and more effitiently) with D3D11 API. But this is one decision I don't fully agree : Look at XNA 4.0 : They have removed the used of VertexShader, PixelShader directly in favor of Effects classes... In one API, they are no longer supporting it, in another, they are making it the only and mandatory one... Some could argue that XNA doesn't have the same target... but still, from a software design perspective, I'm quite <span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">doubtful.</span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">&nbsp;</span></span><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">&nbsp;</span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">The great news is that looking at the C++ Effects11 sample, I have been able to port the most interesting part : decoding an Effect bytecode to extract usefull information, like constant buffers, techniques, stages, shader's bytecodes...etc. I'm not going to support the whole fx_5_0 profile, because I'm usually using a subset of this : for example, I don't find practical to declare samplers state, blending...etc. in the shader and I do prefer to have them instantiated from the C# code. On the other hand, I like a lot the way the Effects library is encapsulating constant buffer and shader resource view binding to shader stages. This is one of the most laborious things to do if you are going with the raw Direct3D 11 interface. So if I could have an Effect framework supporting at least techniques, pass and proper automatic constant buffer and SRV bindings, I would be very happy. This part will deserve another post!</span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">&nbsp; </span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">Also, working more with SlimDX and this new API wrapper, I have been working with a XNA like API on top of a Direct3D 11 API, and It was in fact really easy to achieve (of course, without the content pipeline, which is the true benefit of XNA). Why do we need such a higher API? Well, Direct3D 11 is really powerful with its buffer/resource management, but the fact is that it's <i>much&nbsp; </i>more verbose. But think about it : When you use a Texture2D, you will need most of the time a ShaderResourceView on it.... If you want a texture2D as a render target, you will probably need a RenderTargetView, and because It's a RenderTarget, you will probably use this RenderTarget as a ShaderResourceView for another pass... So in the end, there are lots of things that can be handled in the background, even if you are using a Direct3D 11 API. The nice thing about this kind of API is that you can play with some geometry or compute shaders, while still having the pleasure to work with a high level API. This will also probably be part of a post!</span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title=""><br /></span></span><br /><span class="short_text" id="result_box" lang="en"><span style="color: black;" title="">So, what's next? I just finished the mapping and the port of the MiniTri yesterday. The current wrapper is probably not yet fully usable and doesn't have the same level of API richness than SlimDX. Threre are still lots of -small- extensions code to add to make the coding experience better than a somewhat raw D3D11 API. Within the next days, I'm going to play much more with this new wrapper and see how far can it go...</span></span><br /><br /><span style="font-size: x-small;"><i>(note: 1st draft version of this document)</i></span>
+
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
     </div>
   </div>
 	<footer class="blog-footer">

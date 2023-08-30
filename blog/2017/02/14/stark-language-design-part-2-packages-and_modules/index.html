@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.5.0.0">
+    <meta name="generator" content="lunet 0.5.3.0">
     <title>Stark - Language Design Part 2 - Packages and Modules | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
@@ -21,9 +21,10 @@
 
   <div class="container">
     <div class="row">
-      <nav class="navbar navbar-expand-md navbar-light w-100">
+      <nav class="navbar navbar-expand-md">
+        <div class="container-fluid">
             <a class="xoofx-logo navbar-brand" href="/"></a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
             <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
@@ -34,330 +35,331 @@
     <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
   <li class='nav-item '>
     <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
-  <li class='nav-item  ml-auto'>
+  <li class='nav-item  ms-auto'>
     <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
 </ol>
             </div>            
+        </div>
       </nav>
     </div>
     <div class="row">
-      
-      <div class="col-sm-9 js-toc-content">
-        <p id="lunet-results"></p>
-        <article class="page">
-          <div class="title">
-      		  <h1 class="title"><a href="/blog/2017/02/14/stark-language-design-part-2-packages-and_modules/">Stark - Language Design Part 2 - Packages and Modules</a></h1>
-      		
-          </div>
-          <div class="entry-content">
-          <div class="blog-post-meta">
-            <span class="fa fa-calendar"></span>
-            <span class="date"><time datetime="2017-02-14" itemprop="datePublished">February 14, 2017</time></span>
-            <i class="fa fa-tags"></i><a href="/blog/tag/stark/">Stark</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/rust/">Rust</a>
-        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2017/2017-02-14-stark-language-design-part-2-packages-and_modules.md">edit</a>
-          </div>
-            <p>May be surprisingly, my first post about language design for <a href="/blog/2017/01/17/the-stark-programming-language-experiment">Stark</a> (beyond tokens for the grammar part) is not going to walk through the type system, statements or expressions... But instead focus on how to organize the code of a project/library, how to distribute it (though will not much give details about this) and how to consume it from another project (or from the same project). But obviously, the way you structure your type system has an impact on the way you are going to organize your code. So I'm going to make some assumptions here about our future type system and try to design an organization frame from these.</p>
-            <p>Languages like C#, Java or C++ are typically providing the concept of <code>namespace</code> to organize your code. While I haven't thought much about the usage of <code>namespace</code> until recently, I liked their simplicity, their natural open-ness (e.g add a type to an existing namespace), their implicit import of outer scopes... indeed, very convenient... but at some point, after years of using them inside libraries that are redistributed through some package manager (like NuGet for C#), I have found <code>namespace</code> to be actually too much permissive... causing sometimes trouble and annoyance...</p>
-            <p>So in this post, we are going to re-visit the concept of <code>namespace</code> in C#, check what others are doing by making a small dive into the Rust Crates and Modules system (I could have taken F#, but I found Rust to be a bit more different and appealing for a comparison purpose), and lastly, we will try to sketch a proposal for Stark.</p>
-            <h1 id="c-namespaces-easy-and-dirty">C# Namespaces, easy and dirty</h1>
-            <p>In C#, namespaces come with <em>lots</em> of freedom:</p>
-            <ul>
-            <li>you can declare multiple namespaces (and nested) into a single file via <code>namespace MyNameSpace { ... }</code>. Though, it is more common to declare a single namespace inside a file.</li>
-            <li>the disk folder/directory structure doesn't matter, though usually you use the same directory name for your namespace, but there is nothing that enforce this so you can organize things  vastly differently...</li>
-            <li>Usage of nested types and namespaces path are not differentiated in the code. If you are using a type <code>XXX.YYY.ZZZ</code>, you can't know from this if XXX and YYY are namespaces or types.</li>
-            <li>you can externally &quot;pollute&quot; whatever namespaces you want with your own types. There are no restrictions. Nobody owns a namespace. Though usually, you tend to assume that everybody is going to work relatively isolated from each other.</li>
-            <li>from a same assembly, all types from other namespaces are visible. If you need some privacy, you will use nested types for this. But if you need to share a &quot;private&quot; type between two types in your namespace, you are a bit more in trouble...</li>
-            <li>when working from a namespace, every outer/englobing namespace is automatically imported/visible/accessible without any prefixing.</li>
-            <li>when you import a namespace (e.g <code>using System.Runtime;</code>), it imports all the types defined in that namespace. You can't import a single type or a list of selected types (note for example that in Java, you can import a single type)</li>
-            <li>if you have added multiple assemblies/libraries to your project, when using a type through using/importing a particular namespace, you can't tell for sure from where the type is coming.</li>
-            <li>you can publish NuGet packages with same namespaces</li>
-            <li>Anyone can publish a NuGet package with the same &quot;root&quot; name, as long as sub part names are different (e.g with a nuget package <code>core</code> published, someone can publish a <code>core.mycode</code>)</li>
-            <li>the package id doesn't have to match any of the namespaces exposed by this package</li>
-            <li>with a namespace, you can't easily tell from which nuget package is actually providing it (as it may be provided by many different packages)</li>
-            </ul>
-            <p>To be clear, none of the above have been making namespaces awfully impractical. Redistribute-able Assembly/.NET packages thanks to NuGet came much after C#/.NET was introduced. But after years of using both (namespaces and NuGet packages), I have realized that many of the small disturbances described above are increasingly becoming more and more annoying...</p>
-            <h1 id="rust-crates-and-modules-too-powerful">Rust Crates and Modules, too powerful?</h1>
-            <p>Modules in Rust are very powerful and yet quite difficult to grasp. It is said that they have been inspired by JavaScript modules which were inspired from Racket/Scheme (<a href="https://www.reddit.com/r/rust/comments/24n5q2/crates_and_the_module_system/ch9lf58/">1</a>)</p>
-            <p>As I haven't used Rust intensively, I will try to re-transcript what I have understood from their Module system. The documentation <a href="https://doc.rust-lang.org/book/crates-and-modules.html">&quot;Crates and Modules&quot;</a> is quite informative, but it still doesn't express all the implications of their system.</p>
-            <p>For the declaration part of the modules:</p>
-            <ul>
-            <li>a <code>crate</code> is a package that can contain a library (and sometimes along an exe) with multiple modules
-            <ul>
-            <li>the name of the <code>crate</code> defines the name of the implicit root module of this crate (a <code>crate</code> called <code>yoyo</code> is making the module <code>yoyo</code> top level englobing all the nested modules in the crate)</li>
-            <li>you can't create a <code>mod</code>/module with a name outside of the scope of the root module (e.g <code>yoyo</code>, <code>yoyo::nested_module</code> but not <code>another_top_module</code>)</li>
-            </ul>
-            </li>
-            <li>a <code>mod</code> contains functions/types/constants for this module and nested modules.
-            <ul>
-            <li>it can be declared inlined by using <code>mod module_name {...}</code></li>
-            <li>or it can be declared using <code>mod module_name;</code>, in that case it expects either:
-            <ul>
-            <li>A file named <code>module_name.rs</code> at the same level where the module is declared</li>
-            <li>A file named <code>module_name/mod.rs</code> in a sub-directory</li>
-            </ul>
-            </li>
-            <li>What is important here to understand is that the source code is defining what is part of your module (in C#, it would be the <code>csproj</code>) while in Rust, the compiler will fetch the dependant modules from the source code directly.</li>
-            <li>a <code>module</code> can be defined only once and cannot be extended/modified from outside where it is defined (it means you cannot have the same name for an inline module and module stored in a separate file)</li>
-            <li>a <code>module</code> is by default <code>private</code> to the crate where it is defined but still visible inside this crate from other modules</li>
-            <li>a <code>module</code> can be declared <code>pub mod module_name;</code> - public and thus is made accessible outside of the <code>crate</code></li>
-            <li>each function/type/constant inside a <code>module</code> can either be private (the default, not accessible outside this module, even for other modules in the same crate) or <code>pub</code> - public (accessible for other modules, and accessible outside the crate if the module itself is public)</li>
-            </ul>
-            </li>
-            <li><code>extern crate mymodule_package</code> allows to declare a dependency to an external crate (the version is not defined here but defined in a build/config TOML file)
-            <ul>
-            <li><code>pub extern crate mymodule_package</code> allows to export an external <code>crate</code> (more on this below)</li>
-            <li>you can alias the implicit import of a crate by using the <code>extern crate mymodule_name as my_newmodule_name;</code></li>
-            </ul>
-            </li>
-            <li>the metadata associated to a crate is defined in a <code>toml</code> file (where you define for example the name of the <code>crate</code>, vs the name of the root <code>module</code>, the library version, author...etc.)</li>
-            </ul>
-            <p>For the <code>use</code>/import part of a module, the syntax to use a module is <code>use module_path;</code> where module_path is a list of plain identifiers separated by <code>::</code> (e.g <code>core::module::separated::by</code>)</p>
-            <ul>
-            <li>the module_path to import is always relative to the implicit crate root module</li>
-            <li>you import a module with <code>use module_path;</code> a module path is composed of <code>module_name</code> separated by <code>::</code>
-            <ul>
-            <li>note that importing just a module make the module accessible where the <code>use</code> occurs, though you still need to prefix by last part of the module name to access it: typically <code>use greetings::english;</code> you import the module <code>english</code>, and you can access code/types inside this module in your code by prefixing the type/code with <code>english::function1</code> for example</li>
-            <li>the <code>use</code> directive can import directly the whole content of a module into the current scope using the wildcard <code>*</code> (e.g <code>use module::path::sub_module::*</code>)</li>
-            <li>the <code>use</code> directive can also selectively import module/types/functions using <code>{</code> <code>}</code> (e.g <code>use module::path::sub_module::{module1, type1, function1}</code>)</li>
-            <li>As for crates, you can also re-alias a module name with <code>as</code></li>
-            </ul>
-            </li>
-            <li>you can <a href="https://doc.rust-lang.org/book/crates-and-modules.html#re-exporting-with-pub-use">re-export a module</a> with <code>pub use module_name;</code></li>
-            <li>the <code>use</code> directive allows to import (or even re-export) with a different name <code>use mymodule as mynewmodule;</code></li>
-            </ul>
-            <p>Now compare to C# and the namespaces, we can highlight the following differences:</p>
-            <ul>
-            <li>The declared modules define which source code to include into your library. Unlike C# that has to rely on an external system (e.g msbuild <code>csproj</code>) to define this, Rust integrates the code dependencies directly into the language.</li>
-            <li><code>module</code> are usually a lot more finer grained than namespaces, because Rust does not have nested types, modules are often used to isolate a single type, its trait implementations and its internal types. You will see many modules in Rust foundation crates (e.g core or std).</li>
-            <li>even in nested modules, you don't inherit the scope of outer module, you still need to use/import them. In C#, working in <code>MySystem.MySubSystem</code> (types in MySubSystem will see eveything defined in <code>MySystem</code>)</li>
-            <li>as said earlier, you can't inject new types/submodules outside its original declaration. In C#, you can create a new assembly an use any namespace you want.</li>
-            <li>in Rust, a visibility can be defined on a module. In C#, you can't define a visibility for a namespace but only at a type level.</li>
-            <li>in Rust, because you can re-export modules (and types within a module), you can replicate types of another module into your own module hierarchy and expose it as <code>public</code>. In C#, you can't.</li>
-            </ul>
-            <p>While very powerful, Rust crates and modules are also often confusing many people. While looking for criticism about the Rust approach, I found some instructive feedback:</p>
-            <ul>
-            <li><em>Rust's Modules are Weird</em> (<a href="https://gist.github.com/DanielKeep/470f4e114d28cd0c8d43">post</a>, <a href="https://www.reddit.com/r/rust/comments/2he9xi/rusts_modules_are_weird_another_explanation_of/">reddit</a> )</li>
-            <li><em>Crates and the module system</em> (<a href="https://www.reddit.com/r/rust/comments/24n5q2/crates_and_the_module_system/">reddit</a>)</li>
-            <li><em>I love rust, but one thing about modules is aweful!</em> (<a href="https://users.rust-lang.org/t/i-love-rust-but-one-thing-about-modules-is-aweful/2930">forum</a>)</li>
-            <li><em>I always get a little confused when trying to use its module system</em> (<a href="http://blog.thiago.me/notes-about-rust-modules/">post</a>)</li>
-            <li><em>The Rust module system is too confusing</em> (<a href="https://withoutboats.github.io/blog/rust/2017/01/04/the-rust-module-system-is-too-confusing.html">post</a>, <a href="https://news.ycombinator.com/item?id=13372963">news</a>)</li>
-            </ul>
-            <p>Maybe the last post gives some interesting insights about why Rust modules are difficult to manage. I will give my own appreciation here (again maybe not accurate as I'm not a Rust expert):</p>
-            <ul>
-            <li><code>use</code>/import inside a library is always relative to the crate root module. If your crate is <code>tada</code>, all modules imported in your code will end up inside <code>tada::...</code></li>
-            <li>A syntax like <code>extern crate mymodule_package</code> is implicitly importing the root module of the crate where the extern crate directive was defined. If you perform this at the bottom of your library/crate, you are &quot;lucky&quot; because you will be able to do a <code>use mymodule_package</code> at whatever sub modules in your code without trouble. But because of the relativeness of the <code>use</code> directive, if you perform an <code>extern crate mymodule_package</code> in a sub modules of your own crate, you will have to reference this <code>mymodule_package</code> with something like <code>use self::mymodule_package</code>, a way to bypass the absolute module path (again relative to crate root) and reference the current module (self) where the crate was imported. Typically, I have seen some Rust libraries that actually didn't understand quite well this and the <code>extern crate mycrate</code> was replicated at many sub modules levels but they were still using a plain <code>use mycrate;</code>, that was luckily working because it was also imported at the top level.</li>
-            <li>3 different ways to define a module (and import it implicitly where the <code>module</code> directive is declared):
-            <ol>
-            <li>inlined (e.g <code>module my_module { ... }</code> )</li>
-            <li>stored in one file <code>module my_module;</code> =&gt; will try to import <code>my_module.rs</code></li>
-            <li>stored in one directory+special file <code>module my_module;</code> will also try to import <code>my_module/mod.rs</code>
-            Overall, these choices make sense in the way Rust's Type System is structured (e.g no nested types). But it gives an opportunity for coding styles discrepancies. Typically, in many core Rust library, they are using lots of nested private modules (usually not inlined) and they are re-exporting them (sometimes in a different crate, like many types defined in <code>core</code> are actually publicly <a href="https://github.com/rust-lang/rust/blob/81bd2675eaf96396e363d63aa068b0a462ec5a6d/src/libstd/lib.rs#L361">re-exported in <code>std</code></a>). But I have also seen in many users libraries different coding styles, like using a big top level <code>lib.rs</code> file defining all traits, types of the library, which I find quite annoying from a source control perspective, as you end-up having big files that won't fit well into a versioning workflow with concurrent workers. A common pattern I have seen for inlined modules is to use them for tests.</li>
-            </ol>
-            </li>
-            <li>As you can attach a visibility (i.e a re-export semantic) to a module and you can also attach a visibility to a <code>use</code>/import (so re-export via a <code>use</code>/import directive ), it can make the re-export semantic confusing (e.g why use one or the other, in which case)</li>
-            <li>Because a crate cannot be a module path (<code>mylib::mysublib::xxx</code>) but only (and implicitly) mapped to a single module root (<code>mylib</code>), many Rust libraries authors are actually using a root crate like <code>mylib</code> (with a root module <code>mylib</code> for example), and another crate like <code>mylib_module1</code> (with a root module <code>mysublib</code>), and they are performing an <code>pub extern crate mylib_module1</code> inside <code>my_lib</code>, in order to make the types of the module <code>mysublib</code> (coming from mylib) appearing below the <code>mylib</code> module (e.g <code>mylib::mysublib</code>). But if you start to use <code>mylib_module1</code> directly (i.e <code>mysublib</code> module), you won't find the <code>mylib</code> top level module but only <code>mysublib</code> module.</li>
-            </ul>
-            <h1 id="stark-packages-and-modules-draft-1">Stark Packages and Modules, Draft 1</h1>
-            <p>I would like to find a middle ground, between my experience using namespace/nuget packages in C#, and inspiration from Rust. This is going to be an opinionated design (like almost many choices) though I'm going to try to describe as much as possible the why here...</p>
-            <p>Let's try to define for Stark some overall concepts:</p>
-            <ul>
-            <li>A <code>package</code> in Stark is a re-distributable library (or executable, or both) that can contains a library with one root module, optional associated content/resource files and executable tools. It is very similar to a NuGet package or a crate (it has the relevant metadata to identify a package, its version, authors, project URL...etc.)</li>
-            <li>A <code>library</code> contains one root module.</li>
-            <li>An <code>executable</code> is a library with a special executable entry point</li>
-            <li>A <code>module</code> contains the declaration and definition of types/functions/constants and nested modules.</li>
-            </ul>
-            <p>In the following parts, we are not only going to define the grammar of the language for modules but also what is going to be the folder/directory/files structure.</p>
-            <p>We will cover the following declarations:</p>
-            <ul>
-            <li>The <code>module</code> declaration</li>
-            <li>The <code>package</code> declaration</li>
-            <li>How to use/<code>import</code> an existing <code>module</code></li>
-            <li>How to use/<code>import</code> an existing <code>package</code></li>
-            </ul>
-            <h2 id="declare-a-module">Declare a module</h2>
-            <p>In Stark, a module is declared from the code like this:</p>
-            <pre><code class="language-fsharp">module mymodule
-            </code></pre>
-            <p>The ANTLR syntax for parsing this declaration will be something around this (TODO: Add a link to the ANTLR G4 file on github)</p>
-            <pre><code class="language-antlr">ModuleDirective: 'public'? 'module' ModuleName Eod;
-            
-            ModuleName: IDENTIFIER;
-            
-            ModulePath: (ModuleName '::')+
-                      | 'this' '::' (ModuleName '::')+     // used by import directive but not when declaring a module
-                      | ('base' '::')+ (ModuleName '::')*  // idem
-                      ;
-            
-            ModuleFullName: ModulePath ModuleName
-                          | ModuleName
-                          ;
-            </code></pre>
-            <p>A <strong>module will map to a directory</strong> on the disk. It means that if you declare <code>module mymodule</code> in a module file, in the same directory, it will contain a directory named <code>mymodule</code></p>
-            <p>Assuming that the top level file of a package is in <code>src/library.sk</code> and that it contains <code>module mymodule</code>, we will have the following file/folder structure:</p>
-            <pre><code>src/
-              library.sk
-              mymodule/
-                module.sk
-            </code></pre>
-            <p>All types, functions, traits and implementations for a module will reside along the <code>module.sk</code> file in whatever file organization that may fit your module (but at the same folder level):</p>
-            <pre><code>src/
-              library.sk
-              mymodule/
-                MyType1.sk
-                MyType2AndTraits.sk
-                SomeFunctions.sk
-                ...
-                module.sk
-            </code></pre>
-            <p>All types, functions, traits files will not have to re-specify the module. It will be defined by the directory (and the original <code>module mymodule</code> declaration from <code>src/library.sk</code>). You can't override the module name or declare nested/hidden modules inside your types/functions/traits files.</p>
-            <p>The file <code>mymodule/module.sk</code> is not mandatory but it will be parsed first before parsing other files in the same folder.</p>
-            <p>This <code>module.sk</code> will provide a way to:</p>
-            <ul>
-            <li>pre-define some required custom operators that are used in this module (this is speculative from my early design thoughts, we will see in a much later post about expressions why we may need this)</li>
-            <li>define the default imports, aliases, that will be shared between all the types, functions, traits files inside this module/folder: if you import <code>import std::core::*</code>, it will make all types inside <code>std::core</code> accessible to all types into <code>mymodule</code>), If you perform an <code>import base::*</code> it will make all types from the outer scope accessible to the current module.</li>
-            <li>define the sub modules (via <code>module xxx_my_sub_module</code>)</li>
-            </ul>
-            <p>An important restriction is that you can't declare a module outside a <code>module.sk</code> or a top level <code>library.sk</code> (note that the name of <code>library.sk</code> can be redefined in the package description)</p>
-            <p>The root module of the library is defined by the <code>package</code> (see below). All Stark files on the side of <code>library.sk</code> will be treated as types/functions/traits as part of this root module.</p>
-            <p>By default, a module is made private to the library/package it is declared, accessible from all modules inside the package. But you can <strong>export a module outside a package</strong>:</p>
-            <pre><code class="language-fsharp">public module mymodule // make visible mymodule outside the current package
-            </code></pre>
-            <p>With the import declaration, we will see also that while a module can be private, we can still make its content public and export its content.</p>
-            <p>The <strong>root module is public</strong> and its visibility cannot be changed.</p>
-            <h2 id="declare-a-package">Declare a package</h2>
-            <p>A package is not declared from a Stark source code but it will use meta declaration from a data-oriented language (e.g <code>TOML</code>, <code>JSON</code>... etc.).</p>
-            <p>Unlike Rust or C# NuGet, a package has the name of the root module exposed by this package: if we declare the package with the name <code>mymodule</code>, it will make explicit that the root module exposed by this package is <code>mymodule</code>. A difference with Rust is that we will allow to declare the root module of a package directly with sub a sub module path (e.g <code>mymodule::sub1::sub2</code>).</p>
-            <p>When a package is pushed to a registry, the root module is reserved and you are not only the owner of this module, but also of all sub-modules prefixed by this module that could be published later.
-            It means that if you publish a package <code>mymodule</code>, you will be later able to publish a module <code>mymodule.sub1</code> and nobody else will be able to do this. You have basically the ownership on the entire module sub namespace (similar to when you own a DNS domain name)</p>
-            <p>When a package is pushed, the system will exactly know which modules are exported by this package. As you can't have duplicated modules inside the registry, a module will be only accessible from a single package. It means that if you published a first package <code>mymodule</code> containing 2 modules <code>mymodule</code> and <code>mymodule.sub1</code>, you will not be able to publish <code>mymodule.sub1</code> as a separate package, until it is removed from the <code>mymodule</code> package. There is still some thoughts to put into how to do this with some package update transactions - e.g update <code>mymodule</code> and push <code>mymodule.sub1</code> together and allow an auto redirect/package upgrade to this new package when referencing only the <code>mymodule</code> package.</p>
-            <p>We will detail much later how a package will declare and embed additional resources.</p>
-            <h2 id="import-a-module">import a module</h2>
-            <p>When declaring a <code>module</code>, it is imported implicitly from the module where it is declared. An import means that you can refer to a type inside this module in the code by prefixing by the module name (e.g <code>mymodule::mytype</code>)</p>
-            <p>Note that while a <code>module</code> name is a simple identifier, a full module name is separating identifiers by <code>::</code> (e.g <code>mymodule::sub1::sub2</code>)</p>
-            <p>The reason to use <code>::</code> instead of <code>.</code> is to better spot what is a module path and what is a type path. Because we will support nested types that will be accessible through dot <code>.</code> I prefer to make a clear distinction between a module path and a type path.</p>
-            <p>The ANTLR specification of the import directive would be like this:</p>
-            <pre><code class="language-antlr">ImportDirective: 'public'? 'import' ImportPath Eod;
-            
-            ImportPath: ModulePath ASTERISK
-                      | ModulePath OPEN_BRACE ImportNameOrAlias (COMMA ImportNameOrAlias)* CLOSE_BRACE
-                      | ModulePath? ImportNameOrAlias
-                      ;
-            
-            // The ImportName can either be a module name or a type name
-            ImportName: IDENTIFIER;
-            ImportNameOrAlias: ImportName ('as' ImportName)?;
-            </code></pre>
-            <p>So typically, you can import a module, multiple types, or a selected types:</p>
-            <pre><code class="language-java">// Make the collections module accessible into the current scope where the import directive is done
-            import std::collections   
-            
-            // Imports all types into the current scope
-            import std::collections::*  
-            
-            // Imports selected types into the current scope
-            import std::collections::{List, Iterator}
-            </code></pre>
-            <p>You can also alias a module to a different name when importing it:</p>
-            <pre><code class="language-java">import std::collections as collections2
-            </code></pre>
-            <p>Note that by default, <strong>the module path of an import is absolute</strong> (e.g <code>std::collections</code>). Unlike in Rust for example where the module path is relative to the root module of a crate (Package in Stark).</p>
-            <p>If your package/root module is <code>mymodule</code> and you are in the sub module <code>mymodule::sub1::sub2</code>, if you want to import the content of the root module, you need to specify it <code>import mymodule</code></p>
-            <p>In order to import relatively, you can use:</p>
-            <ul>
-            <li><code>this</code> prefix module to import from the current module path</li>
-            <li>multiple <code>super</code> prefix to import from the parent module path</li>
-            </ul>
-            <p>For example, If we  are in a type in the module <code>mymodule::sub1::sub2</code> and there is an existing <code>sub3</code> module inside <code>sub2</code></p>
-            <pre><code class="language-java">// importing types from sub module sub3 from sub2
-            import this::sub3::*
-            // is equivalent to
-            import mymodule::sub1::sub2::sub3::*
-            
-            // Import from parent of parent
-            import base::base::*
-            // equivalent to
-            import mymodule::*
-            </code></pre>
-            <p>By default, inside a module, only the sub modules are always imported (but not their content). For example, if you are inside the module <code>mymodule</code> and declare <code>module sub1</code>, <code>sub1</code> will be accessible in the code.</p>
-            <p>Types, functions and constants inside a module have a visibility:</p>
-            <ul>
-            <li><code>public</code> will make the type public outside the module (and outside the package if the module is also <code>public</code>)</li>
-            <li><code>internal</code> will make the type accessible from outside the module inside the same package (but not outside it)</li>
-            <li><code>private</code> (implicit and default) will make the type only accessible for the module it is declared</li>
-            </ul>
-            <p>An important aspect of the import directive is that it can be used to re-export a module or the content of a module by using the <code>public</code> modifier on the import.</p>
-            <p>For example, suppose that we have an internal module <code>mymodule::hidden</code> and we want to export its content at <code>mymodule</code> so that from the outside, we will see all types of <code>hidden</code> sub modules under <code>mymodule</code>:</p>
-            <pre><code class="language-java">// Make all types/functions/constants of private sub module hidden 
-            // accessible from mymodule
-            public import this::hidden::*
-            </code></pre>
-            <p>Note also that we could export a module with a different name <code>public import this::hidden as sub1</code></p>
-            <p>The difference with Rust here is that we typically forbid to export a type/module of another module that is already public/exported. It restricts cases like this:</p>
-            <ul>
-            <li>you cannot re-export to a different module the content of a existing public module (either coming from your package or an external package)</li>
-            <li>you cannot re-export the content of another external package/module (a module that you don't own and is already public)</li>
-            <li>you cannot re-export a type from a private module into multiple modules</li>
-            </ul>
-            <p>This is important because we can guarantee some invariants:</p>
-            <ul>
-            <li>a public type is declared only in a specific public module</li>
-            <li>a public module is declared only in a specific package</li>
-            </ul>
-            <p>Also an important difference is the <code>import</code> inside types/functions/traits files: Unlike in Rust, an <strong>import defined in a file is local to the file</strong> (this is similar to how C# is working with namespaces) except for the module file <code>module.sk</code>.</p>
-            <p>As we explained earlier, only the <code>module.sk</code> is sharing its imports with other files in its folder. It means also that you can't <code>public import</code> from types/functions/traits files : This is the responsibility of the <code>module.sk</code>.</p>
-            <h2 id="declare-an-extern-package">Declare an extern package</h2>
-            <p>The <code>extern package</code> directive allows to explicit in the code the dependencies to a specific package. Note that it doesn't say which version of the package we are looking for (this will be stored in the package descriptions)</p>
-            <p>The ANTLR specifications of an extern package is like this:</p>
-            <pre><code class="language-antlr">ExternPackageDirective: 'extern' 'package' Package ('as' Package) Eod;
-            
-            // note that this:: or base:: modules are not supported for a Package
-            Package: ModuleFullName;
-            </code></pre>
-            <p>This is primarily a <strong>linking directive</strong>. But this provides also an <strong>import accessibility</strong>. The package can be imported from any sub modules from the same package that reference it:</p>
-            <pre><code class="language-csharp">// We are linking with mymodule2 package
-            extern package mymodule2
-            
-            // we can import and use the mymodule with the import directive
-            import mymodule2
-            </code></pre>
-            <p>It is important to understand here that <code>extern package</code> is scoped to the module it is declared. It means that you cannot import a module of a package that has not been declared as <code>extern package</code> from the current module or a parent module.</p>
-            <p>Typically, if we are inside the module <code>mymodule::sub1::sub2</code> and we declared <code>extern package mymodule2</code>, we can only access <code>import mymodule2</code> from <code>sub2</code> or any sub modules below <code>sub2</code> (but inside the same package)</p>
-            <p>This is different here from Rust where <code>extern crate</code> link and import into the module scope the root module of the crate, as in Stark:</p>
-            <ul>
-            <li><code>extern package mymodule2</code> is a linking directive and defines an import accessibility for sub modules where the extern package directive is issued. The path of the root module of the package is still absolute, but its import visibility is restricted to where the <code>extern package</code> was issued.</li>
-            <li>you still need an explicit <code>import mymodule2</code> to effectively import the root module (or a sub module of the package). This import can only be issued where an <code>extern package</code> has been declared from the current module or a parent module from the same package.</li>
-            </ul>
-            <h2 id="differences-with-c-and-rust">Differences with C# and Rust</h2>
-            <p>Let's try to recap and highlight some of the major differences with Rust crates/modules and C# namespaces/assembly/nugets.</p>
-            <ul>
-            <li>you have a single and explicit layout of a module on the disk and a single way to declare a module</li>
-            <li>a type inside a module (folder) is automatically part of this module and cannot be part of another module</li>
-            <li>a module declare its nested modules (in .NET, you don't declare namespace but you declare the types in the <code>csproj</code>)</li>
-            <li>import is explicit: there is no implicit import of outer scope module</li>
-            <li>you can't modify the content of the module outside of its original folder/content</li>
-            <li>you can have a visibility on a module (<code>public</code> or <code>private</code>) in addition to the visibility on types/functions/constants</li>
-            <li>import inside a types/functions/contants file is local to that file. import inside a module file (<code>module.sk</code>) is shared between all files in this module.</li>
-            <li>types/functions/constants can be <code>private</code> inside a module (not accessible outside), <code>internal</code> (accessible from other modules from the same package) or <code>public</code> (accessible from any modules)</li>
-            <li>you can re-export a private module to a different public module (only from a module file <code>module.sk</code>)</li>
-            <li>you can re-export a public type of a private module to a different public module (only from a module file <code>module.sk</code>)</li>
-            <li>you declare your package dependencies from the code through <code>extern package</code></li>
-            <li>import paths are absolute (like namespace in C# but not like Rust that is relative to the current crate)</li>
-            <li>the root module of a package in a registry serves as a domain entry that you own. Any sub package/modules using the same root module are part of this package tree (and are owned by a single entity).</li>
-            <li>From the same registry, a module can only be declared once from a single package</li>
-            <li>the root module of a package published to a registry can be a nested module (e.g <code>mymodule::sub1::sub2</code>)</li>
-            </ul>
-            <h1 id="next">Next?</h1>
-            <p>While it departs substantially from some existing namespace/modules handling, I'm wondering how much the explicit layout of a module on the disk is going to be a controversy. Let me know what you think overall, that's a first draft!</p>
-            <p>Now that I have specified the module, I will probably start to write the syntax parser just to bootstrap a little bit the work there.</p>
-            <p>In the meantime, the following posts will continue to dive into the language design parts, with lots of work and pain ahead! Still not sure which part I will cover first, but most likely to start with functions/variable/struct/class declarations...</p>
-            <p>Stay tuned!</p>
-      
-          </div>
-        </article>
-      </div>
-      <div class="col-sm-3">
-        <nav class="js-toc toc sticky-top"></nav>
-      </div>
+
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2017/02/14/stark-language-design-part-2-packages-and_modules/">Stark - Language Design Part 2 - Packages and Modules</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="bi bi-calendar"></span>
+      <span class="date"><time datetime="2017-02-14" itemprop="datePublished">February 14, 2017</time></span>
+      <i class="bi bi-tags"></i><a href="/blog/tag/stark/">Stark</a>, <a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/rust/">Rust</a>
+  	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2017/2017-02-14-stark-language-design-part-2-packages-and_modules.md">edit</a>
+    </div>
+<p>May be surprisingly, my first post about language design for <a href="/blog/2017/01/17/the-stark-programming-language-experiment">Stark</a> (beyond tokens for the grammar part) is not going to walk through the type system, statements or expressions... But instead focus on how to organize the code of a project/library, how to distribute it (though will not much give details about this) and how to consume it from another project (or from the same project). But obviously, the way you structure your type system has an impact on the way you are going to organize your code. So I'm going to make some assumptions here about our future type system and try to design an organization frame from these.</p>
+<p>Languages like C#, Java or C++ are typically providing the concept of <code>namespace</code> to organize your code. While I haven't thought much about the usage of <code>namespace</code> until recently, I liked their simplicity, their natural open-ness (e.g add a type to an existing namespace), their implicit import of outer scopes... indeed, very convenient... but at some point, after years of using them inside libraries that are redistributed through some package manager (like NuGet for C#), I have found <code>namespace</code> to be actually too much permissive... causing sometimes trouble and annoyance...</p>
+<p>So in this post, we are going to re-visit the concept of <code>namespace</code> in C#, check what others are doing by making a small dive into the Rust Crates and Modules system (I could have taken F#, but I found Rust to be a bit more different and appealing for a comparison purpose), and lastly, we will try to sketch a proposal for Stark.</p>
+<h1 id="c-namespaces-easy-and-dirty">C# Namespaces, easy and dirty</h1>
+<p>In C#, namespaces come with <em>lots</em> of freedom:</p>
+<ul>
+<li>you can declare multiple namespaces (and nested) into a single file via <code>namespace MyNameSpace { ... }</code>. Though, it is more common to declare a single namespace inside a file.</li>
+<li>the disk folder/directory structure doesn't matter, though usually you use the same directory name for your namespace, but there is nothing that enforce this so you can organize things  vastly differently...</li>
+<li>Usage of nested types and namespaces path are not differentiated in the code. If you are using a type <code>XXX.YYY.ZZZ</code>, you can't know from this if XXX and YYY are namespaces or types.</li>
+<li>you can externally &quot;pollute&quot; whatever namespaces you want with your own types. There are no restrictions. Nobody owns a namespace. Though usually, you tend to assume that everybody is going to work relatively isolated from each other.</li>
+<li>from a same assembly, all types from other namespaces are visible. If you need some privacy, you will use nested types for this. But if you need to share a &quot;private&quot; type between two types in your namespace, you are a bit more in trouble...</li>
+<li>when working from a namespace, every outer/englobing namespace is automatically imported/visible/accessible without any prefixing.</li>
+<li>when you import a namespace (e.g <code>using System.Runtime;</code>), it imports all the types defined in that namespace. You can't import a single type or a list of selected types (note for example that in Java, you can import a single type)</li>
+<li>if you have added multiple assemblies/libraries to your project, when using a type through using/importing a particular namespace, you can't tell for sure from where the type is coming.</li>
+<li>you can publish NuGet packages with same namespaces</li>
+<li>Anyone can publish a NuGet package with the same &quot;root&quot; name, as long as sub part names are different (e.g with a nuget package <code>core</code> published, someone can publish a <code>core.mycode</code>)</li>
+<li>the package id doesn't have to match any of the namespaces exposed by this package</li>
+<li>with a namespace, you can't easily tell from which nuget package is actually providing it (as it may be provided by many different packages)</li>
+</ul>
+<p>To be clear, none of the above have been making namespaces awfully impractical. Redistribute-able Assembly/.NET packages thanks to NuGet came much after C#/.NET was introduced. But after years of using both (namespaces and NuGet packages), I have realized that many of the small disturbances described above are increasingly becoming more and more annoying...</p>
+<h1 id="rust-crates-and-modules-too-powerful">Rust Crates and Modules, too powerful?</h1>
+<p>Modules in Rust are very powerful and yet quite difficult to grasp. It is said that they have been inspired by JavaScript modules which were inspired from Racket/Scheme (<a href="https://www.reddit.com/r/rust/comments/24n5q2/crates_and_the_module_system/ch9lf58/">1</a>)</p>
+<p>As I haven't used Rust intensively, I will try to re-transcript what I have understood from their Module system. The documentation <a href="https://doc.rust-lang.org/book/crates-and-modules.html">&quot;Crates and Modules&quot;</a> is quite informative, but it still doesn't express all the implications of their system.</p>
+<p>For the declaration part of the modules:</p>
+<ul>
+<li>a <code>crate</code> is a package that can contain a library (and sometimes along an exe) with multiple modules
+<ul>
+<li>the name of the <code>crate</code> defines the name of the implicit root module of this crate (a <code>crate</code> called <code>yoyo</code> is making the module <code>yoyo</code> top level englobing all the nested modules in the crate)</li>
+<li>you can't create a <code>mod</code>/module with a name outside of the scope of the root module (e.g <code>yoyo</code>, <code>yoyo::nested_module</code> but not <code>another_top_module</code>)</li>
+</ul>
+</li>
+<li>a <code>mod</code> contains functions/types/constants for this module and nested modules.
+<ul>
+<li>it can be declared inlined by using <code>mod module_name {...}</code></li>
+<li>or it can be declared using <code>mod module_name;</code>, in that case it expects either:
+<ul>
+<li>A file named <code>module_name.rs</code> at the same level where the module is declared</li>
+<li>A file named <code>module_name/mod.rs</code> in a sub-directory</li>
+</ul>
+</li>
+<li>What is important here to understand is that the source code is defining what is part of your module (in C#, it would be the <code>csproj</code>) while in Rust, the compiler will fetch the dependant modules from the source code directly.</li>
+<li>a <code>module</code> can be defined only once and cannot be extended/modified from outside where it is defined (it means you cannot have the same name for an inline module and module stored in a separate file)</li>
+<li>a <code>module</code> is by default <code>private</code> to the crate where it is defined but still visible inside this crate from other modules</li>
+<li>a <code>module</code> can be declared <code>pub mod module_name;</code> - public and thus is made accessible outside of the <code>crate</code></li>
+<li>each function/type/constant inside a <code>module</code> can either be private (the default, not accessible outside this module, even for other modules in the same crate) or <code>pub</code> - public (accessible for other modules, and accessible outside the crate if the module itself is public)</li>
+</ul>
+</li>
+<li><code>extern crate mymodule_package</code> allows to declare a dependency to an external crate (the version is not defined here but defined in a build/config TOML file)
+<ul>
+<li><code>pub extern crate mymodule_package</code> allows to export an external <code>crate</code> (more on this below)</li>
+<li>you can alias the implicit import of a crate by using the <code>extern crate mymodule_name as my_newmodule_name;</code></li>
+</ul>
+</li>
+<li>the metadata associated to a crate is defined in a <code>toml</code> file (where you define for example the name of the <code>crate</code>, vs the name of the root <code>module</code>, the library version, author...etc.)</li>
+</ul>
+<p>For the <code>use</code>/import part of a module, the syntax to use a module is <code>use module_path;</code> where module_path is a list of plain identifiers separated by <code>::</code> (e.g <code>core::module::separated::by</code>)</p>
+<ul>
+<li>the module_path to import is always relative to the implicit crate root module</li>
+<li>you import a module with <code>use module_path;</code> a module path is composed of <code>module_name</code> separated by <code>::</code>
+<ul>
+<li>note that importing just a module make the module accessible where the <code>use</code> occurs, though you still need to prefix by last part of the module name to access it: typically <code>use greetings::english;</code> you import the module <code>english</code>, and you can access code/types inside this module in your code by prefixing the type/code with <code>english::function1</code> for example</li>
+<li>the <code>use</code> directive can import directly the whole content of a module into the current scope using the wildcard <code>*</code> (e.g <code>use module::path::sub_module::*</code>)</li>
+<li>the <code>use</code> directive can also selectively import module/types/functions using <code>{</code> <code>}</code> (e.g <code>use module::path::sub_module::{module1, type1, function1}</code>)</li>
+<li>As for crates, you can also re-alias a module name with <code>as</code></li>
+</ul>
+</li>
+<li>you can <a href="https://doc.rust-lang.org/book/crates-and-modules.html#re-exporting-with-pub-use">re-export a module</a> with <code>pub use module_name;</code></li>
+<li>the <code>use</code> directive allows to import (or even re-export) with a different name <code>use mymodule as mynewmodule;</code></li>
+</ul>
+<p>Now compare to C# and the namespaces, we can highlight the following differences:</p>
+<ul>
+<li>The declared modules define which source code to include into your library. Unlike C# that has to rely on an external system (e.g msbuild <code>csproj</code>) to define this, Rust integrates the code dependencies directly into the language.</li>
+<li><code>module</code> are usually a lot more finer grained than namespaces, because Rust does not have nested types, modules are often used to isolate a single type, its trait implementations and its internal types. You will see many modules in Rust foundation crates (e.g core or std).</li>
+<li>even in nested modules, you don't inherit the scope of outer module, you still need to use/import them. In C#, working in <code>MySystem.MySubSystem</code> (types in MySubSystem will see eveything defined in <code>MySystem</code>)</li>
+<li>as said earlier, you can't inject new types/submodules outside its original declaration. In C#, you can create a new assembly an use any namespace you want.</li>
+<li>in Rust, a visibility can be defined on a module. In C#, you can't define a visibility for a namespace but only at a type level.</li>
+<li>in Rust, because you can re-export modules (and types within a module), you can replicate types of another module into your own module hierarchy and expose it as <code>public</code>. In C#, you can't.</li>
+</ul>
+<p>While very powerful, Rust crates and modules are also often confusing many people. While looking for criticism about the Rust approach, I found some instructive feedback:</p>
+<ul>
+<li><em>Rust's Modules are Weird</em> (<a href="https://gist.github.com/DanielKeep/470f4e114d28cd0c8d43">post</a>, <a href="https://www.reddit.com/r/rust/comments/2he9xi/rusts_modules_are_weird_another_explanation_of/">reddit</a> )</li>
+<li><em>Crates and the module system</em> (<a href="https://www.reddit.com/r/rust/comments/24n5q2/crates_and_the_module_system/">reddit</a>)</li>
+<li><em>I love rust, but one thing about modules is aweful!</em> (<a href="https://users.rust-lang.org/t/i-love-rust-but-one-thing-about-modules-is-aweful/2930">forum</a>)</li>
+<li><em>I always get a little confused when trying to use its module system</em> (<a href="http://blog.thiago.me/notes-about-rust-modules/">post</a>)</li>
+<li><em>The Rust module system is too confusing</em> (<a href="https://withoutboats.github.io/blog/rust/2017/01/04/the-rust-module-system-is-too-confusing.html">post</a>, <a href="https://news.ycombinator.com/item?id=13372963">news</a>)</li>
+</ul>
+<p>Maybe the last post gives some interesting insights about why Rust modules are difficult to manage. I will give my own appreciation here (again maybe not accurate as I'm not a Rust expert):</p>
+<ul>
+<li><code>use</code>/import inside a library is always relative to the crate root module. If your crate is <code>tada</code>, all modules imported in your code will end up inside <code>tada::...</code></li>
+<li>A syntax like <code>extern crate mymodule_package</code> is implicitly importing the root module of the crate where the extern crate directive was defined. If you perform this at the bottom of your library/crate, you are &quot;lucky&quot; because you will be able to do a <code>use mymodule_package</code> at whatever sub modules in your code without trouble. But because of the relativeness of the <code>use</code> directive, if you perform an <code>extern crate mymodule_package</code> in a sub modules of your own crate, you will have to reference this <code>mymodule_package</code> with something like <code>use self::mymodule_package</code>, a way to bypass the absolute module path (again relative to crate root) and reference the current module (self) where the crate was imported. Typically, I have seen some Rust libraries that actually didn't understand quite well this and the <code>extern crate mycrate</code> was replicated at many sub modules levels but they were still using a plain <code>use mycrate;</code>, that was luckily working because it was also imported at the top level.</li>
+<li>3 different ways to define a module (and import it implicitly where the <code>module</code> directive is declared):
+<ol>
+<li>inlined (e.g <code>module my_module { ... }</code> )</li>
+<li>stored in one file <code>module my_module;</code> =&gt; will try to import <code>my_module.rs</code></li>
+<li>stored in one directory+special file <code>module my_module;</code> will also try to import <code>my_module/mod.rs</code>
+Overall, these choices make sense in the way Rust's Type System is structured (e.g no nested types). But it gives an opportunity for coding styles discrepancies. Typically, in many core Rust library, they are using lots of nested private modules (usually not inlined) and they are re-exporting them (sometimes in a different crate, like many types defined in <code>core</code> are actually publicly <a href="https://github.com/rust-lang/rust/blob/81bd2675eaf96396e363d63aa068b0a462ec5a6d/src/libstd/lib.rs#L361">re-exported in <code>std</code></a>). But I have also seen in many users libraries different coding styles, like using a big top level <code>lib.rs</code> file defining all traits, types of the library, which I find quite annoying from a source control perspective, as you end-up having big files that won't fit well into a versioning workflow with concurrent workers. A common pattern I have seen for inlined modules is to use them for tests.</li>
+</ol>
+</li>
+<li>As you can attach a visibility (i.e a re-export semantic) to a module and you can also attach a visibility to a <code>use</code>/import (so re-export via a <code>use</code>/import directive ), it can make the re-export semantic confusing (e.g why use one or the other, in which case)</li>
+<li>Because a crate cannot be a module path (<code>mylib::mysublib::xxx</code>) but only (and implicitly) mapped to a single module root (<code>mylib</code>), many Rust libraries authors are actually using a root crate like <code>mylib</code> (with a root module <code>mylib</code> for example), and another crate like <code>mylib_module1</code> (with a root module <code>mysublib</code>), and they are performing an <code>pub extern crate mylib_module1</code> inside <code>my_lib</code>, in order to make the types of the module <code>mysublib</code> (coming from mylib) appearing below the <code>mylib</code> module (e.g <code>mylib::mysublib</code>). But if you start to use <code>mylib_module1</code> directly (i.e <code>mysublib</code> module), you won't find the <code>mylib</code> top level module but only <code>mysublib</code> module.</li>
+</ul>
+<h1 id="stark-packages-and-modules-draft-1">Stark Packages and Modules, Draft 1</h1>
+<p>I would like to find a middle ground, between my experience using namespace/nuget packages in C#, and inspiration from Rust. This is going to be an opinionated design (like almost many choices) though I'm going to try to describe as much as possible the why here...</p>
+<p>Let's try to define for Stark some overall concepts:</p>
+<ul>
+<li>A <code>package</code> in Stark is a re-distributable library (or executable, or both) that can contains a library with one root module, optional associated content/resource files and executable tools. It is very similar to a NuGet package or a crate (it has the relevant metadata to identify a package, its version, authors, project URL...etc.)</li>
+<li>A <code>library</code> contains one root module.</li>
+<li>An <code>executable</code> is a library with a special executable entry point</li>
+<li>A <code>module</code> contains the declaration and definition of types/functions/constants and nested modules.</li>
+</ul>
+<p>In the following parts, we are not only going to define the grammar of the language for modules but also what is going to be the folder/directory/files structure.</p>
+<p>We will cover the following declarations:</p>
+<ul>
+<li>The <code>module</code> declaration</li>
+<li>The <code>package</code> declaration</li>
+<li>How to use/<code>import</code> an existing <code>module</code></li>
+<li>How to use/<code>import</code> an existing <code>package</code></li>
+</ul>
+<h2 id="declare-a-module">Declare a module</h2>
+<p>In Stark, a module is declared from the code like this:</p>
+<pre><code class="language-fsharp">module mymodule
+</code></pre>
+<p>The ANTLR syntax for parsing this declaration will be something around this (TODO: Add a link to the ANTLR G4 file on github)</p>
+<pre><code class="language-antlr">ModuleDirective: 'public'? 'module' ModuleName Eod;
+
+ModuleName: IDENTIFIER;
+
+ModulePath: (ModuleName '::')+
+          | 'this' '::' (ModuleName '::')+     // used by import directive but not when declaring a module
+          | ('base' '::')+ (ModuleName '::')*  // idem
+          ;
+
+ModuleFullName: ModulePath ModuleName
+              | ModuleName
+              ;
+</code></pre>
+<p>A <strong>module will map to a directory</strong> on the disk. It means that if you declare <code>module mymodule</code> in a module file, in the same directory, it will contain a directory named <code>mymodule</code></p>
+<p>Assuming that the top level file of a package is in <code>src/library.sk</code> and that it contains <code>module mymodule</code>, we will have the following file/folder structure:</p>
+<pre><code>src/
+  library.sk
+  mymodule/
+    module.sk
+</code></pre>
+<p>All types, functions, traits and implementations for a module will reside along the <code>module.sk</code> file in whatever file organization that may fit your module (but at the same folder level):</p>
+<pre><code>src/
+  library.sk
+  mymodule/
+    MyType1.sk
+    MyType2AndTraits.sk
+    SomeFunctions.sk
+    ...
+    module.sk
+</code></pre>
+<p>All types, functions, traits files will not have to re-specify the module. It will be defined by the directory (and the original <code>module mymodule</code> declaration from <code>src/library.sk</code>). You can't override the module name or declare nested/hidden modules inside your types/functions/traits files.</p>
+<p>The file <code>mymodule/module.sk</code> is not mandatory but it will be parsed first before parsing other files in the same folder.</p>
+<p>This <code>module.sk</code> will provide a way to:</p>
+<ul>
+<li>pre-define some required custom operators that are used in this module (this is speculative from my early design thoughts, we will see in a much later post about expressions why we may need this)</li>
+<li>define the default imports, aliases, that will be shared between all the types, functions, traits files inside this module/folder: if you import <code>import std::core::*</code>, it will make all types inside <code>std::core</code> accessible to all types into <code>mymodule</code>), If you perform an <code>import base::*</code> it will make all types from the outer scope accessible to the current module.</li>
+<li>define the sub modules (via <code>module xxx_my_sub_module</code>)</li>
+</ul>
+<p>An important restriction is that you can't declare a module outside a <code>module.sk</code> or a top level <code>library.sk</code> (note that the name of <code>library.sk</code> can be redefined in the package description)</p>
+<p>The root module of the library is defined by the <code>package</code> (see below). All Stark files on the side of <code>library.sk</code> will be treated as types/functions/traits as part of this root module.</p>
+<p>By default, a module is made private to the library/package it is declared, accessible from all modules inside the package. But you can <strong>export a module outside a package</strong>:</p>
+<pre><code class="language-fsharp">public module mymodule // make visible mymodule outside the current package
+</code></pre>
+<p>With the import declaration, we will see also that while a module can be private, we can still make its content public and export its content.</p>
+<p>The <strong>root module is public</strong> and its visibility cannot be changed.</p>
+<h2 id="declare-a-package">Declare a package</h2>
+<p>A package is not declared from a Stark source code but it will use meta declaration from a data-oriented language (e.g <code>TOML</code>, <code>JSON</code>... etc.).</p>
+<p>Unlike Rust or C# NuGet, a package has the name of the root module exposed by this package: if we declare the package with the name <code>mymodule</code>, it will make explicit that the root module exposed by this package is <code>mymodule</code>. A difference with Rust is that we will allow to declare the root module of a package directly with sub a sub module path (e.g <code>mymodule::sub1::sub2</code>).</p>
+<p>When a package is pushed to a registry, the root module is reserved and you are not only the owner of this module, but also of all sub-modules prefixed by this module that could be published later.
+It means that if you publish a package <code>mymodule</code>, you will be later able to publish a module <code>mymodule.sub1</code> and nobody else will be able to do this. You have basically the ownership on the entire module sub namespace (similar to when you own a DNS domain name)</p>
+<p>When a package is pushed, the system will exactly know which modules are exported by this package. As you can't have duplicated modules inside the registry, a module will be only accessible from a single package. It means that if you published a first package <code>mymodule</code> containing 2 modules <code>mymodule</code> and <code>mymodule.sub1</code>, you will not be able to publish <code>mymodule.sub1</code> as a separate package, until it is removed from the <code>mymodule</code> package. There is still some thoughts to put into how to do this with some package update transactions - e.g update <code>mymodule</code> and push <code>mymodule.sub1</code> together and allow an auto redirect/package upgrade to this new package when referencing only the <code>mymodule</code> package.</p>
+<p>We will detail much later how a package will declare and embed additional resources.</p>
+<h2 id="import-a-module">import a module</h2>
+<p>When declaring a <code>module</code>, it is imported implicitly from the module where it is declared. An import means that you can refer to a type inside this module in the code by prefixing by the module name (e.g <code>mymodule::mytype</code>)</p>
+<p>Note that while a <code>module</code> name is a simple identifier, a full module name is separating identifiers by <code>::</code> (e.g <code>mymodule::sub1::sub2</code>)</p>
+<p>The reason to use <code>::</code> instead of <code>.</code> is to better spot what is a module path and what is a type path. Because we will support nested types that will be accessible through dot <code>.</code> I prefer to make a clear distinction between a module path and a type path.</p>
+<p>The ANTLR specification of the import directive would be like this:</p>
+<pre><code class="language-antlr">ImportDirective: 'public'? 'import' ImportPath Eod;
+
+ImportPath: ModulePath ASTERISK
+          | ModulePath OPEN_BRACE ImportNameOrAlias (COMMA ImportNameOrAlias)* CLOSE_BRACE
+          | ModulePath? ImportNameOrAlias
+          ;
+
+// The ImportName can either be a module name or a type name
+ImportName: IDENTIFIER;
+ImportNameOrAlias: ImportName ('as' ImportName)?;
+</code></pre>
+<p>So typically, you can import a module, multiple types, or a selected types:</p>
+<pre><code class="language-java">// Make the collections module accessible into the current scope where the import directive is done
+import std::collections   
+
+// Imports all types into the current scope
+import std::collections::*  
+
+// Imports selected types into the current scope
+import std::collections::{List, Iterator}
+</code></pre>
+<p>You can also alias a module to a different name when importing it:</p>
+<pre><code class="language-java">import std::collections as collections2
+</code></pre>
+<p>Note that by default, <strong>the module path of an import is absolute</strong> (e.g <code>std::collections</code>). Unlike in Rust for example where the module path is relative to the root module of a crate (Package in Stark).</p>
+<p>If your package/root module is <code>mymodule</code> and you are in the sub module <code>mymodule::sub1::sub2</code>, if you want to import the content of the root module, you need to specify it <code>import mymodule</code></p>
+<p>In order to import relatively, you can use:</p>
+<ul>
+<li><code>this</code> prefix module to import from the current module path</li>
+<li>multiple <code>super</code> prefix to import from the parent module path</li>
+</ul>
+<p>For example, If we  are in a type in the module <code>mymodule::sub1::sub2</code> and there is an existing <code>sub3</code> module inside <code>sub2</code></p>
+<pre><code class="language-java">// importing types from sub module sub3 from sub2
+import this::sub3::*
+// is equivalent to
+import mymodule::sub1::sub2::sub3::*
+
+// Import from parent of parent
+import base::base::*
+// equivalent to
+import mymodule::*
+</code></pre>
+<p>By default, inside a module, only the sub modules are always imported (but not their content). For example, if you are inside the module <code>mymodule</code> and declare <code>module sub1</code>, <code>sub1</code> will be accessible in the code.</p>
+<p>Types, functions and constants inside a module have a visibility:</p>
+<ul>
+<li><code>public</code> will make the type public outside the module (and outside the package if the module is also <code>public</code>)</li>
+<li><code>internal</code> will make the type accessible from outside the module inside the same package (but not outside it)</li>
+<li><code>private</code> (implicit and default) will make the type only accessible for the module it is declared</li>
+</ul>
+<p>An important aspect of the import directive is that it can be used to re-export a module or the content of a module by using the <code>public</code> modifier on the import.</p>
+<p>For example, suppose that we have an internal module <code>mymodule::hidden</code> and we want to export its content at <code>mymodule</code> so that from the outside, we will see all types of <code>hidden</code> sub modules under <code>mymodule</code>:</p>
+<pre><code class="language-java">// Make all types/functions/constants of private sub module hidden 
+// accessible from mymodule
+public import this::hidden::*
+</code></pre>
+<p>Note also that we could export a module with a different name <code>public import this::hidden as sub1</code></p>
+<p>The difference with Rust here is that we typically forbid to export a type/module of another module that is already public/exported. It restricts cases like this:</p>
+<ul>
+<li>you cannot re-export to a different module the content of a existing public module (either coming from your package or an external package)</li>
+<li>you cannot re-export the content of another external package/module (a module that you don't own and is already public)</li>
+<li>you cannot re-export a type from a private module into multiple modules</li>
+</ul>
+<p>This is important because we can guarantee some invariants:</p>
+<ul>
+<li>a public type is declared only in a specific public module</li>
+<li>a public module is declared only in a specific package</li>
+</ul>
+<p>Also an important difference is the <code>import</code> inside types/functions/traits files: Unlike in Rust, an <strong>import defined in a file is local to the file</strong> (this is similar to how C# is working with namespaces) except for the module file <code>module.sk</code>.</p>
+<p>As we explained earlier, only the <code>module.sk</code> is sharing its imports with other files in its folder. It means also that you can't <code>public import</code> from types/functions/traits files : This is the responsibility of the <code>module.sk</code>.</p>
+<h2 id="declare-an-extern-package">Declare an extern package</h2>
+<p>The <code>extern package</code> directive allows to explicit in the code the dependencies to a specific package. Note that it doesn't say which version of the package we are looking for (this will be stored in the package descriptions)</p>
+<p>The ANTLR specifications of an extern package is like this:</p>
+<pre><code class="language-antlr">ExternPackageDirective: 'extern' 'package' Package ('as' Package) Eod;
+
+// note that this:: or base:: modules are not supported for a Package
+Package: ModuleFullName;
+</code></pre>
+<p>This is primarily a <strong>linking directive</strong>. But this provides also an <strong>import accessibility</strong>. The package can be imported from any sub modules from the same package that reference it:</p>
+<pre><code class="language-csharp">// We are linking with mymodule2 package
+extern package mymodule2
+
+// we can import and use the mymodule with the import directive
+import mymodule2
+</code></pre>
+<p>It is important to understand here that <code>extern package</code> is scoped to the module it is declared. It means that you cannot import a module of a package that has not been declared as <code>extern package</code> from the current module or a parent module.</p>
+<p>Typically, if we are inside the module <code>mymodule::sub1::sub2</code> and we declared <code>extern package mymodule2</code>, we can only access <code>import mymodule2</code> from <code>sub2</code> or any sub modules below <code>sub2</code> (but inside the same package)</p>
+<p>This is different here from Rust where <code>extern crate</code> link and import into the module scope the root module of the crate, as in Stark:</p>
+<ul>
+<li><code>extern package mymodule2</code> is a linking directive and defines an import accessibility for sub modules where the extern package directive is issued. The path of the root module of the package is still absolute, but its import visibility is restricted to where the <code>extern package</code> was issued.</li>
+<li>you still need an explicit <code>import mymodule2</code> to effectively import the root module (or a sub module of the package). This import can only be issued where an <code>extern package</code> has been declared from the current module or a parent module from the same package.</li>
+</ul>
+<h2 id="differences-with-c-and-rust">Differences with C# and Rust</h2>
+<p>Let's try to recap and highlight some of the major differences with Rust crates/modules and C# namespaces/assembly/nugets.</p>
+<ul>
+<li>you have a single and explicit layout of a module on the disk and a single way to declare a module</li>
+<li>a type inside a module (folder) is automatically part of this module and cannot be part of another module</li>
+<li>a module declare its nested modules (in .NET, you don't declare namespace but you declare the types in the <code>csproj</code>)</li>
+<li>import is explicit: there is no implicit import of outer scope module</li>
+<li>you can't modify the content of the module outside of its original folder/content</li>
+<li>you can have a visibility on a module (<code>public</code> or <code>private</code>) in addition to the visibility on types/functions/constants</li>
+<li>import inside a types/functions/contants file is local to that file. import inside a module file (<code>module.sk</code>) is shared between all files in this module.</li>
+<li>types/functions/constants can be <code>private</code> inside a module (not accessible outside), <code>internal</code> (accessible from other modules from the same package) or <code>public</code> (accessible from any modules)</li>
+<li>you can re-export a private module to a different public module (only from a module file <code>module.sk</code>)</li>
+<li>you can re-export a public type of a private module to a different public module (only from a module file <code>module.sk</code>)</li>
+<li>you declare your package dependencies from the code through <code>extern package</code></li>
+<li>import paths are absolute (like namespace in C# but not like Rust that is relative to the current crate)</li>
+<li>the root module of a package in a registry serves as a domain entry that you own. Any sub package/modules using the same root module are part of this package tree (and are owned by a single entity).</li>
+<li>From the same registry, a module can only be declared once from a single package</li>
+<li>the root module of a package published to a registry can be a nested module (e.g <code>mymodule::sub1::sub2</code>)</li>
+</ul>
+<h1 id="next">Next?</h1>
+<p>While it departs substantially from some existing namespace/modules handling, I'm wondering how much the explicit layout of a module on the disk is going to be a controversy. Let me know what you think overall, that's a first draft!</p>
+<p>Now that I have specified the module, I will probably start to write the syntax parser just to bootstrap a little bit the work there.</p>
+<p>In the meantime, the following posts will continue to dive into the language design parts, with lots of work and pain ahead! Still not sure which part I will cover first, but most likely to start with functions/variable/struct/class declarations...</p>
+<p>Stay tuned!</p>
+
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
     </div>
   </div>
 	<footer class="blog-footer">

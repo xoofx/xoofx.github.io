@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
+    <atom:link href="https://xoofx.com/feed.xml" rel="self" type="application/rss+xml" />
     <title>xoofx</title>
     <link>https://xoofx.com/</link>
     <description>xoofx website</description>
-    <generator>lunet 0.5.0.0</generator>
+    <generator>lunet 0.5.3.0</generator>
     <managingEditor>Alexandre Mutel</managingEditor>
     <copyright>Alexandre Mutel</copyright>
-    <pubDate>Thu, 24 Aug 2023 19:06:13 +0000</pubDate>
-    <lastBuildDate>Thu, 24 Aug 2023 19:06:13 +0000</lastBuildDate>
+    <pubDate>Wed, 30 Aug 2023 07:32:57 +0000</pubDate>
+    <lastBuildDate>Wed, 30 Aug 2023 07:32:57 +0000</lastBuildDate>
     <item>
       <title>10x Performance with SIMD Vectorized Code in C#/.NET</title>
       <link>https://xoofx.com/blog/2023/07/09/10x-performance-with-simd-in-csharp-dotnet</link>

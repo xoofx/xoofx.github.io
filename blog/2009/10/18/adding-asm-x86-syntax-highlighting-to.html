@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="lunet 0.5.0.0">
+    <meta name="generator" content="lunet 0.5.3.0">
     <title>Adding asm x86 Syntax Highlighting to Visual Studio 2008 | xoofx</title>
     <link rel="stylesheet" href="/css/site.css">
     <script src="/js/site-defer.js" defer></script>
@@ -21,9 +21,10 @@
 
   <div class="container">
     <div class="row">
-      <nav class="navbar navbar-expand-md navbar-light w-100">
+      <nav class="navbar navbar-expand-md">
+        <div class="container-fluid">
             <a class="xoofx-logo navbar-brand" href="/"></a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
             <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
@@ -34,37 +35,38 @@
     <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
   <li class='nav-item '>
     <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
-  <li class='nav-item  ml-auto'>
+  <li class='nav-item  ms-auto'>
     <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
 </ol>
             </div>            
+        </div>
       </nav>
     </div>
     <div class="row">
-      
-      <div class="col-sm-9 js-toc-content">
-        <p id="lunet-results"></p>
-        <article class="page">
-          <div class="title">
-      		  <h1 class="title"><a href="/blog/2009/10/18/adding-asm-x86-syntax-highlighting-to.html">Adding asm x86 Syntax Highlighting to Visual Studio 2008</a></h1>
-      		
-          </div>
-          <div class="entry-content">
-          <div class="blog-post-meta">
-            <span class="fa fa-calendar"></span>
-            <span class="date"><time datetime="2009-10-18" itemprop="datePublished">October 18, 2009</time></span>
-            <i class="fa fa-tags"></i><a href="/blog/tag/assembler/">assembler</a>, <a href="/blog/tag/tools/">Tools</a>, <a href="/blog/tag/x86/">x86</a>, <a href="/blog/tag/visual-studio/">Visual Studio</a>
-        	  <span class="fa fa-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-10-19-adding-asm-x86-syntax-highlighting-to.html">edit</a>
-          </div>
-            
-            
-            While i use to develop some part of 4k's intro code in x86 assembler, it is quite annoying to switch from Visual Studio to an external editor in order to have a correct syntax highlighting. I like the principle of an Integrated Development Environment, and VS is a great tool for that. Based on my previous experience on <a href="http://nshader.codeplex.com/">NShader</a>, i have decided to implement a syntax highlighter for x86 ASM... and thanks to NShader's work, it was really easy to code it! For anyone looking for a place to start when developing a LanguageService Package for Visual Studio, this project is easy to follow and gives a basic implementation for syntax highlighting.<br /><br />So, i have just released <a href="http://asmhighlighter.codeplex.com/">AsmHighlighter</a> under codeplex. This is an AddIn for Visual Studio 2008 (it won't work for Express Editions, as they don't allow communities addIns) that enables <b>syntax highlighting for x86 ASM language</b>. <b>MASM </b>syntax is mainly supported and <b>NASM </b>syntax is partially supported. I have no more reason to switch to an external editor! Cool!<br /><br />Apart from that, the nice thing with <b>MASM is that it is possible to debug directly under Visual Studio</b>, making a mixed C-ASM project much easier to develop (VS is adding building rules for ASM files automatically to your project). On the other hand, i was not able to debug with NASM as nasm cannot generate debug information under the win32 platform...<br /><br />I also found a cool project called <a href="http://japheth.de/index.html">JWasm </a>developed by Japheth : JWasm is a MASM v6 compatible assembler (with v8 bug fixes and improvements)&nbsp; that is able to output win32,win64 as well as linux elf object files. Quite interesting when you still want to develop with a MASM syntax and be able to export your work under linux without moving to another assembler! Japtheth even provides <a href="http://japheth.de/JWasm/Readme.html">JWasm.rules files</a> for an integration under Visual Studio. It's even possible to debug JWasm output objects files under VS,  that's great!<br /><br />Now, you may have noticed that all of this is not strictly related to 4k-64k intros coding, but well, you can consider <a href="http://asmhighlighter.codeplex.com/">AsmHighlighter</a> as a productivity tool for 4k-64k development! ;)
-          </div>
-        </article>
-      </div>
-      <div class="col-sm-3">
-        <nav class="js-toc toc sticky-top"></nav>
-      </div>
+
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2009/10/18/adding-asm-x86-syntax-highlighting-to.html">Adding asm x86 Syntax Highlighting to Visual Studio 2008</a></h1>
+		
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="bi bi-calendar"></span>
+      <span class="date"><time datetime="2009-10-18" itemprop="datePublished">October 18, 2009</time></span>
+      <i class="bi bi-tags"></i><a href="/blog/tag/assembler/">assembler</a>, <a href="/blog/tag/tools/">Tools</a>, <a href="/blog/tag/x86/">x86</a>, <a href="/blog/tag/visual-studio/">Visual Studio</a>
+  	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2009/2009-10-19-adding-asm-x86-syntax-highlighting-to.html">edit</a>
+    </div>
+
+
+While i use to develop some part of 4k's intro code in x86 assembler, it is quite annoying to switch from Visual Studio to an external editor in order to have a correct syntax highlighting. I like the principle of an Integrated Development Environment, and VS is a great tool for that. Based on my previous experience on <a href="http://nshader.codeplex.com/">NShader</a>, i have decided to implement a syntax highlighter for x86 ASM... and thanks to NShader's work, it was really easy to code it! For anyone looking for a place to start when developing a LanguageService Package for Visual Studio, this project is easy to follow and gives a basic implementation for syntax highlighting.<br /><br />So, i have just released <a href="http://asmhighlighter.codeplex.com/">AsmHighlighter</a> under codeplex. This is an AddIn for Visual Studio 2008 (it won't work for Express Editions, as they don't allow communities addIns) that enables <b>syntax highlighting for x86 ASM language</b>. <b>MASM </b>syntax is mainly supported and <b>NASM </b>syntax is partially supported. I have no more reason to switch to an external editor! Cool!<br /><br />Apart from that, the nice thing with <b>MASM is that it is possible to debug directly under Visual Studio</b>, making a mixed C-ASM project much easier to develop (VS is adding building rules for ASM files automatically to your project). On the other hand, i was not able to debug with NASM as nasm cannot generate debug information under the win32 platform...<br /><br />I also found a cool project called <a href="http://japheth.de/index.html">JWasm </a>developed by Japheth : JWasm is a MASM v6 compatible assembler (with v8 bug fixes and improvements)&nbsp; that is able to output win32,win64 as well as linux elf object files. Quite interesting when you still want to develop with a MASM syntax and be able to export your work under linux without moving to another assembler! Japtheth even provides <a href="http://japheth.de/JWasm/Readme.html">JWasm.rules files</a> for an integration under Visual Studio. It's even possible to debug JWasm output objects files under VS,  that's great!<br /><br />Now, you may have noticed that all of this is not strictly related to 4k-64k intros coding, but well, you can consider <a href="http://asmhighlighter.codeplex.com/">AsmHighlighter</a> as a productivity tool for 4k-64k development! ;)
+    </div>
+  </article>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
     </div>
   </div>
 	<footer class="blog-footer">

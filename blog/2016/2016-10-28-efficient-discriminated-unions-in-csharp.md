@@ -111,7 +111,7 @@ public struct enum Option<T>
 
 # Projection to .NET
 
-We would like to have a compact, lightweight valuetype to implement discriminated unions and this is where my previous post "[Struct inheritance in C#](http://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/)" comes into play.
+We would like to have a compact, lightweight valuetype to implement discriminated unions and this is where my previous post "[Struct inheritance in C#](http://xoofx.github.io/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/)" comes into play.
 
 The main idea of the implementation is to collapse/compact all fields of the union types (e.g `Rectangle(width,length)`) into the base union type (e.g `Shape`). This is similar to the way [Rust enum shines](http://smallcultfollowing.com/babysteps/blog/2015/05/05/where-rusts-enum-shines/).
 

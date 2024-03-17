@@ -12,7 +12,7 @@ comments: true
 > Source code of the example program is available in this [gist](https://gist.github.com/xoofx/9d6a1522c642bbcfef7c420351b1d97d)
 >
 
-In the past years I have been using and abusing a lot patching assemblies for IL bytecode. It all started with [SharpDX](http://sharpdx.org) in this [old blog post](http://xoofx.com/blog/2010/10/19/managed-netc-direct3d-11-api-generated/) and I imported all these good recipes while developing [Xenko](http://xenko.com) (which has further exaggerated the usage with its [AssemblyProcessor](https://github.com/SiliconStudio/xenko/tree/master/sources/common/core/SiliconStudio.AssemblyProcessor)!)
+In the past years I have been using and abusing a lot patching assemblies for IL bytecode. It all started with [SharpDX](http://sharpdx.org) in this [old blog post](http://xoofx.github.io/blog/2010/10/19/managed-netc-direct3d-11-api-generated/) and I imported all these good recipes while developing [Xenko](http://xenko.com) (which has further exaggerated the usage with its [AssemblyProcessor](https://github.com/SiliconStudio/xenko/tree/master/sources/common/core/SiliconStudio.AssemblyProcessor)!)
 
 The main approach for doing this was to rely on [Mono.Cecil](https://github.com/jbevain/cecil/) and perform some basic IL rewriting (See for example [InteropApp.cs](https://github.com/sharpdx/SharpDX/blob/master/Source/Tools/SharpCli/InteropApp.cs)) needed to access some IL instructions not available in C# but still very useful or sometimes even mandatory.
 

@@ -8,7 +8,7 @@ tags:
 comments: true
 ---
 
-This is a quick post to give you some feedback about an experiment I just made with the [Scriban Text Templating Library](http://xoofx.com/blog/2017/11/13/implementing-a-text-templating-language-and-engine-for-dotnet/) to add support for async/await automatically from the existing synchronous code, all of this done by using Roslyn.
+This is a quick post to give you some feedback about an experiment I just made with the [Scriban Text Templating Library](http://xoofx.github.io/blog/2017/11/13/implementing-a-text-templating-language-and-engine-for-dotnet/) to add support for async/await automatically from the existing synchronous code, all of this done by using Roslyn.
 
 If you have an existing code base that works beautifully in a synchronous manner, but you would like also to provide a path for async/await patterns, you don't want to rewrite your entire code base to the async/await pattern, or to drop synchronous code for async/await only. It would either be a huge burden to maintain two code paths doing almost the same thing, or the use async/await only would actually perform significantly worse than the synchronous version, even if you are using the recently introduced `ValueTask<T>`
 

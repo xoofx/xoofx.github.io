@@ -604,7 +604,7 @@ In the F# code library, the F# compiler is allowing to inline IL with the syntax
 
 In the CoreRT compiler, they had to develop IL post processing (similar to Fody) to [patch some methods like Unsafe utility methods](https://github.com/dotnet/corert/blob/3c58e6d6a41a64d8742535c653088a7629ce879c/src/Common/src/TypeSystem/IL/Stubs/UnsafeIntrinsics.cs#L13-L90).
 
-In Stark, I have decided to bring back to life the old prototype [Inline IL ASM in C# with Roslyn](https://xoofx.com/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn/) and improved its integration by allowing a new `unsafe il` syntax:
+In Stark, I have decided to bring back to life the old prototype [Inline IL ASM in C# with Roslyn](https://xoofx.github.io/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn/) and improved its integration by allowing a new `unsafe il` syntax:
 
 ```stark
 public func operator [index: int] -> ref T

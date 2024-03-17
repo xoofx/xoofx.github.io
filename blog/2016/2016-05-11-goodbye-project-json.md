@@ -34,7 +34,7 @@ While not ideal, it is easier to adapt msbuild to cover the missing bits, mainly
 - automate cross-platform compilation
 - automate NuGet package creation
 
-Incidentally, I wrote an article almost 2 years ago that talked a little bit about this in "[Packages vNext: Power-up our .NET Builds](http://xoofx.com/blog/2014/08/13/packages-vnext-power-up-our-net-builds/)". 
+Incidentally, I wrote an article almost 2 years ago that talked a little bit about this in "[Packages vNext: Power-up our .NET Builds](http://xoofx.github.io/blog/2014/08/13/packages-vnext-power-up-our-net-builds/)". 
 
 So I could not be more happy to see `project.json` being phased out. Back to a unified model will be way more sane and simpler to manage!
 

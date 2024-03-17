@@ -4,7 +4,7 @@ title = "xoofx"
 description = "xoofx website"
 
 basepath = ""
-baseurl = baseurl ?? "https://xoofx.com"
+baseurl = baseurl ?? "https://xoofx.github.io"
 
 # Use `base` as a default layout
 layout = "base"

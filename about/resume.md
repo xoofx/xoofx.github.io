@@ -208,12 +208,12 @@ ___
 
 # Articles
 
-In the recent years, I have published many technical posts on my [blog](http://xoofx.com/blog), most recently:
+In the recent years, I have published many technical posts on my [blog](http://xoofx.github.io/blog), most recently:
 
-- 2016: [Implementation of Markdig](http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/), a Markdown Engine for .NET
-- 2016: [Inline .NET IL ASM](http://xoofx.com/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn/) in C# by modifying Roslyn.
-- 2015: [Stack allocation of .NET classes](http://xoofx.com/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr/) to improve locality and performance of .NET apps, including the modification of Roslyn and the CoreCLR Runtime and GC to allow such a prototype.
-- 2015: [Struct Inheritance for .NET](http://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/) by tweaking Roslyn and the CoreCLR Runtime.
+- 2016: [Implementation of Markdig](http://xoofx.github.io/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/), a Markdown Engine for .NET
+- 2016: [Inline .NET IL ASM](http://xoofx.github.io/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn/) in C# by modifying Roslyn.
+- 2015: [Stack allocation of .NET classes](http://xoofx.github.io/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr/) to improve locality and performance of .NET apps, including the modification of Roslyn and the CoreCLR Runtime and GC to allow such a prototype.
+- 2015: [Struct Inheritance for .NET](http://xoofx.github.io/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/) by tweaking Roslyn and the CoreCLR Runtime.
 
 ___
 

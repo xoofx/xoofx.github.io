@@ -24,7 +24,7 @@ This idea started to emerge during the 2018 winter holidays:
 
 This brought me back to my teenager time when I had so much fun running assembly code directly on Amstrad/Amiga computers without using an OS... time has passed, and as I was also re-reading all the fascinating [collection of blog posts of Joe Duffy about Midori](http://joeduffyblog.com/2015/11/03/blogging-about-midori/) and also discovered through some discussions on Twitter that Google has been actually working on a [new OS called Fuchsia](https://en.wikipedia.org/wiki/Google_Fuchsia) with its micro-kernel [Zircon](https://fuchsia.googlesource.com/zircon), it made me realized how much I would like to reinvestigate these areas...
 
-So one year ago, I decided to re-focus the work on [the stark programming language experiment](http://xoofx.com/blog/2017/01/17/the-stark-programming-language-experiment/) and to extend its goal by building, not only a safe and efficient system programming language, but also a fast, secure and lightweight micro-kernel and capability based operating system, IoT and cloud ready (game OS also, why not?), async/await event/driven based, but also built with data oriented techniques... 
+So one year ago, I decided to re-focus the work on [the stark programming language experiment](http://xoofx.github.io/blog/2017/01/17/the-stark-programming-language-experiment/) and to extend its goal by building, not only a safe and efficient system programming language, but also a fast, secure and lightweight micro-kernel and capability based operating system, IoT and cloud ready (game OS also, why not?), async/await event/driven based, but also built with data oriented techniques... 
 
 There are still large and exciting areas to explore and challenge in this domain, as much as I'm eager to be technically challenged, learn and share from this experiment!
 
@@ -44,7 +44,7 @@ Though, apart [sharing my progess on Twitter](https://twitter.com/search?q=%23st
 
 ### Stark - The language
 
-I have realized that I never wrote down at least some high level requirements and goals for this language. They might have changed slightly since I wrote ["Going Native 2.0, The future of WinRT"](https://xoofx.com/blog/2012/08/08/going-native-20-future-of-winrt/) or more recently about [stark](https://xoofx.com/blog/2017/01/17/the-stark-programming-language-experiment/), but in the end, they are tactical tradeoffs between the 3 following pillars:
+I have realized that I never wrote down at least some high level requirements and goals for this language. They might have changed slightly since I wrote ["Going Native 2.0, The future of WinRT"](https://xoofx.github.io/blog/2012/08/08/going-native-20-future-of-winrt/) or more recently about [stark](https://xoofx.github.io/blog/2017/01/17/the-stark-programming-language-experiment/), but in the end, they are tactical tradeoffs between the 3 following pillars:
 
 - [Safe](#safe)
 - [Efficient](#efficient)
@@ -343,7 +343,7 @@ After hacking C# with CoreRT on a bare metal OS on the Raspberry Pi, I realized 
 
 <a class="btn btn-outline-info" style="text-align: left; display:block" href="/blog/2020/03/06/stark-language-frontend-compiler/" role="button">Part 1: Stark - Language And Frontend Compiler - Prototype 2019</a>
 
-For the front-end compiler, instead of fully building bottom-up a [tokenizer](https://xoofx.com/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer/)/parser/syntax analyzer/type inference/transform to IL, why not **starting from the Roslyn C# compiler instead**?
+For the front-end compiler, instead of fully building bottom-up a [tokenizer](https://xoofx.github.io/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer/)/parser/syntax analyzer/type inference/transform to IL, why not **starting from the Roslyn C# compiler instead**?
 
 <a class="btn btn-outline-info" style="text-align: left; display:block" href="/blog/2020/03/21/stark-native-compiler" role="button">Part 2: Stark - Native Compiler - Prototype 2019</a>
 

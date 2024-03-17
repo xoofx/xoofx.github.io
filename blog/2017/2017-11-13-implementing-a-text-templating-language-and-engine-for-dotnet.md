@@ -8,7 +8,7 @@ comments: true
 {%{
 <a href="https://github.com/scriban/scriban"><img align="right" width="140px" height="140px" src="https://raw.githubusercontent.com/scriban/scriban/master/img/scriban.png"></a>
 
-Last year, before developing [`markdig`](http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/), I spent a few weeks developing a brand new text templating language and engine called [`scriban`](https://github.com/scriban/scriban). 
+Last year, before developing [`markdig`](http://xoofx.github.io/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/), I spent a few weeks developing a brand new text templating language and engine called [`scriban`](https://github.com/scriban/scriban). 
 
 Though, while I have received a few enthusiastic feedback on this project, I haven't taken the time to promote, polish and finish it to the level that I originally expected to push... Until the past weeks where I have finally put the last efforts to bring hopefully a solid stone to the Text Templating .NET OSS ecosystem
 
@@ -45,7 +45,7 @@ In .NET, I have been using text templating in the - non exhaustive - list of the
   
   Again, it is sharing many similarities with T4 (C# syntax for example) and specially the fact that the time to generate the assemblies for the templating was slowing down the iteration process.
 
-- For this website itself, when I [migrated my blog](http://xoofx.com/blog/2015/06/15/migration-to-jekyll/) from blogger around two years ago to use instead [Jekyll and GitHub pages](https://jekyllrb.com/docs/github-pages/). It has been simplifying a lot the pain of updating this blog and giving me a lot more freedom to control the layout and templating of this website. 
+- For this website itself, when I [migrated my blog](http://xoofx.github.io/blog/2015/06/15/migration-to-jekyll/) from blogger around two years ago to use instead [Jekyll and GitHub pages](https://jekyllrb.com/docs/github-pages/). It has been simplifying a lot the pain of updating this blog and giving me a lot more freedom to control the layout and templating of this website. 
 
   Static website generators have been here for years (if not decades) and departing from CMS solutions was a real liberation for me (which I unfortunately used for too many years with solutions like Joomla PHP) as much as it improved the editing workflow with git versioning...etc.
   
@@ -302,7 +302,7 @@ A [token](https://github.com/scriban/scriban/blob/master/src/Scriban/Parsing/Tok
 
 This is fundamental to record the precise line and column, because we are able later with the Parser to produce meaningful error with an exact location where the syntax error is occurring... but also, when rendering and there is typically a runtime exception, we are also able to **indicate precisely where the runtime error occurred in the original template**, and that's a big changer if you ask me when dealing with a templating system. 
 
-Similar to [the StringSlice of markdig](http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/#stringslice-a-lightweight-string-part) we are also using the start/end information of the Token to avoid performing substrings on the original template code. That's important, because a template is mainly compose of strings that are going to be directly copied as-is from the input to the output.
+Similar to [the StringSlice of markdig](http://xoofx.github.io/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/#stringslice-a-lightweight-string-part) we are also using the start/end information of the Token to avoid performing substrings on the original template code. That's important, because a template is mainly compose of strings that are going to be directly copied as-is from the input to the output.
 
 ### The parser
 

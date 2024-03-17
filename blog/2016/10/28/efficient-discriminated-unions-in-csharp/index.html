@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Efficient discriminated unions in C#7 | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Efficient discriminated unions in C#7 | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -136,7 +136,7 @@ public static double getShapeSurface(Shape shape)
 }
 </code></pre>
 <h1 id="projection-to.net">Projection to .NET</h1>
-<p>We would like to have a compact, lightweight valuetype to implement discriminated unions and this is where my previous post &quot;<a href="http://xoofx.com/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/">Struct inheritance in C#</a>&quot; comes into play.</p>
+<p>We would like to have a compact, lightweight valuetype to implement discriminated unions and this is where my previous post &quot;<a href="http://xoofx.github.io/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr/">Struct inheritance in C#</a>&quot; comes into play.</p>
 <p>The main idea of the implementation is to collapse/compact all fields of the union types (e.g <code>Rectangle(width,length)</code>) into the base union type (e.g <code>Shape</code>). This is similar to the way <a href="http://smallcultfollowing.com/babysteps/blog/2015/05/05/where-rusts-enum-shines/">Rust enum shines</a>.</p>
 <p>So internally, the <code>Shape</code> discriminated union would be represented like this:</p>
 <pre><code class="language-csharp">[Union]
@@ -329,6 +329,6 @@ Create(out circle); // Not Ok
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

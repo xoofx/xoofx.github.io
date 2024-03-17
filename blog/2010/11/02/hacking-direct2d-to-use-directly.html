@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Hacking Direct2D to use directly Direct3D 11 instead of Direct3D 10.1 API | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Hacking Direct2D to use directly Direct3D 11 instead of Direct3D 10.1 API | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -164,7 +164,7 @@ d2dFactory-&gt;CreateDxgiSurfaceRenderTarget(
 </code></pre>
 <br />And that's all! You will find attached a project with the sources. Feel free to test it and let me know if you are encountering any issues with it. Also, the code is far from being 100% safe/robust... It's a quick hack. For example, I have not checked carefully that my proxies behaves well with AddRef/Release... but that should be fine.<br /><br />So far, It's seems to work well on the whole Direct2D API... I have even been able to use DirectWrite with Direct2D... using Direct3D 11, without any problem. There is only one issue : PIX won't be able to debug Direct2D over Direct3D 11... because It seems that Direct2D is performing some additional method calls (D3D10CreateStateBlocks) that are incompatible with the lightweight proxies I have developed... In order to be fully supported, It would be necessary to implement all the proxies for all the interfaces returned by ID3D10Device1... But this is a sooo  laborious task that by that time, we can expect to have Direct2D fully working with Direct3D 11 provided from DirectX Team itself!<br /><br />Also from this little experience, I can safely confirm that It shouldn't take more than one day for one guy from the Direct2D team to patch existing Direct2D code in order to use Direct3D 11... as it is <i>much</i> easier to do this on the original code than going to the proxy road as I did! ;)<br /><br />
 <hr />
-<br />You can grab the VC++ 2010 project from here : <a href="http://xoofx.com/upload/D2D1ToD3D11.7z">D2D1ToD3D11.7z</a><br /><br />This sample is only saving a "test.png" image using Direct2D API over Direct3D11.
+<br />You can grab the VC++ 2010 project from here : <a href="http://xoofx.github.io/upload/D2D1ToD3D11.7z">D2D1ToD3D11.7z</a><br /><br />This sample is only saving a "test.png" image using Direct2D API over Direct3D11.
 
 
     </div>
@@ -176,6 +176,6 @@ d2dFactory-&gt;CreateDxgiSurfaceRenderTarget(
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

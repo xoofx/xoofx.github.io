@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Implementing a Text Templating Language and Engine for .NET | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Implementing a Text Templating Language and Engine for .NET | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -59,7 +59,7 @@
   	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2017/2017-11-13-implementing-a-text-templating-language-and-engine-for-dotnet.md">edit</a>
     </div>
 <p><a href="https://github.com/scriban/scriban"><img align="right" width="140px" height="140px" src="https://raw.githubusercontent.com/scriban/scriban/master/img/scriban.png"></a></p>
-<p>Last year, before developing <a href="http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/"><code>markdig</code></a>, I spent a few weeks developing a brand new text templating language and engine called <a href="https://github.com/scriban/scriban"><code>scriban</code></a>.</p>
+<p>Last year, before developing <a href="http://xoofx.github.io/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/"><code>markdig</code></a>, I spent a few weeks developing a brand new text templating language and engine called <a href="https://github.com/scriban/scriban"><code>scriban</code></a>.</p>
 <p>Though, while I have received a few enthusiastic feedback on this project, I haven't taken the time to promote, polish and finish it to the level that I originally expected to push... Until the past weeks where I have finally put the last efforts to bring hopefully a solid stone to the Text Templating .NET OSS ecosystem</p>
 <p>So today, I feel quite relieved and excited to <strong>release the first 1.0.0 beta version of <code>scriban</code></strong>, and along the celebration of this release, I would like to share in this post a bit of the underlying decisions and implementation tricks that have been put into this project.</p>
 <p>The post is organized like this:</p>
@@ -85,7 +85,7 @@
 <p>For this project, I developed at that time <a href="https://github.com/xoofx/SharpRazor">SharpRazor</a> which is the much more lightweight equivalent of <a href="https://github.com/Antaris/RazorEngine">RazorEngine</a>. It was actually pretty nice to be able to step into the templates with debugging (RazorEngine was not exposing this at that time, and it was a pain to bring this feature to it, mainly because the code was layered with tons of interfaces that were actually abstracting way too much the core Razor Engine).</p>
 <p>Again, it is sharing many similarities with T4 (C# syntax for example) and specially the fact that the time to generate the assemblies for the templating was slowing down the iteration process.</p>
 </li>
-<li><p>For this website itself, when I <a href="http://xoofx.com/blog/2015/06/15/migration-to-jekyll/">migrated my blog</a> from blogger around two years ago to use instead <a href="https://jekyllrb.com/docs/github-pages/">Jekyll and GitHub pages</a>. It has been simplifying a lot the pain of updating this blog and giving me a lot more freedom to control the layout and templating of this website.</p>
+<li><p>For this website itself, when I <a href="http://xoofx.github.io/blog/2015/06/15/migration-to-jekyll/">migrated my blog</a> from blogger around two years ago to use instead <a href="https://jekyllrb.com/docs/github-pages/">Jekyll and GitHub pages</a>. It has been simplifying a lot the pain of updating this blog and giving me a lot more freedom to control the layout and templating of this website.</p>
 <p>Static website generators have been here for years (if not decades) and departing from CMS solutions was a real liberation for me (which I unfortunately used for too many years with solutions like Joomla PHP) as much as it improved the editing workflow with git versioning...etc.</p>
 <p>With Jekyll, you have to use the <a href="https://help.shopify.com/themes/liquid">Liquid language templating</a> which is a very simple templating language, not super powerful (and well, sometimes so under feature that you have to fight with tags/filters to simulate even simple things) , but actually &quot;safe&quot;, in the sense that unlike T4/Razor, it is a templating language exposing a sand-boxed environment, and can even be used by end-users (most likely one of the key success of the Shopify solution)</p>
 </li>
@@ -279,7 +279,7 @@ end
 <li>Precise ending character offset from the source document, including also precise line and column.</li>
 </ul>
 <p>This is fundamental to record the precise line and column, because we are able later with the Parser to produce meaningful error with an exact location where the syntax error is occurring... but also, when rendering and there is typically a runtime exception, we are also able to <strong>indicate precisely where the runtime error occurred in the original template</strong>, and that's a big changer if you ask me when dealing with a templating system.</p>
-<p>Similar to <a href="http://xoofx.com/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/#stringslice-a-lightweight-string-part">the StringSlice of markdig</a> we are also using the start/end information of the Token to avoid performing substrings on the original template code. That's important, because a template is mainly compose of strings that are going to be directly copied as-is from the input to the output.</p>
+<p>Similar to <a href="http://xoofx.github.io/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/#stringslice-a-lightweight-string-part">the StringSlice of markdig</a> we are also using the start/end information of the Token to avoid performing substrings on the original template code. That's important, because a template is mainly compose of strings that are going to be directly copied as-is from the input to the output.</p>
 <h3 id="the-parser">The parser</h3>
 <p>The Parser is then responsible to decode this flow of tokens into an AST.</p>
 <p>Though there is a particularity of the <code>scriban</code> lexer and parser: There is a <strong>mode to parse actual liquid templates directly into a scriban AST and runtime</strong></p>
@@ -531,6 +531,6 @@ Processor=Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), ProcessorCount=8
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

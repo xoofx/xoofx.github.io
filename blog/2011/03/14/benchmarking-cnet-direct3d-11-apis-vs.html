@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Benchmarking C#/.Net Direct3D 11 APIs vs native C++ | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Benchmarking C#/.Net Direct3D 11 APIs vs native C++ | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -205,7 +205,7 @@ It has been tested on a Win7-64bit, i5-750 2.6Ghz, Gfx AMD HD6950. All tests wer
 </ul>
 Ok, so if you are a .NET programmer and are not aware about performance penalty using a managed language, you are probably surprised by these results that could be... scary!&nbsp; Although, we can balance things here, as your 3D engine is unlikely to be CPU bounded on drawing calls, but 3000-7000 calls could lead to a 4ms impact in the better case, which is something we need to know when we design a game.<br /><br />This test could be also extrapolated to other parts of a 3D engine, as It will probably slower by a factor of x2 compare to a brute force C++ engine. For AAA game, this would be of course an unacceptable performance penalty, but If you are a small/independent studio, this cost is relatively low compare to the cost of efficiently developing a game in C#, and in the end, that's a trade-off.<br /><br />In case you are using SharpDX API, you can still run at a reasonable performance. And if you really want to circumvent this interop cost for chatty API scenarios, you can design your engine to call a native function that will batch calls to the Direct3D native API. <br /><br />
 <hr />
-You can download this benchmark <a href="http://xoofx.com/upload/Sharp3DBench.7z">Sharp3DBench.7z</a>.
+You can download this benchmark <a href="http://xoofx.github.io/upload/Sharp3DBench.7z">Sharp3DBench.7z</a>.
 
 
     </div>
@@ -217,6 +217,6 @@ You can download this benchmark <a href="http://xoofx.com/upload/Sharp3DBench.7z
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

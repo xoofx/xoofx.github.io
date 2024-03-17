@@ -1,1 +1,1 @@
-Sitemap: https://xoofx.com/sitemap.xml
+Sitemap: https://xoofx.github.io/sitemap.xml

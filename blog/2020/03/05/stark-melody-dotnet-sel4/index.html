@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="The Odyssey of Stark and Melody | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="The Odyssey of Stark and Melody | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -64,7 +64,7 @@
 <blockquote class="twitter-tweet tw-align-center" data-lang="en"><p lang="en" dir="ltr">Woot! I just hacked the &quot;Building an Operating System for the Raspberry Pi&quot; <a href="https://t.co/tSvS8Bz0ft">https://t.co/tSvS8Bz0ft</a> by writing the kernel in C# and using the AOT Compiler with a slightly modified version of CoreRT to compile it to ARM, and... it&#39;s running! I&#39;m super happy, it is so much fun! 🤗 <a href="https://t.co/lM3MrH04Tk">pic.twitter.com/lM3MrH04Tk</a></p>&mdash; Alexandre Mutel (@xoofx) <a href="https://twitter.com/xoofx/status/1080583909384118272?ref_src=twsrc%5Etfw">January 2, 2019</a></blockquote>
 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 <p>This brought me back to my teenager time when I had so much fun running assembly code directly on Amstrad/Amiga computers without using an OS... time has passed, and as I was also re-reading all the fascinating <a href="http://joeduffyblog.com/2015/11/03/blogging-about-midori/">collection of blog posts of Joe Duffy about Midori</a> and also discovered through some discussions on Twitter that Google has been actually working on a <a href="https://en.wikipedia.org/wiki/Google_Fuchsia">new OS called Fuchsia</a> with its micro-kernel <a href="https://fuchsia.googlesource.com/zircon">Zircon</a>, it made me realized how much I would like to reinvestigate these areas...</p>
-<p>So one year ago, I decided to re-focus the work on <a href="http://xoofx.com/blog/2017/01/17/the-stark-programming-language-experiment/">the stark programming language experiment</a> and to extend its goal by building, not only a safe and efficient system programming language, but also a fast, secure and lightweight micro-kernel and capability based operating system, IoT and cloud ready (game OS also, why not?), async/await event/driven based, but also built with data oriented techniques...</p>
+<p>So one year ago, I decided to re-focus the work on <a href="http://xoofx.github.io/blog/2017/01/17/the-stark-programming-language-experiment/">the stark programming language experiment</a> and to extend its goal by building, not only a safe and efficient system programming language, but also a fast, secure and lightweight micro-kernel and capability based operating system, IoT and cloud ready (game OS also, why not?), async/await event/driven based, but also built with data oriented techniques...</p>
 <p>There are still large and exciting areas to explore and challenge in this domain, as much as I'm eager to be technically challenged, learn and share from this experiment!</p>
 <p>Though while I have been enjoying the early design/prototyping of stark, It became also obvious that starting entirely from scratch a whole compiler would not allow me to make enough sustainable progress and to keep enough motivation during my spare-time on the long run...</p>
 <p>Luckily, thanks to the development of OSS, we can rely on the shoulders of existing giants to experiment and prototype more quickly what would have been impossible in the past... So during the past year, with the help of the .NET ecosystem and the <a href="http://sel4.systems/">seL4 micro-kernel</a>, I was able to  build a vertical prototype of the language, its core library, its front-end compiler, a native compiler and an embryo-integration with seL4:</p>
@@ -77,7 +77,7 @@
 </ul>
 <h2 id="foundations">Foundations</h2>
 <h3 id="stark-the-language">Stark - The language</h3>
-<p>I have realized that I never wrote down at least some high level requirements and goals for this language. They might have changed slightly since I wrote <a href="https://xoofx.com/blog/2012/08/08/going-native-20-future-of-winrt/">&quot;Going Native 2.0, The future of WinRT&quot;</a> or more recently about <a href="https://xoofx.com/blog/2017/01/17/the-stark-programming-language-experiment/">stark</a>, but in the end, they are tactical tradeoffs between the 3 following pillars:</p>
+<p>I have realized that I never wrote down at least some high level requirements and goals for this language. They might have changed slightly since I wrote <a href="https://xoofx.github.io/blog/2012/08/08/going-native-20-future-of-winrt/">&quot;Going Native 2.0, The future of WinRT&quot;</a> or more recently about <a href="https://xoofx.github.io/blog/2017/01/17/the-stark-programming-language-experiment/">stark</a>, but in the end, they are tactical tradeoffs between the 3 following pillars:</p>
 <ul>
 <li><a href="/blog/2020/03/05/stark-melody-dotnet-sel4">Safe</a></li>
 <li><a href="/blog/2020/03/05/stark-melody-dotnet-sel4">Efficient</a></li>
@@ -368,7 +368,7 @@
 </ul>
 <p>After hacking C# with CoreRT on a bare metal OS on the Raspberry Pi, I realized that the .NET ecosystem could help my experiment a lot more than I had planned when starting to work on Stark. Instead of trying to rebuild everything, <strong>let's try to find and reuse components that could significantly boost this enterprise</strong>:</p>
 <p><a class="btn btn-outline-info" style="text-align: left; display:block" href="/blog/2020/03/06/stark-language-frontend-compiler/" role="button">Part 1: Stark - Language And Frontend Compiler - Prototype 2019</a></p>
-<p>For the front-end compiler, instead of fully building bottom-up a <a href="https://xoofx.com/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer/">tokenizer</a>/parser/syntax analyzer/type inference/transform to IL, why not <strong>starting from the Roslyn C# compiler instead</strong>?</p>
+<p>For the front-end compiler, instead of fully building bottom-up a <a href="https://xoofx.github.io/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer/">tokenizer</a>/parser/syntax analyzer/type inference/transform to IL, why not <strong>starting from the Roslyn C# compiler instead</strong>?</p>
 <p><a class="btn btn-outline-info" style="text-align: left; display:block" href="/blog/2020/03/21/stark-native-compiler" role="button">Part 2: Stark - Native Compiler - Prototype 2019</a></p>
 <p>For the back-end compiler responsible to generate native code, I originally thought that I could rely on CoreRT, but realized that the design of the compiler and runtime would be so different that I should proceed differently... and came to the conclusion that the most critical component I could reuse was the <strong>RyuJIT compiler for the IL to native codegen part</strong>. And I will explain more in details why.</p>
 <p><a class="btn btn-outline-info" style="text-align: left; display:block" href="#" role="button">Part 3: Melody - HelloWorld OS - Prototype 2019 (Blog post coming soon)</a></p>
@@ -389,6 +389,6 @@
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

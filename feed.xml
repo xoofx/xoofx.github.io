@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <atom:link href="https://xoofx.com/feed.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://xoofx.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <title>xoofx</title>
-    <link>https://xoofx.com/</link>
+    <link>https://xoofx.github.io/</link>
     <description>xoofx website</description>
     <generator>lunet 0.5.3.0</generator>
     <managingEditor>Alexandre Mutel</managingEditor>
     <copyright>Alexandre Mutel</copyright>
-    <pubDate>Wed, 30 Aug 2023 07:32:57 +0000</pubDate>
-    <lastBuildDate>Wed, 30 Aug 2023 07:32:57 +0000</lastBuildDate>
+    <pubDate>Sun, 17 Mar 2024 07:44:50 +0000</pubDate>
+    <lastBuildDate>Sun, 17 Mar 2024 07:44:50 +0000</lastBuildDate>
     <item>
       <title>10x Performance with SIMD Vectorized Code in C#/.NET</title>
-      <link>https://xoofx.com/blog/2023/07/09/10x-performance-with-simd-in-csharp-dotnet</link>
+      <link>https://xoofx.github.io/blog/2023/07/09/10x-performance-with-simd-in-csharp-dotnet</link>
       <pubDate>Sun, 09 Jul 2023 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2023/07/09/10x-performance-with-simd-in-csharp-dotnet</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2023/07/09/10x-performance-with-simd-in-csharp-dotnet</guid>
       <description>10x Performance with SIMD Vectorized Code in C#/.NET | xoofx Home Blog Projects About 10x Performance with SIMD Vectorized Code in C#/.NET Use your CPU at its full width! July 9, 2023 C#, .NET, x86, assembler edit In the middle of my holidays, I was browsing my Mastodon feed and found an interesting challenge, small enough that I don&#39;t have to spend days to figure this out, but also interesting...</description>
       <category>C#</category>
       <category>.NET</category>
@@ -24,18 +24,18 @@
     </item>
     <item>
       <title>Comments in Code</title>
-      <link>https://xoofx.com/blog/2023/06/23/comments-in-code</link>
+      <link>https://xoofx.github.io/blog/2023/06/23/comments-in-code</link>
       <pubDate>Fri, 23 Jun 2023 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2023/06/23/comments-in-code</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2023/06/23/comments-in-code</guid>
       <description>Comments in Code | xoofx Home Blog Projects About Comments in Code Wait, I thought it was about quality? June 23, 2023 edit I haven&#39;t been blogging for a while, and this post is not going to be a real blog post! But I wanted to share an old presentation I made a few years ago at my company about Comments in code, as I think that it is worth...</description>
     </item>
     <item>
       <title>Stark - Native Compiler - Prototype 2019</title>
-      <link>https://xoofx.com/blog/2020/03/21/stark-native-compiler</link>
+      <link>https://xoofx.github.io/blog/2020/03/21/stark-native-compiler</link>
       <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2020/03/21/stark-native-compiler</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2020/03/21/stark-native-compiler</guid>
       <description>Stark - Native Compiler - Prototype 2019 | xoofx Home Blog Projects About Stark - Native Compiler - Prototype 2019 Development of an AOT native compiler using RyuJIT March 21, 2020 Stark, Melody, OS, Compiler, LLVM, C#, .NET edit This is the second part of the blog post series about The Odyssey of Stark and Melody and more specifically, about the development of a prototype of the native compiler for...</description>
       <category>Stark</category>
       <category>Melody</category>
@@ -47,10 +47,10 @@
     </item>
     <item>
       <title>Stark - Language And Frontend Compiler - Prototype 2019</title>
-      <link>https://xoofx.com/blog/2020/03/06/stark-language-frontend-compiler</link>
+      <link>https://xoofx.github.io/blog/2020/03/06/stark-language-frontend-compiler</link>
       <pubDate>Fri, 06 Mar 2020 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2020/03/06/stark-language-frontend-compiler</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2020/03/06/stark-language-frontend-compiler</guid>
       <description>Stark - Language And Frontend Compiler - Prototype 2019 | xoofx Home Blog Projects About Stark - Language And Frontend Compiler - Prototype 2019 Syntax of the language and the development of the front-end compiler March 6, 2020 Stark, Melody, OS, Compiler, LLVM, C#, .NET edit This is the first part of the blog post series about The Odyssey of Stark and Melody and more specifically, about the development of...</description>
       <category>Stark</category>
       <category>Melody</category>
@@ -62,10 +62,10 @@
     </item>
     <item>
       <title>The Odyssey of Stark and Melody</title>
-      <link>https://xoofx.com/blog/2020/03/05/stark-melody-dotnet-sel4</link>
+      <link>https://xoofx.github.io/blog/2020/03/05/stark-melody-dotnet-sel4</link>
       <pubDate>Thu, 05 Mar 2020 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2020/03/05/stark-melody-dotnet-sel4</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2020/03/05/stark-melody-dotnet-sel4</guid>
       <description>The Odyssey of Stark and Melody | xoofx Home Blog Projects About The Odyssey of Stark and Melody Prototyping a new language and OS with the help of the .NET ecosystem and seL4 micro-kernel March 5, 2020 Stark, Melody, OS, Compiler, LLVM, C#, .NET edit What would it take these days to build a prototype of a new language and operating system built on top of it, just for fun?...</description>
       <category>Stark</category>
       <category>Melody</category>
@@ -77,10 +77,10 @@
     </item>
     <item>
       <title>Behind the burst compiler</title>
-      <link>https://xoofx.com/blog/2019/03/28/behind-the-burst-compiler</link>
+      <link>https://xoofx.github.io/blog/2019/03/28/behind-the-burst-compiler</link>
       <pubDate>Thu, 28 Mar 2019 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2019/03/28/behind-the-burst-compiler</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2019/03/28/behind-the-burst-compiler</guid>
       <description>Behind the burst compiler | xoofx Home Blog Projects About Behind the burst compiler March 28, 2019 burst, Compiler, C#, .NET edit Last year I made a presentation to Unite LA, the dotnetos conference in Warsaw and to the dotnext conference in Moscow of the burst compiler that we have been working on for the past two years at Unity In a nutshell: The burst compiler is a technology aimed...</description>
       <category>burst</category>
       <category>Compiler</category>
@@ -89,10 +89,10 @@
     </item>
     <item>
       <title>Generate automatically async/await code from sync code with Roslyn</title>
-      <link>https://xoofx.com/blog/2018/12/26/generate-async-from-sync-code-with-roslyn</link>
+      <link>https://xoofx.github.io/blog/2018/12/26/generate-async-from-sync-code-with-roslyn</link>
       <pubDate>Wed, 26 Dec 2018 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2018/12/26/generate-async-from-sync-code-with-roslyn</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2018/12/26/generate-async-from-sync-code-with-roslyn</guid>
       <description>Generate automatically async/await code from sync code with Roslyn | xoofx Home Blog Projects About Generate automatically async/await code from sync code with Roslyn December 26, 2018 C#, .NET, Roslyn edit This is a quick post to give you some feedback about an experiment I just made with the Scriban Text Templating Library to add support for async/await automatically from the existing synchronous code, all of this done by using...</description>
       <category>C#</category>
       <category>.NET</category>
@@ -100,10 +100,10 @@
     </item>
     <item>
       <title>Writing a Managed JIT in C# with CoreCLR</title>
-      <link>https://xoofx.com/blog/2018/04/12/writing-managed-jit-in-csharp-with-coreclr</link>
+      <link>https://xoofx.github.io/blog/2018/04/12/writing-managed-jit-in-csharp-with-coreclr</link>
       <pubDate>Thu, 12 Apr 2018 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2018/04/12/writing-managed-jit-in-csharp-with-coreclr</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2018/04/12/writing-managed-jit-in-csharp-with-coreclr</guid>
       <description>Writing a Managed JIT in C# with CoreCLR | xoofx Home Blog Projects About Writing a Managed JIT in C# with CoreCLR April 12, 2018 C#, .NET, CoreCLR edit As you may know, in .NET CoreCLR (and Mono), the JIT has been entirely written in C/C++. That&#39;s sometimes even a joke used by C++ developers to remind the enthusiastic C# developer crowd that their ecosystem is being actually ran by...</description>
       <category>C#</category>
       <category>.NET</category>
@@ -111,10 +111,10 @@
     </item>
     <item>
       <title>Porting the Unity Engine to .NET CoreCLR</title>
-      <link>https://xoofx.com/blog/2018/04/06/porting-unity-to-coreclr</link>
+      <link>https://xoofx.github.io/blog/2018/04/06/porting-unity-to-coreclr</link>
       <pubDate>Fri, 06 Apr 2018 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2018/04/06/porting-unity-to-coreclr</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2018/04/06/porting-unity-to-coreclr</guid>
       <description>Porting the Unity Engine to .NET CoreCLR | xoofx Home Blog Projects About Porting the Unity Engine to .NET CoreCLR April 6, 2018 C#, .NET, CoreCLR, Unity edit NOTE: This work was a prototype as we don&#39;t have yet an official roadmap and timetable in mind to bring this to Unity, more on that later this year hopefully ;) This blog post is also my own opinionated vision on the...</description>
       <category>C#</category>
       <category>.NET</category>
@@ -123,10 +123,10 @@
     </item>
     <item>
       <title>Productivity with ReSharper</title>
-      <link>https://xoofx.com/blog/2018/03/09/productivity-with-resharper</link>
+      <link>https://xoofx.github.io/blog/2018/03/09/productivity-with-resharper</link>
       <pubDate>Fri, 09 Mar 2018 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.com/blog/2018/03/09/productivity-with-resharper</guid>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2018/03/09/productivity-with-resharper</guid>
       <description>Productivity with ReSharper | xoofx Home Blog Projects About Productivity with ReSharper March 9, 2018 Visual Studio, Visual Studio 2015, Roslyn edit I have been using ReSharper for around 10 years now and it has been my number one productivity tool when developing in C#. When Visual Studio 2015 switched to Roslyn I was very annoyed by the massive slow down occurring when using ReSharper and Roslyn together on large...</description>
       <category>Visual Studio</category>
       <category>Visual Studio 2015</category>

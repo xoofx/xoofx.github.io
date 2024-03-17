@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="High performance memcpy gotchas in C# | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="High performance memcpy gotchas in C# | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -534,7 +534,7 @@ Don't trust your .NET VM, check your code on both x86 and x64. It's interesting 
    <li><b>On x86, you should better use a <u>memcpy </u>function</b></li>
    <li><b>On x64, you should better use a <u>cpblk </u>function</b>, which is performing better from small size (twice faster than memcpy) to large size.</li>
 </ul>
-<b>You may wonder why the x86 version is so unoptimized? </b>This is because the x86 CLR is generating a x86 instruction that is performing a memcpy on a PER BYTE basis (rep movb for x86 folks), even if you are moving a large memory chunk of 1Mo! In comparison, a memcpy as implemented in MSVCRT is able to use SSE instructions that are able to batch copy with large 128 bits&nbsp; registers (with also an optimized case for not poluting CPU cache). This is the case for x64 that seems to use a correct implemented memcpy, but the x86 CLR memcpy is just poorly implemented. Please vote for this <a href="https://connect.microsoft.com/VisualStudio/feedback/details/766977/il-bytecode-method-cpblk-badly-implemented-by-x86-clr" target="_blank">bug described on Microsoft Connect</a>.<br /><br />One important consequence of this is when you are developping a C++/CLI and calling a memcpy from a managed function... It will end up in a cpblk copy functions... which is almost the worst case on x86 platforms... so be careful if you are dealing with this kind of issue. To avoir this, you have to force the compiler to use the function from the MSVCRTxx.dll. <br /><br />Of course, the memcpy is platform dependent, which would not be an option for all...<br /><br />Also, I didn't perform this test on a CLR 2 runtime... we could be surprised as well... There is also one thing that I should try against a pure C++ memcpy using the optimized SSE2 version that is shipped with later msvcrt.<br /><br />You can download the VS2010 project from <a href="http://xoofx.com/upload/BenchmarkCLI.7z">here</a>
+<b>You may wonder why the x86 version is so unoptimized? </b>This is because the x86 CLR is generating a x86 instruction that is performing a memcpy on a PER BYTE basis (rep movb for x86 folks), even if you are moving a large memory chunk of 1Mo! In comparison, a memcpy as implemented in MSVCRT is able to use SSE instructions that are able to batch copy with large 128 bits&nbsp; registers (with also an optimized case for not poluting CPU cache). This is the case for x64 that seems to use a correct implemented memcpy, but the x86 CLR memcpy is just poorly implemented. Please vote for this <a href="https://connect.microsoft.com/VisualStudio/feedback/details/766977/il-bytecode-method-cpblk-badly-implemented-by-x86-clr" target="_blank">bug described on Microsoft Connect</a>.<br /><br />One important consequence of this is when you are developping a C++/CLI and calling a memcpy from a managed function... It will end up in a cpblk copy functions... which is almost the worst case on x86 platforms... so be careful if you are dealing with this kind of issue. To avoir this, you have to force the compiler to use the function from the MSVCRTxx.dll. <br /><br />Of course, the memcpy is platform dependent, which would not be an option for all...<br /><br />Also, I didn't perform this test on a CLR 2 runtime... we could be surprised as well... There is also one thing that I should try against a pure C++ memcpy using the optimized SSE2 version that is shipped with later msvcrt.<br /><br />You can download the VS2010 project from <a href="http://xoofx.github.io/upload/BenchmarkCLI.7z">here</a>
 
 
     </div>
@@ -546,6 +546,6 @@ Don't trust your .NET VM, check your code on both x86 and x64. It's interesting 
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

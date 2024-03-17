@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Stark - Language And Frontend Compiler - Prototype 2019 | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/stark-driver.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/stark-driver.png">
     <meta name="twitter:image:alt" content="Stark - Language And Frontend Compiler - Prototype 2019 | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -666,7 +666,7 @@ public interface IArray&lt;T&gt; extends ISizeable, MutableIterable&lt;T, int&gt
 </ul>
 <p>In the F# code library, the F# compiler is allowing to inline IL with the syntax <code>(# ... #)</code> and it is <a href="https://github.com/fsharp/fsharp/blob/6819e1c769269edefcea2263c98f993e90b623e2/src/fsharp/FSharp.Core/prim-types.fs#L400-L467">used internally</a> to unlock some low level parts that cannot be expressed in F#. In the past it was even allowed for user library, but I have read somewhere that it is no longer possible, which is fine in my opinion, as long as the language and runtime in the end are able to fill all the necessary missing gaps.</p>
 <p>In the CoreRT compiler, they had to develop IL post processing (similar to Fody) to <a href="https://github.com/dotnet/corert/blob/3c58e6d6a41a64d8742535c653088a7629ce879c/src/Common/src/TypeSystem/IL/Stubs/UnsafeIntrinsics.cs#L13-L90">patch some methods like Unsafe utility methods</a>.</p>
-<p>In Stark, I have decided to bring back to life the old prototype <a href="https://xoofx.com/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn/">Inline IL ASM in C# with Roslyn</a> and improved its integration by allowing a new <code>unsafe il</code> syntax:</p>
+<p>In Stark, I have decided to bring back to life the old prototype <a href="https://xoofx.github.io/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn/">Inline IL ASM in C# with Roslyn</a> and improved its integration by allowing a new <code>unsafe il</code> syntax:</p>
 <pre><code class="language-stark">public func operator [index: int] -&gt; ref T
     requires index as uint &lt; tSize as uint
   { 
@@ -823,6 +823,6 @@ public module all_tests {
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

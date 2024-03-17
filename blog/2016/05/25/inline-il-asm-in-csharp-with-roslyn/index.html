@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Inline IL ASM in C# with Roslyn | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Inline IL ASM in C# with Roslyn | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -62,7 +62,7 @@
 <p><strong>Source code for Roslyn changes is available on <a href="https://github.com/xoofx/roslyn/tree/inline_il_asm">github</a></strong></p>
 <p>Source code of the example program is available in this <a href="https://gist.github.com/xoofx/9d6a1522c642bbcfef7c420351b1d97d">gist</a></p>
 </blockquote>
-<p>In the past years I have been using and abusing a lot patching assemblies for IL bytecode. It all started with <a href="http://sharpdx.org">SharpDX</a> in this <a href="http://xoofx.com/blog/2010/10/19/managed-netc-direct3d-11-api-generated/">old blog post</a> and I imported all these good recipes while developing <a href="http://xenko.com">Xenko</a> (which has further exaggerated the usage with its <a href="https://github.com/SiliconStudio/xenko/tree/master/sources/common/core/SiliconStudio.AssemblyProcessor">AssemblyProcessor</a>!)</p>
+<p>In the past years I have been using and abusing a lot patching assemblies for IL bytecode. It all started with <a href="http://sharpdx.org">SharpDX</a> in this <a href="http://xoofx.github.io/blog/2010/10/19/managed-netc-direct3d-11-api-generated/">old blog post</a> and I imported all these good recipes while developing <a href="http://xenko.com">Xenko</a> (which has further exaggerated the usage with its <a href="https://github.com/SiliconStudio/xenko/tree/master/sources/common/core/SiliconStudio.AssemblyProcessor">AssemblyProcessor</a>!)</p>
 <p>The main approach for doing this was to rely on <a href="https://github.com/jbevain/cecil/">Mono.Cecil</a> and perform some basic IL rewriting (See for example <a href="https://github.com/sharpdx/SharpDX/blob/master/Source/Tools/SharpCli/InteropApp.cs">InteropApp.cs</a>) needed to access some IL instructions not available in C# but still very useful or sometimes even mandatory.</p>
 <p>Just a few days ago, someone proposed to add support for <a href="https://github.com/dotnet/roslyn/issues/11475">&quot;compiler intrinsics&quot; to Roslyn</a>. I was pretty happy to see this coming, as It could potentially obviate the usage of IL repatching (which comes sometimes with lots of problems: Mono.Cecil sometimes messing up debug info, or an assembly that would no longer be certified/working on a specific .NET platform/runtime... etc.).</p>
 <p>While I'm enthusiastic about the general idea of this proposal, I was expecting a <a href="https://github.com/dotnet/roslyn/issues/11475#issuecomment-220964443">simpler way</a> of bringing this feature to Roslyn, by <strong>allowing to write almost directly IL ASM code in your program</strong>, to make it a lot easier for a end-user (a user used to read or write IL ASM code). The main arguments against my proposal was that it would be complicated to implement, It would not feel enough C# friendly or it may not provide a good syntax analysis.</p>
@@ -285,6 +285,6 @@ Sizeof&lt;T&gt; with Vector3: 12
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Generate automatically async/await code from sync code with Roslyn | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Generate automatically async/await code from sync code with Roslyn | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -58,7 +58,7 @@
       <i class="bi bi-tags"></i><a href="/blog/tag/csharp/">C#</a>, <a href="/blog/tag/net/">.NET</a>, <a href="/blog/tag/roslyn/">Roslyn</a>
   	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2018/2018-12-26-generate-async-from-sync-code-with-roslyn.md">edit</a>
     </div>
-<p>This is a quick post to give you some feedback about an experiment I just made with the <a href="http://xoofx.com/blog/2017/11/13/implementing-a-text-templating-language-and-engine-for-dotnet/">Scriban Text Templating Library</a> to add support for async/await automatically from the existing synchronous code, all of this done by using Roslyn.</p>
+<p>This is a quick post to give you some feedback about an experiment I just made with the <a href="http://xoofx.github.io/blog/2017/11/13/implementing-a-text-templating-language-and-engine-for-dotnet/">Scriban Text Templating Library</a> to add support for async/await automatically from the existing synchronous code, all of this done by using Roslyn.</p>
 <p>If you have an existing code base that works beautifully in a synchronous manner, but you would like also to provide a path for async/await patterns, you don't want to rewrite your entire code base to the async/await pattern, or to drop synchronous code for async/await only. It would either be a huge burden to maintain two code paths doing almost the same thing, or the use async/await only would actually perform significantly worse than the synchronous version, even if you are using the recently introduced <code>ValueTask&lt;T&gt;</code></p>
 <p>For Scriban, I wanted to have all this async/await version of the library entirely generated, so that whenever I update the synchronous code, I can automatically generate the async/await version. While implementing this, I found an old GitHub issue on Roslyn <a href="https://github.com/dotnet/roslyn/issues/12931"><em>&quot;Automatically create non-async methods from async methods&quot;</em></a> and that it was also experimented on the project <a href="https://github.com/npgsql/npgsql">npgsql</a> via <a href="https://github.com/roji/AsyncRewriter">AsyncRewriter</a> done by Shay Rojansky (Hey Shay!). The method used by AsyncRewriter was a bit different from what I was looking for, specifically that I didn't want to modify my existing code with attributes but let the codegen find the relevant methods transitively with just a few bootstrap hints.</p>
 <p>It's an interesting challenge and can be a very common point of library design issue (Should I maintain async/await only, or have both? How can I maintain them?), so let's see how that was done.</p>
@@ -329,6 +329,6 @@ method = method.WithReturnType(asyncReturnType);
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

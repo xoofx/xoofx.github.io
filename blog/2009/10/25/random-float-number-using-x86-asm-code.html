@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Random float number generator using x86 ASM code optimized in size | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Random float number generator using x86 ASM code optimized in size | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -193,7 +193,7 @@ We can see that the 0x7FFF truncation is hurting a lot the precision of the rand
 <h3>A question of floor?</h3>
 <br />Just a few words about truncating a float to an int. I needed such think in order to increments the frequecies for the bucket. I'm usually using a poor implementation using the fpu instructions couple <code>fld/fistp</code> but the results depends on the FPU rounding mode (and the default rounding mode is "nearest" and not "toward zero" as expected). You don't see this when you are using the msvcrt library, as they have implemented a true floor() conversion in the back. But when using the /QIfist option in VC++, you can't use anymore this function from the msvcrt.<br /><br />However, I found a straight function that may do the trick, using following SSE function :<br />
 <pre><code>inline long floorSSE(double x) {<br />    __asm cvttsd2si eax,x<br />}<br /></code></pre>
-The <a href="http://siyobik.info/index.php?module=x86&amp;id=66">cvttsd2si </a>SSE instruction is converting a double to an int (you can find about this an interesting discussion <a href="http://www.masm32.com/board/index.php?topic=9515.0">here</a>). This is actually working well if the double is coming originally from a float (moving from the FPU to SSE requires writing to memory). But this instruction seems to work well on float. Although, I should check more extensively the reliability of this function...<br /><b>Update 29/10/2009</b> : In fact, there is the FPU instruction <a href="http://software.intel.com/en-us/articles/how-to-implement-the-fisttp-streaming-simd-extensions-3-instruction/"><code>fisttp</code></a> in SSE3 that do also and is less restrictive than the <code>cvttsd2si</code> instruction (notice although they are more considered as "truncate" than "floor" as i mentioned).<br />________________________________________<br />Here is attached the VC++ 2008 <a href="http://xoofx.com/upload/RandAsm.zip">RandAsm </a>project i used for this article.
+The <a href="http://siyobik.info/index.php?module=x86&amp;id=66">cvttsd2si </a>SSE instruction is converting a double to an int (you can find about this an interesting discussion <a href="http://www.masm32.com/board/index.php?topic=9515.0">here</a>). This is actually working well if the double is coming originally from a float (moving from the FPU to SSE requires writing to memory). But this instruction seems to work well on float. Although, I should check more extensively the reliability of this function...<br /><b>Update 29/10/2009</b> : In fact, there is the FPU instruction <a href="http://software.intel.com/en-us/articles/how-to-implement-the-fisttp-streaming-simd-extensions-3-instruction/"><code>fisttp</code></a> in SSE3 that do also and is less restrictive than the <code>cvttsd2si</code> instruction (notice although they are more considered as "truncate" than "floor" as i mentioned).<br />________________________________________<br />Here is attached the VC++ 2008 <a href="http://xoofx.github.io/upload/RandAsm.zip">RandAsm </a>project i used for this article.
 
 
     </div>
@@ -205,6 +205,6 @@ The <a href="http://siyobik.info/index.php?module=x86&amp;id=66">cvttsd2si </a>S
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

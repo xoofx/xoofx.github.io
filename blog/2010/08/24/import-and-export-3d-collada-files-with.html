@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Import and Export 3D Collada files with C#/.NET | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.com/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
     <meta name="twitter:image:alt" content="Import and Export 3D Collada files with C#/.NET | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -155,7 +155,7 @@ model.Save(inputFileName + ".test.dae");
 </code></pre>
 <br />One thing that could be of an interest, is that not only you can easily load a Collada dae file... but <b>you can export them as well</b>! I did a couple of experiment to verify that importing and exporting a Collada file is producing the same file, and It seems to work like a charm... meaning that if you want to produce some procedural Collada models to load them back in a 3D modeling tool, this is quite straightforward! But anyway, my main concern was to have a solid Collada loader that is compliant with the spec and performs most of the tedious fields conversion for me.<br /><br />Of course, having such a loader in C# is just a very small part of the whole picture in order to create a full importer supporting most of the Collada features for a custom renderer... but that's probably the less exciting part of developing such an importer, so having this C# Collada model will be probably helpful.<br /><br />
 <hr>
-<br />Note: You can download the <a href="http://xoofx.com/upload/csharp_collada_schema_1_4.7z">C# Collada model here</a>. This is only a single C# source file that you can add directly to your project!<br /><br />The model is stored inside the namespace Collada141 (in order to support multiple incompatible version of the Collada spec), and the root class (as specified in the xsd) is the COLLADA class, which contains also the two added Load/Save methods.<br /><br />Also, a nice thing about the generated model from xsd.exe is that it allows you to extend the object model methods outside the csharp file. All the classes are declared partial, so It's quite easy to add some helpers method directly inside the Collada object model without touching directly the generated file.<br /><br />Let me know if you are using it!
+<br />Note: You can download the <a href="http://xoofx.github.io/upload/csharp_collada_schema_1_4.7z">C# Collada model here</a>. This is only a single C# source file that you can add directly to your project!<br /><br />The model is stored inside the namespace Collada141 (in order to support multiple incompatible version of the Collada spec), and the root class (as specified in the xsd) is the COLLADA class, which contains also the two added Load/Save methods.<br /><br />Also, a nice thing about the generated model from xsd.exe is that it allows you to extend the object model methods outside the csharp file. All the classes are declared partial, so It's quite easy to add some helpers method directly inside the Collada object model without touching directly the generated file.<br /><br />Let me know if you are using it!
 
 
     </div>
@@ -167,6 +167,6 @@ model.Save(inputFileName + ".test.dae");
     </div>
   </div>
 	<footer class="blog-footer">
-        <p>Copyright &copy; 2009 - 2023, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
 	</footer>  </body>
 </html>

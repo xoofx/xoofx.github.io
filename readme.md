@@ -5,7 +5,7 @@ title_html: Hi and Welcome!
 ---
 
 <div class="home">
-  <img width="256" src="/images/xoofx-2020.jpg" style="float: right;border-radius: 50%" alt="Avatar"/>
+  <img width="256" src="/images/xoofx-2023.jpg" style="float: right;border-radius: 50%" alt="Avatar"/>
   <ul class="bi-ul">
   <li><i class="bi-li bi bi-person-fill"></i>My name is <strong>Alexandre Mutel</strong>. <p class="little-voice">aka <strong>xoofx</strong>.</p></li>
   <li><i class="bi-li bi bi-code-slash"></i>I'm a Software Engineer <p class="little-voice">Sometimes Architect, Developer, Dreamer, Gardener, Hacker...</p></li>

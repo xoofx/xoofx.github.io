@@ -2,7 +2,10 @@
 title: Building a secure 10G Home Network
 subtitle: Use your Network at its full potential!
 tags:
- - network
+ - Network
+ - OPNsense
+ - Firewall
+ - Tailscale
 ghcommentid: 14
 comments: true
 ---

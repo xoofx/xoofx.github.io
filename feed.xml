@@ -8,16 +8,19 @@
     <generator>lunet 0.5.3.0</generator>
     <managingEditor>Alexandre Mutel</managingEditor>
     <copyright>Alexandre Mutel</copyright>
-    <pubDate>Fri, 22 Mar 2024 05:43:36 +0000</pubDate>
-    <lastBuildDate>Fri, 22 Mar 2024 05:43:36 +0000</lastBuildDate>
+    <pubDate>Fri, 22 Mar 2024 05:45:01 +0000</pubDate>
+    <lastBuildDate>Fri, 22 Mar 2024 05:45:01 +0000</lastBuildDate>
     <item>
       <title>Building a secure 10G Home Network</title>
       <link>https://xoofx.github.io/blog/2024/03/22/building-secure-10g-home-network</link>
       <pubDate>Fri, 22 Mar 2024 00:00:00 +0000</pubDate>
       <author>Alexandre Mutel</author>
       <guid isPermaLink="true">https://xoofx.github.io/blog/2024/03/22/building-secure-10g-home-network</guid>
-      <description>Building a secure 10G Home Network | xoofx Home Blog Projects About Building a secure 10G Home Network Use your Network at its full potential! March 22, 2024 network edit A few weeks ago, I was finally able to upgrade my Internet connection from a Starlink 100-200 Mbps (with an ADLS2 backup) to a 8 Gbps up/down Fiber connection with the Free Ultra box offer. By doing so, I decided...</description>
-      <category>network</category>
+      <description>Building a secure 10G Home Network | xoofx Home Blog Projects About Building a secure 10G Home Network Use your Network at its full potential! March 22, 2024 Network, OPNsense, Firewall, Tailscale edit A few weeks ago, I was finally able to upgrade my Internet connection from a Starlink 100-200 Mbps (with an ADLS2 backup) to a 8 Gbps up/down Fiber connection with the Free Ultra box offer. By doing...</description>
+      <category>Network</category>
+      <category>OPNsense</category>
+      <category>Firewall</category>
+      <category>Tailscale</category>
     </item>
     <item>
       <title>10x Performance with SIMD Vectorized Code in C#/.NET</title>

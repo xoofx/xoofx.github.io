@@ -12,7 +12,7 @@ comments: true
 
 <img src="/images/network-home-setup.jpg" style="width:512px; height: 512px; float: right;"/>
 
-A few weeks ago, I was finally able to upgrade my Internet connection from a Starlink 100-200 Mbps (with an ADLS2 backup) to a 8 Gbps up/down Fiber connection with the [Free Ultra](https://www.free.fr/freebox/freebox-ultra) box offer. By doing so, I decided also to revisit my internal network as my setup has been growing organically in the past years (with multiple switches, IoT and mini-PC connected devices...) and realized that my internal network, while already using some 10 Gbps ethernet cables, was not really used at its fully potential.
+A few weeks ago, I was finally able to upgrade my Internet connection from a Starlink 100-200 Mbps (with an ADLS2 backup) to a 8 Gbps up/down Fiber connection with the [Free Ultra](https://www.free.fr/freebox/freebox-ultra) box offer. By doing so, I decided also to revisit my internal network as my setup has been growing organically in the past years (with multiple switches, IoT and mini-PC connected devices...) and realized that my internal network, while already using some 10 Gbps ethernet cables, was not really used at its full potential.
 
 Moreover, the Freebox Ultra is making IPv6 mandatory (no wonder why the adoption of IPv6 in France is [probably the highest in the world!](https://www.google.com/intl/en/ipv6/statistics.html#tab=per-country-ipv6-adoption)) but I never really paid attention to IPv6 until now, as I was always relying on the good old IPv4. But reading further, I discovered that IPv6 is allowing all your devices to be accessible from Internet while the Freebox does not activate any firewall by default... I could use the very rudimentary builtin firewall on the Freebox (a checkbox enable/disable) but thought that it would be nice to understand what is really happening under the hood, and so, why not also bringing my own firewall to this setup?
 
@@ -22,7 +22,7 @@ So, this post is a small retrospective of the changes I have made to my home net
 - Select a mini-PC suited for building my own 10 Gbps Firewall
 - Install and configure the [open-source OPNsense Firewall](https://opnsense.org/)
 - Tune OPNsense performance
-- Install tailscale to safely access to my internal network from anywhere
+- Install [tailscale](https://tailscale.com/) to safely access to my internal network from anywhere
 
 
 ## Preparing my home network for 10 Gbps
@@ -267,6 +267,7 @@ For my config, I end up with the following tunnables:
 | `hw.ix.flow_control`              | 0
 
 </div>
+
 
 I'm not an expert in making good diagnostics for these network settings (and If I wanted to do it properly, I would have to change one setting at a time, reboot, run iperf...), so I can't tell which one exactly was able to bring the performance from 6 Gbps to 8 Gbps but it is worth spending some time tweaking these values. If anyone is using a similar Qotom HW and is able to achieve better performance, I would be interested to know more about it!
 

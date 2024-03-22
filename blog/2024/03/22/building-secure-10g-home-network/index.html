@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="lunet 0.5.3.0">
+    <title>Building a secure 10G Home Network | xoofx</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/site-defer.js" defer></script>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@xoofx">
+    <meta name="twitter:title" content="Building a secure 10G Home Network | xoofx">
+    <meta name="twitter:description" content="xoofx website">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
+    <meta name="twitter:image:alt" content="Building a secure 10G Home Network | xoofx">    
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
+  </head>
+  <body>
+
+  <div class="container">
+    <div class="row">
+      <nav class="navbar navbar-expand-md">
+        <div class="container-fluid">
+            <a class="xoofx-logo navbar-brand" href="/"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarSupportedContent" class="collapse navbar-collapse justify-content-between">
+<ol id='nav-id-home-0' class='navbar-nav nav-level0  w-100'>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/' class='nav-link  '>Home</a></span>  </li>
+  <li class='nav-item  active'>
+    <span class='nav-item-row'><a href='/blog/' class='nav-link  '>Blog</a></span>  </li>
+  <li class='nav-item '>
+    <span class='nav-item-row'><a href='/projects/' class='nav-link  '>Projects</a></span>  </li>
+  <li class='nav-item  ms-auto'>
+    <span class='nav-item-row'><a href='/about/' class='nav-link  '>About</a></span>  </li>
+</ol>
+            </div>            
+        </div>
+      </nav>
+    </div>
+    <div class="row">
+
+<div class="col-sm-9 js-toc-content">
+  <p id="lunet-results"></p>
+  <article class="page">
+    <div class="title">
+		  <h1 class="title"><a href="/blog/2024/03/22/building-secure-10g-home-network/">Building a secure 10G Home Network</a></h1>
+		<span class="subtitle">Use your Network at its full potential!</span>
+    </div>
+    <div class="entry-content">
+    <div class="blog-post-meta">
+      <span class="bi bi-calendar"></span>
+      <span class="date"><time datetime="2024-03-22" itemprop="datePublished">March 22, 2024</time></span>
+      <i class="bi bi-tag"></i><a href="/blog/tag/network/">network</a>
+  	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2024-03-22-building-secure-10g-home-network.md">edit</a>
+    </div>
+<img src="/images/network-home-setup.jpg" style="width:512px; height: 512px; float: right;"/>
+<p>A few weeks ago, I was finally able to upgrade my Internet connection from a Starlink 100-200 Mbps (with an ADLS2 backup) to a 8 Gbps up/down Fiber connection with the <a href="https://www.free.fr/freebox/freebox-ultra">Free Ultra</a> box offer. By doing so, I decided also to revisit my internal network as my setup has been growing organically in the past years (with multiple switches, IoT and mini-PC connected devices...) and realized that my internal network, while already using some 10 Gbps ethernet cables, was not really used at its fully potential.</p>
+<p>Moreover, the Freebox Ultra is making IPv6 mandatory (no wonder why the adoption of IPv6 in France is <a href="https://www.google.com/intl/en/ipv6/statistics.html#tab=per-country-ipv6-adoption">probably the highest in the world!</a>) but I never really paid attention to IPv6 until now, as I was always relying on the good old IPv4. But reading further, I discovered that IPv6 is allowing all your devices to be accessible from Internet while the Freebox does not activate any firewall by default... I could use the very rudimentary builtin firewall on the Freebox (a checkbox enable/disable) but thought that it would be nice to understand what is really happening under the hood, and so, why not also bringing my own firewall to this setup?</p>
+<p>So, this post is a small retrospective of the changes I have made to my home network setup in the past weeks:</p>
+<ul>
+<li>Some prerequisites for a 10 Gbps home network</li>
+<li>Select a mini-PC suited for building my own 10 Gbps Firewall</li>
+<li>Install and configure the <a href="https://opnsense.org/">open-source OPNsense Firewall</a></li>
+<li>Tune OPNsense performance</li>
+<li>Install tailscale to safely access to my internal network from anywhere</li>
+</ul>
+<h2 id="preparing-my-home-network-for-10-gbps">Preparing my home network for 10 Gbps</h2>
+<img src="/images/network-freebox-back.jpg" style="width:512px; float: right;"/>
+<p>The Freebox comes with:</p>
+<ul>
+<li>1 x WAN incoming Fiber <a href="https://en.wikipedia.org/wiki/Small_Form-factor_Pluggable">SFP+ connector</a></li>
+<li>1 x SFP+ 10 Gbps connector for connecting to your 10 Gbps LAN switches/home network</li>
+<li>4 x 2.5 Gbps ethernet ports.</li>
+</ul>
+<p>First time I was getting an hardware with such SFP+ ports. I discovered that <strong>SFP+ connectors are the most common way that will interconnect your multi-gigabit appliances</strong>. There are of course some appliances with 10 Gbe ethernet ports, but they are far less common than these SFP+ ports.</p>
+<p>What does that mean to have to use these SFP+ ports? If you want to make sure that your whole network setup is able to benefit from the extra bandwidth, <strong>you will have to use such SFP+ connectors to connect to other appliances</strong> (mostly switches but also, your main PC!)</p>
+<p>In my home/office computer room, I have around 20+ devices to connect including several computers, gaming consoles, a NAS, a WIFI 6e main mesh, a camera powered through a POE, a TV, a printer, and ethernet cables coming from other parts of the house...</p>
+<p>So, in order to upgrade my network, I had to buy:</p>
+<ul>
+<li>Several SFP+ 10 Gbps cable (With different lengths: 1 meter, 2/3 meters)</li>
+<li>Several switches:
+<ul>
+<li>A <a href="https://www.zyxel.com/global/en/products/switch/12-port-web-managed-multi-gigabit-switch-includes-3-port-10g-and-1-port-10g-sfp-xgs1250-12">Zyxel XGS1250-12</a>, which comes with one SFP+ port (again, to interconnect your 10 Gbps network), 3 x 2.5/10 Gbps ports and 8 x 1 Gbps ports (These are useful for devices that don't need more than that). Don't forget to change the password of this device (It is a managed switch, meaning that it comes with HTTP/HTML admin pages), specially in a IPv6 environment!</li>
+<li>A <a href="https://www.yuanley.com/products/6-port-25g-umanaged-ethernet-switch,-4-x-25g-base-t-ports,-2-x-10g-sfp,-compatible-with-100-1000-2500mbps,-metal-fanless,-desktop-wall-mount-yuanley-25gbe-network-switch-for-wireless-ap,-nas,-pc">Yuanley 4 x 2.5G + 2 x SFP+/10G</a> and a <a href="https://www.yuanley.com/products/8-port-25g-unmanaged-desktop-ethernet-switch-with-10g-sfp,-8-x-25g-base-t-ports,-60gbps-switching-capacity,-compatible-with-100-1000-2500mbps,-metal-fanless,-yuanley-25gbe-network-switch-wall-mount-1">Yuanley 10 x 2.5G + 1 x SFP+/10G</a></li>
+</ul>
+</li>
+<li>One PCIExpressx8 SFP+ 10 Gbps card for my personal PC that I will connect directly to the router, as it is probably the PC at home that requires most of the bandwidth from time to time 😅</li>
+</ul>
+<p>I have to confess that I haven't equipped all the parts of my home to 10 Gbps, because I found it difficult to find small 10 Gbps switches. I have several 1 Gbps switches installed in the house, so didn't want to change them for now. The best you will be able to find these days are SFP+/10G with several 2.5 Gbps ethernet ports, which I concede, should be vastly enough for the other devices in the house, but jumping from a shared 100 Mbps to an almost 1 Gbps per device and my family was already fully happy about the change.</p>
+<h2 id="selecting-a-10-gbps-firewall-appliance-for-less-than-500">Selecting a 10 Gbps firewall appliance for less than 500€</h2>
+<img src="/images/network-qotom-Q20331G9S10.jpg" style="width:512px; float: right;"/>
+<p>Initially, without knowing much about this area, I thought of buying a firewall bundle hardware + software. For example there are really good <a href="https://shop.opnsense.com/product-categorie/hardware-appliances/">OPNsense appliances from Deciso</a> or <a href="https://www.netgate.com/pfsense-plus-software/how-to-buy#appliances">Pfsense+ appliances from Netgate</a>, but I found quickly that for my requirements, I would have to purchase some $800+ appliance. Both are using their own OSS Firewall <a href="https://github.com/opnsense">OPNsense</a> and <a href="https://github.com/pfsense">Pfsense</a> (OPNsense being a fork of Pfsense, Pfsense being a fork of another older project). They are developed on the <a href="https://www.freebsd.org/">FreeBSD</a> Unix system which is coming with a solid reputation as a safe/secure Unix system.</p>
+<p><strong>I feel lucky and love to live at a time where it's incredibly accessible and easy to install your own Firewall OS!</strong> 💖</p>
+<p>So then, I tried to look for a mini-pc that could provide the CPU power and all the SFP+ ports (as I wanted to maximize direct connections, instead of chaining multiple SFP+ switches), with a fanless design. Stumble on this nice review of <a href="https://www.servethehome.com/the-everything-fanless-home-server-firewall-router-and-nas-appliance-qotom-qnap-teamgroup/">&quot;The Everything Fanless Home Server Firewall Router and NAS Appliance&quot;</a> for the <a href="https://www.qotom.net/product/RouterPC_Q20331G9S10.html">Qotom Router PC Q20331G9S10</a>. I ordered it from AliExpress (It was not available on Amazon in my place, but it seems to be available in the US), and selected an Intel Atom C3758R, with 16GB RAM and a 256GB M2 drive, with the shipping cost, it was slightly above 500€.</p>
+<p>This router PC is only coming with a VGA output (!), so I still had to order a small and cheap VGA to HDMI converter. 🙈</p>
+<p>But, in then end, that's a pretty nice PC, considering that most firewall appliances are coming with similar CPU/HW specs. But, as we will see in the following section, what you get by using an off-the-shelf HW firewall is that you don't need to deal with installing and setup-ing correctly the whole firewall stack! For me, I wanted to go through this adventure from the ground up, and I don't regret it: it was fun and I learned quite a lot!</p>
+<h2 id="installing-opnsense">Installing OPNsense</h2>
+<p>Once I ordered the Qotom PC, I had to wait for 2 weeks to get it delivered. In the meantime, I decided to practice a bit by installing OPNsense on a spare mini-pc I had around that happened to have 2 x 1 Gbps Ethernet ports.</p>
+<p>The installation process is pretty smooth. Go to <a href="https://opnsense.org/download/">OPNsense download</a>, select your image (for me, amd64 + vga) and burn it to a USB stick with e.g <a href="https://rufus.ie/en/">Rufus</a>. Then you can follow the <a href="https://docs.opnsense.org/manual/install.html#installation-instructions">installation instructions</a> in their documentation (which is overall, pretty good).</p>
+<p>During the setup, you need to select the interface that will be the WAN port (connected to my Freebox SFP+ &quot;LAN&quot; port) and optionally the LAN port. Be careful that if you select the LAN port, you will have to connect a machine to this port in order to be able to connect the OPNsense Web interface, as the interface won't be accessible from the WAN port once the LAN is enabled. But in my small experience, it was easier to first connect through the WAN port without configuring a LAN port, and configure the LAN port from the Web interface and apply the changes at the very end.</p>
+<p>The SFP+ 10 Gbps interfaces are named <code>ix0</code>, <code>ix1</code>, <code>ix2</code>, <code>ix3</code>, and I had to try and fail the SFP+ ports to see which one is at the back panel of the qotom. The other regular 2.5 Gbps ethernet ports are named <code>igc0</code>, <code>igc1</code>, <code>igc2</code>, <code>igc3</code>, <code>igc4</code>.</p>
+<p>Here is a small ASCII diagram of the back panel with the <code>ix</code> and <code>igc</code> ports:</p>
+<pre><code>---- ix -----    ------ igc ------
+[  0 ] [  2 ]    [ 2 ] [ 3 ] [ 4 ]
+[  1 ] [  3 ]    [ 1 ] [ 0 ]
+ SFP+   SFP+      Ethernet ports
+</code></pre>
+<p>I plugged the WAN port <code>ix0</code> to the available Freebox SFP+ LAN port.</p>
+<p>I have to say that the web interface of OPNSense delivers successfully its <a href="https://docs.opnsense.org/intro.html#mission-statement">mission statement</a>:</p>
+<blockquote>
+<p><em>Give users, developers and businesses a friendly, stable and transparent environment. Make OPNsense the most widely used open source security platform. The project’s name is derived from open and sense and stands for: “Open (source) makes sense.”</em></p>
+</blockquote>
+<p>This is the nice dashboard of my OPNsense setup once I had configured everything and added relevant widgets to it:</p>
+<img src="/images/network-opnsense-dashboard.jpg" class="img-fluid" />
+<h2 id="configuring-opnsense">Configuring OPNsense</h2>
+<p>During the installation process, when you select the WAN port, OPNsense will use by default DHCP to configure this port. By default, the Freebox is configured as a router with DHCP enabled, so it will make the router accessible from the LAN on the Freebox. Once we have transferred all the Freebox LAN to the router, We will later switch the Freebox to act as a bridge instead (to avoid having double routers and so to avoid double NAT).</p>
+<h3 id="assigning-interfaces">1. Assigning interfaces</h3>
+<p>In OPNsense, the first thing to do is to assign interfaces. Go to <code>Interfaces/Assignments</code> and I configured my interfaces like this on the Qotom router:</p>
+<ul>
+<li><code>ix0</code> ⇒ WAN, already configured during the installation setup</li>
+<li><code>ix1</code> ⇒ LAN1, connected to one of my 10 Gbps switch</li>
+<li><code>ix2</code> ⇒ LAN2, connected to one of my 10 Gbps switch</li>
+<li><code>ix3</code> ⇒ LAN3, connected to my PC directly</li>
+<li><code>igc1</code> ⇒ LAN4, connected to the Freebox pop TV player</li>
+<li><code>igc0</code> ⇒ WAN_STARLINK (for the backup)</li>
+</ul>
+<p><img src="/images/network-router-config-interfaces-assignments.jpg" class="img-fluid" alt="OPNsense Interfaces / Assignments" /></p>
+<p>To simplify the configuration of Firewall rules, I also created a group of all my LAN interfaces in <code>Firewall/Groups</code>, added a <code>LAN_ALL</code>:</p>
+<p><img src="/images/network-router-config-firewall-groups.jpg" class="img-fluid" alt="OPNsense Firewall / Groups config" /></p>
+<h3 id="configure-freebox-prefix-delegation">2. Configure Freebox prefix delegation</h3>
+<blockquote>
+<p>The following assumes that you have already requested a fixed IP address for the Freebox on your account at <a href="https://free.fr">https://free.fr</a> in <code>Ma Freebox / Demander une adresse IP fixe V4 full-stack</code> (you will get also an IPv6 address from there)</p>
+</blockquote>
+<p>So before we start, we need to get the IPv6 local address of the OPNsense WAN interface (connected to the SFP+ port on the Freebox). If you go to OPNSense <code>Interfaces/Overview</code> you will get the list of all the interfaces (LAN are not yet configured):</p>
+<p><img src="/images/network-router-config-interfaces-overview.jpg" class="img-fluid" alt="OPNsense Interfaces / Overview" /></p>
+<p>For your <code>WAN</code> interface you should see a local IPv6 address in the column IPv6 starting with <code>fe80:xxxx:yyyy:zzzz:wwww/64</code>. Take a note of this address.</p>
+<p>Then, I connected to the admin page of my freebox via <a href="https://mafreebox.freebox.fr/">https://mafreebox.freebox.fr/</a> (for which the DNS is bound to the local address <code>212.27.38.253</code>), Configuration IPv6, and you should see the following page:</p>
+<p><img src="/images/network-freebox-config-ipv6.jpg" class="img-fluid" alt="Freebox Configuration IPv6" /></p>
+<p>Here we need to tell the Freebox that we will delegate the public IPv6 prefix for the 3 LAN interfaces that we have connected to OPNsense/Qotom router. In the <code>Next Hop</code> for the 3 secondary prefixes: put the local IPv6 address of the OPNsense WAN (the above <code>fe80:xxxx:yyyy:zzzz:wwww/64</code>). We will keep the <code>Prefixe principal</code> blank, as it is used by the Freebox to assign the DHCP address to our OPNsense WAN interface (Note that it is not really DHCPv6 that we are using here but we are actually relying on <a href="https://en.wikipedia.org/wiki/IPv6#Stateless_address_autoconfiguration_(SLAAC)">Stateless address autoconfiguration (SLAAC) for IPv6</a>).</p>
+<p>Doing these changes on the Freebox are harmless as the prefixes that we are configuring haven't been used yet.</p>
+<p>For each of the IPv6 delegation prefixes configured, take a note also of the public IPv6 addresses (not the <code>fe80</code> one), as we will use them to configure the IPv6 part of the LAN interfaces in the following section.</p>
+<h3 id="configure-lan-interfaces">3. Configure LAN interfaces</h3>
+<p>Then we need to configure each LAN interfaces by assigning a static IPv4 and IPv6 address.</p>
+<h4 id="ip-addresses-for-lan">3.1 IP Addresses for LAN</h4>
+<p>In OPNsense, go to <code>Interfaces / LAN_ALL / LAN1</code> (assuming  that you have created a group, otherwise, it's directly LAN1).</p>
+<p>For each interface, you should configure:</p>
+<ul>
+<li><code>IPv4 Configuration Type</code> = <code>Static IPv4</code></li>
+<li><code>IPv6 Configuration Type</code> = <code>Static IPv6</code></li>
+<li><code>IPv4 address</code> = <code>192.168.2.1</code>, <code>Prefix</code> = <code>24</code> (then <code>192.168.3.1</code> for LAN2,  <code>192.168.4.1</code> for LAN3...). Don't forget the Prefix here (by default it is 32 meaning directly an address and not a subnet). What is important here is to select a subnet that is not going to conflict with the subnet provided by the Freebox (default is <code>192.168.1.0/24</code>)</li>
+<li><code>IPv6 address</code> = <code>aaaa:bbbb:cccc:dddd::2</code>, <code>Prefix</code> = <code>64</code> (Important!), the IPv6 address here is the public address that you noted from the delegation prefix from the Freebox configuration IPv6 panel.</li>
+</ul>
+<blockquote>
+<p>Save changes without applying them, otherwise you won't be able to configure OPNsense through your WAN interface.</p>
+</blockquote>
+<h4 id="configure-dhcp">3.2 Configure DHCP</h4>
+<p>We should then enable DHCPv4 for each of these LAN interfaces, go to OPNsense <code>Services/ISC DHCPv4</code> and select each <code>LAN1</code>/<code>LAN2</code>...etc. And configure them with the address range selected when configuring the interfaces. For example, I selected a range from <code>192.168.2.2</code> to <code>192.168.2.100</code></p>
+<p><img src="/images/network-router-config-services-dhcpv4.jpg" class="img-fluid" alt="OPNsense Configuration DHCPv4" /></p>
+<h4 id="configure-router-advertisements">3.2 Configure Router Advertisements</h4>
+<p>Then for each LAN, we need to tell how they are going to advertise their routes. We will use <code>Unmanaged</code> router advertisement for each LAN interfaces. Save without applying.</p>
+<p><img src="/images/network-router-config-services-ra.jpg" class="img-fluid" alt="OPNsense Configuration Router Advertisements" /></p>
+<h4 id="add-firewall-lan_all-rules">3.3 Add Firewall LAN_ALL rules</h4>
+<p>Here we need to tell the Firewall that all connections coming from any LAN can pass.</p>
+<p>Add a firewall rule, select <code>LAN_ALL net</code> Source dropdown, save.</p>
+<p><img src="/images/network-router-config-firewall-rules-LAN_ALL.jpg" class="img-fluid" alt="OPNsense Configuration Firewall/Rules" /></p>
+<blockquote>
+<p>Note that the fact that we created a group LAN_ALL for our LANs makes this configuration more straightforward, otherwise we would have to repeat this step for each LAN interfaces!</p>
+</blockquote>
+<p>At this point, you should be able to apply the changes to the Firewall, it will save the config on the disk and restart the different services. If you were connected from the LAN of the freebox to access OPNsense WAN, you won't be able to do it anymore! You will have to plug at least your main PC to one of the OPNsense LAN interface to interact again with the OPNsense web admin UI.</p>
+<h3 id="other-misc-configurations">4. Other misc configurations</h3>
+<p>I won't go into every details of my particular setup, but OPNsense is making things super easy to configure. For example, I was able to easily configure multiple WAN with failover (as I'm still keeping my WAN starlink interface just in case).</p>
+<p>You might want to play with VLAN as well. For example, ideally, I would have preferred to isolate some of the IoT devices on a separate VLAN without giving them an access to my internal network, but I couldn't because my TP-Link Deco X75-Pro Wifi 6E is not supporting assigning VLAN tag id. What a disappointment!</p>
+<p>Though I will detail later in this post an important configuration I made: Adding a VPN network with <a href="https://tailscale.com/">tailscale</a>.</p>
+<h4 id="switching-the-freebox-to-bridge-mode">5. Switching the Freebox to bridge mode</h4>
+<p>Once the WAN and the LAN interfaces have been configured, we can switch the Freebox to a bridge mode. Go to <code>Paramètres de la Freebox (advanced mode)/Mode réseau</code> select <code>Bridge</code> from the dropdown.</p>
+<p>You should reboot the Freebox from there.</p>
+<p>You can then test your Firewall and the different machines with various port scanners to double check that everything is working fine.</p>
+<p>An interesting effect of moving the router to another box (with a more advanced firewall!) is that the temperature in the Freebox got extremely stable. You can see in the following picture the day I turned on OPNsense. The yellow chart at the bottom is the fan of the Freebox. After using my own router, it doesn't trigger anymore. The drop at the end was a tentative to install a small fan under the Freebox, and it helped to drop the temperature by almost 20 ℃. I might enable it during the summer!</p>
+<p><img src="/images/network-freebox-temperature.png" class="img-fluid" alt="Freebox temperature" /></p>
+<h2 id="tuning-opnsense-performance-for-10-gbps">Tuning OPNsense performance for 10 Gbps</h2>
+<p>I was initially planning to have more details here, as at the beginning of my installation, I discovered that I was not able to reach the same raw throughput on a single port.</p>
+<p>On the Freebox, you have access to some URL that will fake returning big files (e.g 1 GB) that you can try:</p>
+<pre><code class="language-powershell">$ curl -o NUL http://mafreebox.freebox.fr:8095/fixed/1G
+</code></pre>
+<p>And you should get something like this:</p>
+<pre><code>  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1024M  100 1024M    0     0   299M      0  0:00:03  0:00:03 --:--:--  299M
+</code></pre>
+<p>Previously, when connected directly to the Freebox with a SFP+ cable from my PC, I could achieve <code>1GB</code> download from a single port. It turns out that going through a soft firewall/router on a single port with a packet filter layer will necessarily induce a loss in pure raw performance.</p>
+<p>If you install <a href="https://iperf.fr">iperf</a> on OPNsense (via <code>System/Firmware/Plugins</code>) and then go to <code>Interfaces/Diagnostics/iperf</code> (after a page refresh) to launch an iperf session, get the port to use after selecting the correct LAN interface!</p>
+<pre><code>iperf3.exe -p PASTE_THE_PORT_HERE_RETURNED_BY_OPNSENSE_IPERF -c 192.168.4.1 -P 32
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth
+[SUM]   0.00-10.00  sec  9.62 GBytes  8.26 Gbits/sec                  sender
+[SUM]   0.00-10.00  sec  9.49 GBytes  8.15 Gbits/sec                  receiver
+</code></pre>
+<p>I have tried to collect some settings from various place on internet:</p>
+<ul>
+<li><a href="https://calomel.org/freebsd_network_tuning.html">FreeBSD Tuning and Optimization</a></li>
+<li><a href="https://binaryimpulse.com/2022/11/opnsense-performance-tuning-for-multi-gigabit-internet/">OPNsense Performance Tuning for Multi-Gigabit Internet</a></li>
+</ul>
+<p>If you connect via SSH to your OPNsense (you need to enable it for a user), you can get configurable values with the <code>sysctl</code> command.</p>
+<p>For example:</p>
+<pre><code>$ sysctl net.inet.tcp.tso
+net.inet.tcp.tso: 0
+</code></pre>
+<p>In OPNsense, you should go directly to <code>System / Settings / Tunnable</code> and you can add tunnable values directly from there.</p>
+<p>For my config, I end up with the following tunnables:</p>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>Tunnable Name</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kern.ipc.maxsockbuf</code></td>
+<td>16777216</td>
+</tr>
+<tr>
+<td><code>kern.random.fortuna.minpoolsize</code></td>
+<td>128</td>
+</tr>
+<tr>
+<td><code>net.inet.icmp.drop_redirect</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>net.inet.rss.enabled</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>net.inet.tcp.abc_l_var</code></td>
+<td>42</td>
+</tr>
+<tr>
+<td><code>net.inet.tcp.minmss</code></td>
+<td>536</td>
+</tr>
+<tr>
+<td><code>net.inet.tcp.mssdflt</code></td>
+<td>1240</td>
+</tr>
+<tr>
+<td><code>net.inet.tcp.recvbuf_max</code></td>
+<td>4194304</td>
+</tr>
+<tr>
+<td><code>net.inet.tcp.sendbuf_max</code></td>
+<td>4194304</td>
+</tr>
+<tr>
+<td><code>net.inet.tcp.soreceive_stream</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>net.inet.tcp.tso</code></td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>net.isr.bindthreads</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>net.isr.defaultqlimit</code></td>
+<td>2048</td>
+</tr>
+<tr>
+<td><code>net.isr.dispatch</code></td>
+<td>deferred</td>
+</tr>
+<tr>
+<td><code>net.isr.maxthreads</code></td>
+<td>-1</td>
+</tr>
+<tr>
+<td><code>net.pf.source_nodes_hashsize</code></td>
+<td>1048576</td>
+</tr>
+<tr>
+<td><code>net.inet.ip.intr_queue_maxlen</code></td>
+<td>3000</td>
+</tr>
+<tr>
+<td><code>hw.ix.flow_control</code></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>I'm not an expert in making good diagnostics for these network settings (and If I wanted to do it properly, I would have to change one setting at a time, reboot, run iperf...), so I can't tell which one exactly was able to bring the performance from 6 Gbps to 8 Gbps but it is worth spending some time tweaking these values. If anyone is using a similar Qotom HW and is able to achieve better performance, I would be interested to know more about it!</p>
+<p>If the CPU of the OPNsense router was maybe more powerful, it would most likely improve the raw performance on a single port accordingly.</p>
+<h2 id="creating-a-vpn-to-your-home-network-with-tailscale">Creating a VPN to your home network with tailscale</h2>
+<p>I have a NAS connected to a camera and in the past, I had to create a NAT port forward rule on my internet box + setup dynamic DNS + setup 2FA for my NAS. And that was just for one service!</p>
+<p>Using tailscale removes the need to open any ports (more about this in <a href="https://tailscale.com/blog/how-tailscale-works">How Tailscale works?</a>) and you can easily create your own home VPN network, accessible from anywhere and giving access to your entire home internal work. You have to decide whether tailscale is safe/trustable enough to synchronize private keys between your machines.</p>
+<p>For installing tailscale on OPNsense, I have followed the official guide <a href="https://tailscale.com/kb/1097/install-opnsense">Using OPNsense with Tailscale</a></p>
+<p>I had to tweak it a bit. For example, <code>go122</code> (the go toolchain version required by tailscale), was not installed by default, so you have to <code>cd /usr/ports/lang/go122/</code> and issue a <code>make install</code> from there in order to have a go toolchain compiled.</p>
+<p>Depending on your network, you might want add different networks accessible from tailscale. I configured mine with my setup (in a SSH prompt on the OPNsense box):</p>
+<pre><code>tailscale up --accept-dns=false --advertise-routes=192.168.2.0/24,192.168.3.0/24,192.168.4.0/24,192.168.5.0/24,212.27.38.253/32,192.168.100.1/32
+</code></pre>
+<p>The <code>212.27.38.253</code> is the address of my Freebox, the <code>192.168.100.1</code> is the address of the Starlink bridge interface.</p>
+<p>Things are then super easy to configure from the tailscale dashboard:</p>
+<p><img src="/images/network-tailscale-dashboard.jpg" class="img-fluid" alt="Tailscale dashboard" /></p>
+<p>You should enable the route from your OPNsense node:</p>
+<p><img src="/images/network-tailscale-route-settings.jpg" class="img-fluid" alt="Tailscale route settings" /></p>
+<p>From the official guide, I have used the setup <code>Static NAT port mapping</code> by adding a manual NAT rule (you need to change your NAT from automatic to hybrid).</p>
+<p>I have enabled Unbound DNS on my OPNsense in <code>Services / Unbound DNS / General</code> to have all my machines available through the recommended <code>home.arpa</code> domain suffix so that I could also setup the DNS accessible from tailscale when connecting to my network. In the DNS section on tailscale, you can add your own split DNS (the unbound DNS from OPNsense for your internal network). Don't forget to update your OPNsense settings in <code>System / Settings / General</code> and update the domain to use <code>home.arpa</code>.</p>
+<p><img src="/images/network-tailscale-dns-settings.jpg" class="img-fluid" alt="Tailscale DNS settings" /></p>
+<p>And that's it! By activating Tailscale on my phone, I can connect very easily to my local network and it makes my network more secure, as I don't have to open forward ports on my firewall anymore.</p>
+<h2 id="wrapping-up">Wrapping up</h2>
+<p>First time that I have spent several days to cleanup and improve my network, including the setup of a firewall. But it was worth it!</p>
+<p>As a non-expert in that domain, I must say that OPNsense is super nice to use, user friendly for a newbie like me but I could also see that it allows more advanced setup. And, of course, it is an OSS!</p>
+<p>Tailscale is another nice discovery. I was already using it at work, but I have enjoyed how easy it is to setup my own VPN network.</p>
+<p>So, have fun with your own home network!</p>
+
+    </div>
+  </article>
+
+<div id="gh-comments" data-ghcommentid=14>
+  <h2>Comments</h2>
+  <div id="gh-comments-list" ></div>
+  <a href="javascript:void(0)" id="gh-load-comments" class="btn" style="display:none">Load more comments</a>
+</div>
+</div>
+<div class="col-sm-3">
+  <nav class="js-toc toc sticky-top"></nav>
+</div>
+    </div>
+  </div>
+	<footer class="blog-footer">
+        <p>Copyright &copy; 2009 - 2024, Alexandre Mutel - Blog content licensed under the Creative Commons <a href="http://creativecommons.org/licenses/by/2.5/">CC BY 2.5</a> | Site powered by <a href="https://github.com/lunet-io/lunet">lunet</a></p>
+	</footer>  </body>
+</html>

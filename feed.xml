@@ -8,8 +8,17 @@
     <generator>lunet 0.5.3.0</generator>
     <managingEditor>Alexandre Mutel</managingEditor>
     <copyright>Alexandre Mutel</copyright>
-    <pubDate>Mon, 18 Mar 2024 06:03:46 +0000</pubDate>
-    <lastBuildDate>Mon, 18 Mar 2024 06:03:46 +0000</lastBuildDate>
+    <pubDate>Fri, 22 Mar 2024 05:43:36 +0000</pubDate>
+    <lastBuildDate>Fri, 22 Mar 2024 05:43:36 +0000</lastBuildDate>
+    <item>
+      <title>Building a secure 10G Home Network</title>
+      <link>https://xoofx.github.io/blog/2024/03/22/building-secure-10g-home-network</link>
+      <pubDate>Fri, 22 Mar 2024 00:00:00 +0000</pubDate>
+      <author>Alexandre Mutel</author>
+      <guid isPermaLink="true">https://xoofx.github.io/blog/2024/03/22/building-secure-10g-home-network</guid>
+      <description>Building a secure 10G Home Network | xoofx Home Blog Projects About Building a secure 10G Home Network Use your Network at its full potential! March 22, 2024 network edit A few weeks ago, I was finally able to upgrade my Internet connection from a Starlink 100-200 Mbps (with an ADLS2 backup) to a 8 Gbps up/down Fiber connection with the Free Ultra box offer. By doing so, I decided...</description>
+      <category>network</category>
+    </item>
     <item>
       <title>10x Performance with SIMD Vectorized Code in C#/.NET</title>
       <link>https://xoofx.github.io/blog/2023/07/09/10x-performance-with-simd-in-csharp-dotnet</link>
@@ -120,17 +129,6 @@
       <category>.NET</category>
       <category>CoreCLR</category>
       <category>Unity</category>
-    </item>
-    <item>
-      <title>Productivity with ReSharper</title>
-      <link>https://xoofx.github.io/blog/2018/03/09/productivity-with-resharper</link>
-      <pubDate>Fri, 09 Mar 2018 00:00:00 +0000</pubDate>
-      <author>Alexandre Mutel</author>
-      <guid isPermaLink="true">https://xoofx.github.io/blog/2018/03/09/productivity-with-resharper</guid>
-      <description>Productivity with ReSharper | xoofx Home Blog Projects About Productivity with ReSharper March 9, 2018 Visual Studio, Visual Studio 2015, Roslyn edit I have been using ReSharper for around 10 years now and it has been my number one productivity tool when developing in C#. When Visual Studio 2015 switched to Roslyn I was very annoyed by the massive slow down occurring when using ReSharper and Roslyn together on large...</description>
-      <category>Visual Studio</category>
-      <category>Visual Studio 2015</category>
-      <category>Roslyn</category>
     </item>
   </channel>
 </rss>

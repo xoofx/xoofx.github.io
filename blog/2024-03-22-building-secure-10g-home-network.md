@@ -1,16 +1,17 @@
 ---
 title: Building a secure 10G Home Network
 subtitle: Use your Network at its full potential!
+ghcommentid: 14
 tags:
  - Network
  - OPNsense
  - Firewall
  - Tailscale
-ghcommentid: 14
 comments: true
+twitter_image: /images/network-home-setup.jpg
 ---
 
-<img src="/images/network-home-setup.jpg" style="width:512px; height: 512px; float: right;"/>
+<img src="/images/network-home-setup.jpg" class="img-fluid" style="width:512px; height: 512px; float: right;"/>
 
 A few weeks ago, I was finally able to upgrade my Internet connection from a Starlink 100-200 Mbps (with an ADLS2 backup) to a 8 Gbps up/down Fiber connection with the [Free Ultra](https://www.free.fr/freebox/freebox-ultra) box offer. By doing so, I decided also to revisit my internal network as my setup has been growing organically in the past years (with multiple switches, IoT and mini-PC connected devices...) and realized that my internal network, while already using some 10 Gbps ethernet cables, was not really used at its full potential.
 
@@ -27,7 +28,7 @@ So, this post is a small retrospective of the changes I have made to my home net
 
 ## Preparing my home network for 10 Gbps
 
-<img src="/images/network-freebox-back.jpg" style="width:512px; float: right;"/>
+<img src="/images/network-freebox-back.jpg" class="img-fluid" style="width:512px; float: right;"/>
 
 The Freebox comes with:
 

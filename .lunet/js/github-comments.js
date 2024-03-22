@@ -47,8 +47,8 @@ function DoGithubComments(comment_id, page_id)
     {
         const gh_fetch_options = { headers: { Accept: "application/vnd.github.v3.html+json" } };
         const rsp = await fetch(api_issue_url, gh_fetch_options);
+        if (rsp.status != 200) return;
         const issueData = await rsp.json();
-        if (issueData.comments <= 0) return;
         
         const response = await fetch(api_comments_url, gh_fetch_options);
 

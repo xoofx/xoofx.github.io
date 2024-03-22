@@ -12,7 +12,7 @@
     <meta name="twitter:site" content="@xoofx">
     <meta name="twitter:title" content="Building a secure 10G Home Network | xoofx">
     <meta name="twitter:description" content="xoofx website">
-    <meta name="twitter:image" content="https://xoofx.github.io/images/twitter-banner.png">
+    <meta name="twitter:image" content="https://xoofx.github.io/images/network-home-setup.jpg">
     <meta name="twitter:image:alt" content="Building a secure 10G Home Network | xoofx">    
     <script src="https://www.googletagmanager.com/gtag/js?id=G-0DVR9ML8KY" async></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0DVR9ML8KY');</script>
@@ -58,7 +58,7 @@
       <i class="bi bi-tags"></i><a href="/blog/tag/network/">Network</a>, <a href="/blog/tag/opnsense/">OPNsense</a>, <a href="/blog/tag/firewall/">Firewall</a>, <a href="/blog/tag/tailscale/">Tailscale</a>
   	  <span class="bi bi-edit"></span> <a href="https://github.com/xoofx/xoofx.github.io/edit/master/blog/2024-03-22-building-secure-10g-home-network.md">edit</a>
     </div>
-<img src="/images/network-home-setup.jpg" style="width:512px; height: 512px; float: right;"/>
+<img src="/images/network-home-setup.jpg" class="img-fluid" style="width:512px; height: 512px; float: right;"/>
 <p>A few weeks ago, I was finally able to upgrade my Internet connection from a Starlink 100-200 Mbps (with an ADLS2 backup) to a 8 Gbps up/down Fiber connection with the <a href="https://www.free.fr/freebox/freebox-ultra">Free Ultra</a> box offer. By doing so, I decided also to revisit my internal network as my setup has been growing organically in the past years (with multiple switches, IoT and mini-PC connected devices...) and realized that my internal network, while already using some 10 Gbps ethernet cables, was not really used at its full potential.</p>
 <p>Moreover, the Freebox Ultra is making IPv6 mandatory (no wonder why the adoption of IPv6 in France is <a href="https://www.google.com/intl/en/ipv6/statistics.html#tab=per-country-ipv6-adoption">probably the highest in the world!</a>) but I never really paid attention to IPv6 until now, as I was always relying on the good old IPv4. But reading further, I discovered that IPv6 is allowing all your devices to be accessible from Internet while the Freebox does not activate any firewall by default... I could use the very rudimentary builtin firewall on the Freebox (a checkbox enable/disable) but thought that it would be nice to understand what is really happening under the hood, and so, why not also bringing my own firewall to this setup?</p>
 <p>So, this post is a small retrospective of the changes I have made to my home network setup in the past weeks:</p>
@@ -70,7 +70,7 @@
 <li>Install <a href="https://tailscale.com/">tailscale</a> to safely access to my internal network from anywhere</li>
 </ul>
 <h2 id="preparing-my-home-network-for-10-gbps">Preparing my home network for 10 Gbps</h2>
-<img src="/images/network-freebox-back.jpg" style="width:512px; float: right;"/>
+<img src="/images/network-freebox-back.jpg" class="img-fluid" style="width:512px; float: right;"/>
 <p>The Freebox comes with:</p>
 <ul>
 <li>1 x WAN incoming Fiber <a href="https://en.wikipedia.org/wiki/Small_Form-factor_Pluggable">SFP+ connector</a></li>

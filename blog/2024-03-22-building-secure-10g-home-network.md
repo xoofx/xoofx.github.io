@@ -54,7 +54,7 @@ I have to confess that I haven't equipped all the parts of my home to 10 Gbps, b
 
 ## Selecting a 10 Gbps firewall appliance for less than 500€
 
-<img src="/images/network-qotom-Q20331G9S10.jpg" style="width:512px; float: right;"/>
+<img src="/images/network-qotom-Q20331G9S10.jpg" class="img-fluid" style="width:512px; float: right;"/>
 
 Initially, without knowing much about this area, I thought of buying a firewall bundle hardware + software. For example there are really good [OPNsense appliances from Deciso](https://shop.opnsense.com/product-categorie/hardware-appliances/) or [Pfsense+ appliances from Netgate](https://www.netgate.com/pfsense-plus-software/how-to-buy#appliances), but I found quickly that for my requirements, I would have to purchase some $800+ appliance. Both are using their own OSS Firewall [OPNsense](https://github.com/opnsense) and [Pfsense](https://github.com/pfsense) (OPNsense being a fork of Pfsense, Pfsense being a fork of another older project). They are developed on the [FreeBSD](https://www.freebsd.org/) Unix system which is coming with a solid reputation as a safe/secure Unix system.
 

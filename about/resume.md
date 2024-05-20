@@ -4,7 +4,7 @@ title: Resume
 section: about
 url: /resume/
 ---
-<img width="256px" src="/images/xoofx-2023.jpg" style="float: right;border-radius: 50%" alt="Avatar"/>
+<img width="196px" src="/images/xoofx-2023.jpg" style="float: right;border-radius: 50%" alt="Avatar"/>
 
 Name: *Alexandre MUTEL*  
 Age: *Born in 1973*  

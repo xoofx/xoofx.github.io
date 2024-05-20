@@ -34,7 +34,7 @@ Location: _Remote, Grenoble Area, France_
 
 **Key Responsibilities:**
 
-- Led the C#/.NET Tech Group, integrating multiple teams (C# Compilation, .NET Runtimes & Integration, IL2CPP, Burst Native Compiler) to standardize and innovate with .NET technologies within the Unity platform.
+- Led the C#/.NET Tech Group, integrating multiple teams (C# Compilation, Scripting, .NET Runtimes & Integration, IL2CPP, Burst Native Compiler) to standardize and innovate with .NET technologies within the Unity platform.
 - Managed 2-3 teams, each with a manager, comprising a total of 25-30 software engineers.
 Collaborated with principal and staff engineers, defining the strategy and direction for the group's future.
 - Worked closely with the Technical Program Manager to improve team planning and the Product Manager to enhance product approaches.

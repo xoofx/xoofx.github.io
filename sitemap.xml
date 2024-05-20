@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://xoofx.github.io/blog</loc>
+    <loc>https://xoofx.github.io/</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -9,23 +9,19 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.github.io/resume</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2009/10/13/coding-4k-or-64k-intro-need-tools.html</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.github.io/blog/2024/03/22/building-secure-10g-home-network</loc>
+    <loc>https://xoofx.github.io/blog</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
     <loc>https://xoofx.github.io/blog/2009/10/18/adding-asm-x86-syntax-highlighting-to.html</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.github.io/blog/2024/03/22/building-secure-10g-home-network</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -37,7 +33,7 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2010/02/12/coding-4k-intro-for-breakpoint-2010.html</loc>
+    <loc>https://xoofx.github.io/blog/2009/10/13/coding-4k-or-64k-intro-need-tools.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -49,11 +45,7 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2010/01/08/building-fx-hlsl-files-under-visual.html</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.github.io/blog/2010/05/20/nshader-11-hlsl-glsl-cg-syntax-coloring.html</loc>
+    <loc>https://xoofx.github.io/blog/2010/02/12/coding-4k-intro-for-breakpoint-2010.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -61,7 +53,19 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
+    <loc>https://xoofx.github.io/blog/2010/05/20/nshader-11-hlsl-glsl-cg-syntax-coloring.html</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
     <loc>https://xoofx.github.io/blog/2009/12/10/rmasm-new-generation-of-macro-assembler.html</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.github.io/blog/2009/10/25/random-float-number-using-x86-asm-code.html</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.github.io/blog/2010/01/08/building-fx-hlsl-files-under-visual.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -69,11 +73,15 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2010/08/12/democoding-tools-coding-and-coding.html</loc>
+    <loc>https://xoofx.github.io/blog/2010/08/24/import-and-export-3d-collada-files-with.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2010/08/24/import-and-export-3d-collada-files-with.html</loc>
+    <loc>https://xoofx.github.io/blog/2010/11/18/sharpdx-new-managed-directx-api.html</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.github.io/blog/2010/11/02/hacking-direct2d-to-use-directly.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -85,19 +93,7 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2010/11/02/hacking-direct2d-to-use-directly.html</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.github.io/blog/2010/11/18/sharpdx-new-managed-directx-api.html</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.github.io/blog/2010/11/30/official-release-of-sharpdx-10.html</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.github.io/blog/2011/10/02/managed-directx-with-win8-metro-style.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -105,11 +101,7 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2010/12/28/crinkler-secrets-4k-intro-executable.html</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.github.io/projects</loc>
+    <loc>https://xoofx.github.io/blog/2011/10/02/managed-directx-with-win8-metro-style.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -117,11 +109,15 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2010/10/23/high-performance-memcpy-gotchas-in-c.html</loc>
+    <loc>https://xoofx.github.io/projects</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2013/04/19/advanced-hlsl-ii-shader-compound.html</loc>
+    <loc>https://xoofx.github.io/blog/2010/12/28/crinkler-secrets-4k-intro-executable.html</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.github.io/blog/2010/10/23/high-performance-memcpy-gotchas-in-c.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -133,15 +129,15 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
+    <loc>https://xoofx.github.io/blog/2013/04/19/advanced-hlsl-ii-shader-compound.html</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
     <loc>https://xoofx.github.io/blog/2011/11/24/advanced-hlsl-using-closures-and.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2014/09/12/why-windows-ui-matters-part-1.html</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.github.io/blog/2009/10/25/random-float-number-using-x86-asm-code.html</loc>
+    <loc>https://xoofx.github.io/blog/2010/08/12/democoding-tools-coding-and-coding.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -149,7 +145,15 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2014/08/13/packages-vnext-power-up-our-net-builds.html</loc>
+    <loc>https://xoofx.github.io/blog/2014/09/12/why-windows-ui-matters-part-1.html</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.github.io/blog/2014/09/14/why-windows-ui-matters-part-2.html</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.github.io/blog/2014/05/25/managing-multiple-platforms-in-visual.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -161,10 +165,6 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2014/09/14/why-windows-ui-matters-part-2.html</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.github.io/blog/2015/09/27/struct-inheritance-in-csharp-with-roslyn-and-coreclr</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
@@ -173,11 +173,15 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2016/10/28/efficient-discriminated-unions-in-csharp</loc>
+    <loc>https://xoofx.github.io/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr</loc>
+    <loc>https://xoofx.github.io/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
+    <loc>https://xoofx.github.io/blog/2016/10/28/efficient-discriminated-unions-in-csharp</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -189,15 +193,7 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
     <loc>https://xoofx.github.io/blog/2018/03/09/productivity-with-resharper</loc>
-    <lastmod>2024-05-20</lastmod>
-  </url>
-  <url>
-    <loc>https://xoofx.github.io/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -205,11 +201,11 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2018/12/26/generate-async-from-sync-code-with-roslyn</loc>
+    <loc>https://xoofx.github.io/blog/2017/02/06/stark-tokens-specs-and-the-tokenizer</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2019/03/28/behind-the-burst-compiler</loc>
+    <loc>https://xoofx.github.io/blog/2018/12/26/generate-async-from-sync-code-with-roslyn</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -217,7 +213,7 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2018/04/12/writing-managed-jit-in-csharp-with-coreclr</loc>
+    <loc>https://xoofx.github.io/blog/2019/03/28/behind-the-burst-compiler</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
@@ -229,6 +225,10 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
+    <loc>https://xoofx.github.io/blog/2018/04/12/writing-managed-jit-in-csharp-with-coreclr</loc>
+    <lastmod>2024-05-20</lastmod>
+  </url>
+  <url>
     <loc>https://xoofx.github.io/blog/2017/11/13/implementing-a-text-templating-language-and-engine-for-dotnet</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
@@ -237,11 +237,11 @@
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2014/05/25/managing-multiple-platforms-in-visual.html</loc>
+    <loc>https://xoofx.github.io/blog/2020/03/21/stark-native-compiler</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>
-    <loc>https://xoofx.github.io/blog/2020/03/21/stark-native-compiler</loc>
+    <loc>https://xoofx.github.io/blog/2014/08/13/packages-vnext-power-up-our-net-builds.html</loc>
     <lastmod>2024-05-20</lastmod>
   </url>
   <url>

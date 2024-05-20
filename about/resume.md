@@ -38,9 +38,9 @@ Location: _Remote, Grenoble Area, France_
 - Managed 2-3 teams, each with a manager, comprising a total of 25-30 software engineers.
 Collaborated with principal and staff engineers, defining the strategy and direction for the group's future.
 - Worked closely with the Technical Program Manager to improve team planning and the Product Manager to enhance product approaches.
-- Oversaw the execution of major technical stack evolutions, negotiated team resourcing, and presented progress to key stakeholders (VP, SVP).
+- Oversaw the execution of major technical stack evolutions, negotiated team resourcing, and presented progress to key stakeholders (VP, SVP). Wrote Objective Key Results (OKR) for the group.
 - Established and maintained team rituals, organized bi-weekly .NET Group All Hands meetings, and led a team-building event in Copenhagen.
-- Conducted weekly 1-1 meetings with direct reports and skip-level meetings, engaged in bi-annual internal engagement survey reviews, and wrote Objective Key Results (OKR) for the group.
+- Conducted weekly 1-1 meetings with direct reports and skip-level meetings, engaged in bi-annual internal engagement survey reviews, and evaluated yearly compensation cycles.
 
 
 ## Senior Engineering Manager

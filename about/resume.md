@@ -17,7 +17,7 @@ GitHub: https://github.com/xoofx/ \
 
 ___
 
-With over 30 years of passionate software development experience, I have consistently excelled in challenging projects across diverse technologies, including low-level coding, server-side applications, language parsers, and game engines. My expertise lies in leading complex systems, enhancing their designs, and empowering users through strong technical leadership. I am dedicated to improving direction, performance, quality, extensibility, maintainability, simplicity, and usability in all projects.
+With over 30 years of passionate software development experience, I have consistently excelled in challenging projects across diverse technologies, including low-level coding, server-side applications, language parsers, compilers, and game engines. My expertise lies in leading complex systems, enhancing their designs, and empowering users through strong technical leadership. I am dedicated to improving direction, performance, quality, extensibility, maintainability, simplicity, and usability in all projects.
 
 In recent years, I have successfully led larger teams, both technically and from a management perspective, establishing good engineering practices and fostering a respectful and empathetic work environment.
 

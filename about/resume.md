@@ -4,25 +4,22 @@ title: Resume
 section: about
 url: /resume/
 ---
-<img width="256px" src="/images/xoofx-2020.jpg" style="float: right;border-radius: 50%" alt="Avatar"/>
+<img width="256px" src="/images/xoofx-2023.jpg" style="float: right;border-radius: 50%" alt="Avatar"/>
 
 Name: *Alexandre MUTEL*  
 Age: *Born in 1973*  
 Situation: *Married, 2 children*  
 Location: *Grenoble, France*  
-Email: *alexandre_mutel at live.com*  
-Social medias: [@xoofx](https://twitter.com/xoofx) on Twitter, [Github](https://github.com/xoofx/), [StackOverflow](http://stackoverflow.com/users/1356325/xoofx)  
-***Latest update: 9 July 2018***
+Email: *alexandre_mutel at live.com* \
+Social medias: [@xoofx](https://mastodon.social/@xoofx) on Mastodon \
+GitHub: https://github.com/xoofx/ \
+***Latest update: May 20th, 2024***
 
 ___
 
-I have been developing software with passion for more than 30 years, being involved 
-in challenging projects using various technologies, ranging from low level coding, 
-server side applications, language parsers or game engines.
+With over 30 years of passionate software development experience, I have consistently excelled in challenging projects across diverse technologies, including low-level coding, server-side applications, language parsers, and game engines. My expertise lies in leading complex systems, enhancing their designs, and empowering users through strong technical leadership. I am dedicated to improving direction, performance, quality, extensibility, maintainability, simplicity, and usability in all projects.
 
-I love to work on complex systems, improve their designs, empower the users and bring a strong technical leadership to a team.
-
-When working on a project, I particularly care about direction, performance, quality, extensibility, maintainability, simplicity and usability.
+In recent years, I have successfully led larger teams, both technically and from a management perspective, establishing good engineering practices and fostering a respectful and empathetic work environment.
 
 I'm currently working at [Unity Technologies](https://unity3d.com).
 
@@ -30,15 +27,53 @@ ___
 
 # Experience
 
-## Software Architect at Unity Technologies
-***November 2016 - present***  
-Company: *Unity Technologies*  
-Location: *Grenoble, France*  
+## Director, Software Engineering
+***Oct 2021 - Present (2 years 8 months)*** \
+Company: _Unity Technologies_ \
+Location: _Remote, Grenoble Area, France_
 
-Working to make .NET performance more awesome.
+**Key Responsibilities:**
+
+- Led the C#/.NET Tech Group, integrating multiple teams (C# Compilation, .NET Runtimes & Integration, IL2CPP, Burst Native Compiler) to standardize and innovate with .NET technologies within the Unity platform.
+- Managed 2-3 teams, each with a manager, comprising a total of 25-30 software engineers.
+Collaborated with principal and staff engineers, defining the strategy and direction for the group's future.
+- Worked closely with the Technical Program Manager to improve team planning and the Product Manager to enhance product approaches.
+- Oversaw the execution of major technical stack evolutions, negotiated team resourcing, and presented progress to key stakeholders (VP, SVP).
+- Established and maintained team rituals, organized bi-weekly .NET Group All Hands meetings, and led a team-building event in Copenhagen.
+- Conducted weekly 1-1 meetings with direct reports and skip-level meetings, engaged in bi-annual internal engagement survey reviews, and wrote Objective Key Results (OKR) for the group.
+
+
+## Senior Engineering Manager
+***Sep 2020 - Oct 2021 (1 year 2 months)*** \
+Company: _Unity Technologies_ \
+Location: _Remote, Grenoble Area, France_
+
+**Key Responsibilities:**
+
+- Led the Scripting and Burst Teams, focused on C# Compilation, .NET Runtime Integration, and Burst Native Compiler.
+- Managed 2 teams of 10-12 engineers, defining directions and clarifying scopes.
+- Improved planning, documentation, and engineering practices, set up team rituals and 1-1 meetings, and conducted quarterly performance reviews.
+- Collaborated with the Technical Program Manager on JIRA setup, hired new engineers, and facilitated feedback sessions.
+- Developed key talents into new technical/management positions, engaged with stakeholders, and evaluated yearly compensation cycles.
+- Prepared the formation of the .NET Tech Group by integrating several teams.
+
+## Technical Lead
+***Nov 2016 - Sep 2020 (3 years 11 months)*** \
+Company: _Unity Technologies_ \
+Location: _Remote, Grenoble Area, France_
+
+**Key Responsibilities:**
+
+- Designed, developed, and shipped the Burst compiler to translate .NET/C#/IL code into efficient native code using the LLVM compiler.
+- Led the full design and development of the compiler, collaborating with the [SLEEF OSS project](https://github.com/shibatch/sleef/) for deterministic floating point support, for example [here](https://github.com/shibatch/sleef/issues/187)
+- Expanded compiler functionality to major platforms (Desktops, Mobile, Consoles), mentored and hired engineers, and built a cohesive team.
+- Organized development priorities, 1-1 meetings, knowledge-sharing sessions, and annual reviews.
+- Presented Burst technology at conferences (Unite 2019, DotNext 2019 - video [here](https://youtu.be/LKpyaVrby04?si=0M6IObrPDLFb7rME))
+- Authored comprehensive internal documentation and user documentation, and contributed to blog posts on Burst compiler updates ([1](https://blog.unity.com/technology/optimize-your-projects-with-burst-compiler-1-3),[2](https://blog.unity.com/engine-platform/bursting-into-2021-with-burst-1-5)).
+
 
 ## Lead Developer of several OSS projects
-***September 2010 - Today (6 years)***  
+***September 2010 - Today (14 years)***  
 Technologies: *`C#`, `C/C++`, `Direct3D11`, `MsBuild`, `ASP.NET`, `HTML+JavaScript`*  
 Platforms: *`Windows`*  
 
@@ -202,7 +237,7 @@ ___
 
 # Awards
 
-- I have been awarded as a **Microsoft Most Valuable Professional** for C#/.NET/Visual Studio (2014 - 2016, 3 years)
+- I have been awarded as a **Microsoft Most Valuable Professional** for C#/.NET/Visual Studio (2014 - Present, for 10 years)
 
 ___
 
@@ -210,6 +245,9 @@ ___
 
 In the recent years, I have published many technical posts on my [blog](http://xoofx.github.io/blog), most recently:
 
+- 2020: [Stark - Native Compiler - Prototype 2019](https://xoofx.github.io/blog/2020/03/21/stark-native-compiler/), Development of an AOT native compiler using RyuJIT
+- 2020: [Stark - Language And Frontend Compiler - Prototype 2019](https://xoofx.github.io/blog/2020/03/06/stark-language-frontend-compiler/), Syntax of the language and the development of the front-end compiler
+- 2020: [The Odyssey of Stark and Melody](https://xoofx.github.io/blog/2020/03/05/stark-melody-dotnet-sel4/), Prototyping a new language and OS with the help of the .NET ecosystem and seL4 micro-kernel
 - 2016: [Implementation of Markdig](http://xoofx.github.io/blog/2016/06/13/implementing-a-markdown-processor-for-dotnet/), a Markdown Engine for .NET
 - 2016: [Inline .NET IL ASM](http://xoofx.github.io/blog/2016/05/25/inline-il-asm-in-csharp-with-roslyn/) in C# by modifying Roslyn.
 - 2015: [Stack allocation of .NET classes](http://xoofx.github.io/blog/2015/10/08/stackalloc-for-class-with-roslyn-and-coreclr/) to improve locality and performance of .NET apps, including the modification of Roslyn and the CoreCLR Runtime and GC to allow such a prototype.
@@ -229,9 +267,9 @@ ___
 ___
 
 # Interests
+- **Hiking**, many during my world tour, at least one hike every month since then.
 - **Guitar classic/folk** (learned for few years during my 5 years in Software Engineering)
 - **Music composition on computers** with musictracker: composed many musics on Amiga back in the 1990's and more recently 
   several [unfinished musics](https://soundcloud.com/xoofx) around 2003 with Renoise.
 - **Philosophy**, read many authors after my world tour. One of my favorite philosopher is [Henry Bergson](https://en.wikipedia.org/wiki/Henri_Bergson)
-- **Hiking**, many during my world tour, at least one hike every month since then.
 - **Swimming**, with many competitions when I was younger and now more a casual swimmer

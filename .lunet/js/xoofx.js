@@ -6,8 +6,20 @@ const initXoofxTheme = function (e) {
     if (e.matches) {
         currentXoofxTheme = "dark";
         document.documentElement.setAttribute('data-bs-theme', 'dark')
+        
+        // Mermaid Init
+        mermaid.initialize({
+            securityLevel: 'loose',
+            theme: 'dark',
+        });        
     } else if (currentXoofxTheme == "dark") {
         document.documentElement.setAttribute('data-bs-theme', 'light')
+        
+        // Mermaid Init
+        mermaid.initialize({
+            securityLevel: 'loose',
+            theme: 'neutral',
+        });
     }
 }
 let colorSchemeQueryList = window.matchMedia('(prefers-color-scheme: dark)')

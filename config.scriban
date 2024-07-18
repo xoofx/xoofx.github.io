@@ -27,6 +27,7 @@ with bundle
     tocbot = resource "npm:tocbot" "4.21.1"
     anchorjs = resource "npm:anchor-js" "5.0.0"
     prismjs = resource "npm:prismjs" "1.29.0"
+    mermaid = resource "npm:mermaid" "10.9.1"
 
     # css files
     css tocbot "/dist/tocbot.css"
@@ -46,6 +47,7 @@ with bundle
     js prismjs "/components/prism-cpp.min.js"
     js prismjs "/components/prism-csharp.min.js"
     js prismjs "/components/prism-nasm.min.js"
+    js mermaid "/dist/mermaid.min.js"
     js "/js/prism-stark.js"
     js "/js/github-comments.js"
     js "/js/xoofx.js"

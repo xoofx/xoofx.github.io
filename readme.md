@@ -2,6 +2,7 @@
 layout: simple
 title: Home
 title_html: Hi and Welcome!
+og_type: website
 ---
 
 <div class="home">

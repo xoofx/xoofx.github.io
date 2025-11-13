@@ -13,11 +13,17 @@ layout = "base"
 github_user = "xoofx"
 github_repo_url = "https://github.com/xoofx/xoofx.github.io/"
 
-with cards.twitter
-    enable = true
-    card = "summary_large_image"
-    user = "xoofx"
-    image = "/images/twitter-banner.png"
+with cards
+    with twitter
+        enable = true
+        card = "summary_large_image"
+        user = "xoofx"
+        image = "/images/twitter-banner.png"
+    end
+    with og
+        enable = true
+        image = "/images/twitter-banner.png"
+    end
 end
 
 # Resources bundle
